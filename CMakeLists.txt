@@ -8,7 +8,13 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
     message(FATAL_ERROR "In-source builds are not allowed.")
     endif()
     
-    find_package( Qt5 COMPONENTS Widgets Gui PrintSupport Test Network Xml Core Svg REQUIRED)
+    find_package( Qt5 COMPONENTS Widgets Gui Test Core Svg REQUIRED)
 endif()
 
-add_subdirectory(foreign)
+include( CTest )
+enable_testing()
+
+add_subdirectory( foreign )
+add_subdirectory( src )
+
+add_subdirectory( test )
