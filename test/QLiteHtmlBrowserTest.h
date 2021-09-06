@@ -2,6 +2,8 @@
 #include <QtWidgets/QMainWindow>
 #include <QtCore/QObject>
 
+class QLiteHtmlBrowser;
+
 class QLiteHtmlBrowserTest : public QObject
 {
   Q_OBJECT
@@ -17,8 +19,10 @@ private Q_SLOTS:
     mWnd = nullptr;
   }
   void testCreation();
+  void testHtml_data();
+  void testHtml();
 
 private:
-  void                         createMainWindow( const QSize& );
+  QLiteHtmlBrowser*            createMainWindow( const QSize& );
   std::unique_ptr<QMainWindow> mWnd = nullptr;
 };

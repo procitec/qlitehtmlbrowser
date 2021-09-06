@@ -12,6 +12,6 @@ target_sources(qlitehtmlbrowsertest
 )
 target_include_directories( qlitehtmlbrowsertest PUBLIC ${PROJECT_SOURCE_DIR}/include/qlitehtmlbrowser)
 
-target_link_libraries(qlitehtmlbrowsertest PRIVATE QLiteHtmlBrowser Qt5::Widgets Qt5::Test )
+target_link_libraries(qlitehtmlbrowsertest PRIVATE QLiteHtmlBrowser Qt5::Widgets Qt5::Gui Qt5::Test )
 
 add_test( NAME qlitehtmlbrowsertest COMMAND qlitehtmlbrowsertest )

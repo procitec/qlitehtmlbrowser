@@ -1,13 +1,19 @@
 #pragma once
 
 #include "litehtml.h"
-#include <QWidget>
+#include <QtWidgets/QAbstractScrollArea>
 
-class container_qt : public QWidget, protected litehtml::document_container
+class container_qt : public QAbstractScrollArea, protected litehtml::document_container
 {
   Q_OBJECT
 public:
   container_qt( QWidget* parent = nullptr );
+
+  void setSource( const char* url );
+  void setHtml( const char* html );
+
+protected:
+  void paintEvent( QPaintEvent* ) override;
 
 protected:
   virtual litehtml::uint_ptr create_font(
@@ -43,4 +49,7 @@ protected:
 
 private:
   std::shared_ptr<litehtml::document> mDocument;
+  litehtml::context                   mContext;
+  litehtml::tstring                   mBaseUrl;
+  int                                 mFontSize = 12;
 };
