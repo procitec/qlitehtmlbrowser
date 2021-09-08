@@ -5,13 +5,13 @@
 
 class QLiteHtmlBrowser;
 
-class HTMLContentTest : public TestBase
+class HTMLCssTest : public TestBase
 {
   Q_OBJECT
 public:
-  HTMLContentTest()
+  HTMLCssTest()
     : TestBase( qApp->arguments() ){};
-  virtual ~HTMLContentTest() = default;
+  virtual ~HTMLCssTest() = default;
 
 private Q_SLOTS:
   void init() { TestBase::init(); }
@@ -21,9 +21,8 @@ private Q_SLOTS:
     mWnd.reset();
     mWnd = nullptr;
   }
-  void testCreation();
-  void testHtml_data();
-  void testHtml();
+  void testCSS_data();
+  void testCSS();
 
 private:
   QLiteHtmlBrowser*            createMainWindow( const QSize& );

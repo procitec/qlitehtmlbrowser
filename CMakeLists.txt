@@ -2,12 +2,14 @@ project( QLiteHtmlBrowser )
 
 cmake_minimum_required( VERSION 3.2 )
 
+set( AUTOMOC OFF)
+
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
 
     if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "In-source builds are not allowed.")
     endif()
-    
+
     find_package( Qt5 COMPONENTS Widgets Gui Test Core Svg REQUIRED)
 endif()
 

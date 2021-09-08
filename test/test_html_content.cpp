@@ -9,14 +9,8 @@ int main( int argc, char** argv )
 {
   QApplication app( argc, argv );
 
-  auto args = app.arguments();
-  if ( args.contains( "--interactive" ) )
-  {
-    args.removeAll( "--interactive" );
-  }
-
-  HTMLContentTest mContentTest( args );
-  QTest::qExec( &mContentTest, mContentTest.args().size(), mContentTest.args() );
+  HTMLContentTest mContentTest;
+  QTest::qExec( &mContentTest, mContentTest.args() );
 }
 
 QLiteHtmlBrowser* HTMLContentTest::createMainWindow( const QSize& size )
@@ -43,6 +37,18 @@ void HTMLContentTest::testHtml_data()
   QTest::newRow( "Show a single line of text" ) << "<html><body>This is just text</body></html>";
   QTest::newRow( "Show 2 lines of text" ) << R"-(<html><body>this is first line<br>
   this is second line</body></html>)-";
+  QTest::newRow( "Text formating text" ) << R"-(
+<!DOCTYPE html>
+<html>
+<body>
+
+<p><b>This text is bold</b></p>
+<p><i>This text is italic</i></p>
+<strong>This test is strong</strong></p>
+
+</body>
+</html>
+)-";
 }
 
 //<p style = "text-align:center"> Dieser Text wird zentriert.<br>
@@ -52,5 +58,4 @@ void HTMLContentTest::testHtml()
   QFETCH( QString, html );
   auto browser = createMainWindow( mBrowserSize );
   browser->setHtml( html );
-  QTest::qWait( 1000 );
 }
