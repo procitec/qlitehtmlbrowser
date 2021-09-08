@@ -19,6 +19,11 @@ container_qt::container_qt( QWidget* parent )
   //  setLayout( layout );
 }
 
+void container_qt::setCSS( const QString& css )
+{
+  mContext.load_master_stylesheet( css.toUtf8().constData() );
+}
+
 void container_qt::setSource( const char* url )
 {
   // mDocument = litehtml::document::createFromString( url, this, );
@@ -39,15 +44,15 @@ void container_qt::paintEvent( QPaintEvent* event )
   {
     if ( mDocument )
     {
+      /*auto     width = */
       mDocument->render( this->viewport()->width() );
       QPainter p( viewport() );
       p.setRenderHint( QPainter::SmoothPixmapTransform, true );
       p.setRenderHint( QPainter::Antialiasing, true );
       const litehtml::position clipRect = { event->rect().x(), event->rect().y(), event->rect().width(), event->rect().height() };
-      auto                     margins  = contentsMargins();
+      // auto                     margins  = contentsMargins();
+      auto margins = viewport()->contentsMargins();
       mDocument->draw( reinterpret_cast<litehtml::uint_ptr>( &p ), margins.left(), margins.top(), &clipRect );
-      // auto pp = mapToParent( { 0, 0 } );
-      // mDocument->draw( reinterpret_cast<litehtml::uint_ptr>( &p ), 0, 0, &clipRect );
     }
   }
 }
@@ -58,7 +63,36 @@ litehtml::uint_ptr container_qt::create_font(
   auto* font = new QFont();
   font->setFamily( "Monospace" );
   font->setFixedPitch( true );
-  font->setPointSize( size );
+  font->setPixelSize( size );
+
+  font->setItalic( litehtml::fontStyleItalic == italic ? true : false );
+
+  // thinner, thicker? @see https://www.w3schools.com/cssref/pr_font_weight.asp
+  font->setWeight( ( weight - 1 ) / 10 );
+
+  /// handle fonts decoration
+  if ( litehtml::font_decoration_underline == decoration )
+  {
+    font->setUnderline( true );
+  }
+  if ( litehtml::font_decoration_overline == decoration )
+  {
+    font->setOverline( true );
+  }
+  if ( litehtml::font_decoration_linethrough == decoration )
+  {
+    font->setStrikeOut( true );
+  }
+
+  if ( fm )
+  {
+    const QFontMetrics _fm( *font );
+    fm->height      = _fm.height();
+    fm->ascent      = _fm.ascent();
+    fm->descent     = _fm.descent();
+    fm->x_height    = _fm.xHeight();
+    fm->draw_spaces = true;
+  }
 
   return reinterpret_cast<litehtml::uint_ptr>( font );
 }
@@ -93,9 +127,10 @@ void container_qt::draw_text(
   p->setPen( Qt::black );
   //  litehtml::position clientPos;
   //  get_client_rect( clientPos );
-  QRect rect;
-  auto  brect = p->boundingRect( rect, Qt::AlignTop | Qt::AlignLeft, QString::fromUtf8( text ) );
-  p->drawText( pos.x, pos.y + brect.height(), QString::fromUtf8( text ) );
+  //  QRect rect;
+  //  auto  brect = p->boundingRect( rect, /*Qt::AlignTop | Qt::AlignLeft*/ 0, QString::fromUtf8( text ) );
+  //  p->drawText( pos.x, pos.y + brect.height(), QString::fromUtf8( text ) );
+  p->drawText( QRect( pos.x, pos.y, pos.width, pos.height ), 0, QString::fromUtf8( text ) );
   p->restore();
 }
 int container_qt::pt_to_px( int pt )

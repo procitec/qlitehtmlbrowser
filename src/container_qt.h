@@ -11,6 +11,7 @@ public:
 
   void setSource( const char* url );
   void setHtml( const char* html );
+  void setCSS( const QString& css );
 
 protected:
   void paintEvent( QPaintEvent* ) override;

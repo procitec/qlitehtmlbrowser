@@ -3,6 +3,10 @@
 
 #include <QtWidgets/QVBoxLayout>
 
+extern const litehtml::tchar_t master_css[] = {
+#include "master.css.inc"
+  , 0 };
+
 QLiteHtmlBrowser::QLiteHtmlBrowser( QWidget* parent )
   : QWidget( parent )
 {
@@ -16,6 +20,9 @@ QLiteHtmlBrowser::QLiteHtmlBrowser( QWidget* parent )
   layout->addWidget( mContainer );
 
   setLayout( layout );
+
+  mCSS = master_css;
+  loadStyleSheet();
 }
 
 // void QLiteHtmlBrowser::resizeEvent( QResizeEvent* ev )
@@ -51,4 +58,9 @@ void QLiteHtmlBrowser::setHtml( const QString& html )
   {
     mContainer->setHtml( html.toUtf8().constData() );
   }
+}
+
+void QLiteHtmlBrowser::loadStyleSheet()
+{
+  mContainer->setCSS( mCSS );
 }

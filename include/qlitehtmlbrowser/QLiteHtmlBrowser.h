@@ -21,8 +21,10 @@ public:
 protected:
   virtual void _setSource( const QUrl& name );
   //  void         resizeEvent( QResizeEvent* ) override;
+  void loadStyleSheet();
 
 private:
   container_qt* mContainer = nullptr;
   QUrl          mSource;
+  QString       mCSS;
 };
