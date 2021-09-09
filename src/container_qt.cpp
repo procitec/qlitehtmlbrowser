@@ -37,6 +37,7 @@ void container_qt::setHtml( const char* html )
     mDocument = litehtml::document::createFromUTF8( html, this, &mContext );
     mDocument->render( this->viewport()->width(), litehtml::render_all );
     resetScrollBars();
+    viewport()->update();
   }
 }
 

@@ -14,8 +14,18 @@ public:
   TestBrowser();
   virtual ~TestBrowser();
 
+  void loadHtml( const QString& html_file );
+  void setLastDirectory( const QString& dir )
+  {
+    auto d = QDir( dir );
+    if ( d.exists() )
+    {
+      mLastDirectory.setPath( d.absolutePath() );
+    }
+  }
+
 protected:
-  void loadHtml();
+  void openHtml();
 
 private:
   QLiteHtmlBrowser* mBrowser;
