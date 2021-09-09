@@ -5,6 +5,7 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QVBoxLayout>
 #include <QtGui/QPaintEvent>
+#include <QtWidgets/QScrollBar>
 
 container_qt::container_qt( QWidget* parent )
   : QAbstractScrollArea( parent )
@@ -35,7 +36,18 @@ void container_qt::setHtml( const char* html )
   {
     mDocument = litehtml::document::createFromUTF8( html, this, &mContext );
     mDocument->render( this->viewport()->width(), litehtml::render_all );
+    resetScrollBars();
   }
+}
+
+void container_qt::resetScrollBars()
+{
+  horizontalScrollBar()->setValue( 0 );
+  verticalScrollBar()->setValue( 0 );
+  horizontalScrollBar()->setMaximum( mDocument->width() );
+  verticalScrollBar()->setMaximum( mDocument->height() );
+  horizontalScrollBar()->setPageStep( viewport()->width() );
+  verticalScrollBar()->setPageStep( viewport()->height() );
 }
 
 void container_qt::paintEvent( QPaintEvent* event )
@@ -100,7 +112,8 @@ void container_qt::delete_font( litehtml::uint_ptr hFont )
 {
   if ( hFont )
   {
-    delete reinterpret_cast<QFont*>( hFont );
+    auto* font = reinterpret_cast<QFont*>( hFont );
+    delete font;
   }
 }
 int container_qt::text_width( const litehtml::tchar_t* text, litehtml::uint_ptr hFont )
@@ -122,9 +135,7 @@ void container_qt::draw_text(
   QFont*    f = reinterpret_cast<QFont*>( hFont );
   p->save();
   p->setFont( *f );
-  QPen pen( Qt::black );
-  pen.setWidth( 2 );
-  p->setPen( Qt::black );
+  p->setPen( QColor( color.red, color.green, color.blue, color.alpha ) );
   //  litehtml::position clientPos;
   //  get_client_rect( clientPos );
   //  QRect rect;

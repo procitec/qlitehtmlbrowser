@@ -10,31 +10,24 @@ class TestBase : public QObject
 {
   Q_OBJECT
 public:
-  TestBase( const QStringList& args )
-  {
-    auto ag = args;
-    if ( ag.contains( "--interactive" ) )
-    {
-      ag.removeAll( "--interactive" );
-      mArgs = ag;
-    }
-  }
+  TestBase( const QStringList& args ) { parseArgs( args ); }
 
-  TestBase()
-  {
-    auto args = qApp->arguments();
-    if ( args.contains( "--interactive" ) )
-    {
-      args.removeAll( "--interactive" );
-      mArgs = args;
-    }
-  }
+  TestBase() { parseArgs( qApp->arguments() ); }
   virtual ~TestBase() {}
 
   //  QArgsToStdArgs& args() { return mArgs; };
   QStringList& args() { return mArgs; };
 
 protected:
+  void parseArgs( const QStringList& args )
+  {
+    auto ag = args;
+    if ( ag.contains( "--interactive" ) )
+    {
+      ag.removeAll( "--interactive" );
+    }
+    mArgs = ag;
+  }
   void init() {}
   void cleanup()
   {

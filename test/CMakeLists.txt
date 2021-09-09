@@ -3,14 +3,11 @@ set( test_names
     test_css_content
 )
 
-
 foreach( name ${test_names})
 
     add_executable( ${name} )
 
-    set(mocs)
-
-    qt5_wrap_cpp ( mocs
+    qt5_wrap_cpp ( ${name}_mocs
         ${name}.h
         test_base.h
     )
@@ -19,7 +16,7 @@ foreach( name ${test_names})
       PRIVATE
       ${name}.cpp
       ${name}.h
-      ${mocs}
+      ${${name}_mocs}
     )
     target_include_directories( ${name} PUBLIC ${PROJECT_SOURCE_DIR}/include/qlitehtmlbrowser)
 
@@ -28,3 +25,6 @@ foreach( name ${test_names})
     add_test( NAME ${name} COMMAND ${name} )
 
 endforeach()
+
+add_subdirectory( testbrowser )
+

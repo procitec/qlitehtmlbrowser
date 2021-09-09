@@ -49,8 +49,12 @@ protected:
   virtual void get_language( litehtml::tstring& language, litehtml::tstring& culture ) const;
 
 private:
+  void resetScrollBars();
+
+private:
   std::shared_ptr<litehtml::document> mDocument;
   litehtml::context                   mContext;
   litehtml::tstring                   mBaseUrl;
-  int                                 mFontSize = 12;
+  int                                 mFontSize   = 12;
+  int                                 mZoomFactor = 1;
 };

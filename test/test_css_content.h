@@ -21,8 +21,11 @@ private Q_SLOTS:
     mWnd.reset();
     mWnd = nullptr;
   }
-  void testCSS_data();
-  void testCSS();
+  void testCSS_align_data();
+  void testCSS_align();
+
+  void testCSS_font_data();
+  void testCSS_font();
 
 private:
   QLiteHtmlBrowser*            createMainWindow( const QSize& );

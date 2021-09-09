@@ -24,6 +24,8 @@ private Q_SLOTS:
   void testCreation();
   void testHtml_data();
   void testHtml();
+  void testHtml_Scroll_data();
+  void testHtml_Scroll();
 
 private:
   QLiteHtmlBrowser*            createMainWindow( const QSize& );
