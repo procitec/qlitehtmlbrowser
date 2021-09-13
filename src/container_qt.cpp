@@ -51,6 +51,11 @@ void container_qt::resetScrollBars()
   verticalScrollBar()->setPageStep( viewport()->height() );
 }
 
+QPoint container_qt::scrollBarPos() const
+{
+  return { horizontalScrollBar()->value(), verticalScrollBar()->value() };
+}
+
 void container_qt::paintEvent( QPaintEvent* event )
 {
   if ( event )
@@ -64,8 +69,10 @@ void container_qt::paintEvent( QPaintEvent* event )
       p.setRenderHint( QPainter::Antialiasing, true );
       const litehtml::position clipRect = { event->rect().x(), event->rect().y(), event->rect().width(), event->rect().height() };
       // auto                     margins  = contentsMargins();
-      auto margins = viewport()->contentsMargins();
-      mDocument->draw( reinterpret_cast<litehtml::uint_ptr>( &p ), margins.left(), margins.top(), &clipRect );
+      auto margins    = viewport()->contentsMargins();
+      auto scroll_pos = -scrollBarPos();
+
+      mDocument->draw( reinterpret_cast<litehtml::uint_ptr>( &p ), margins.left() + scroll_pos.x(), margins.top() + scroll_pos.y(), &clipRect );
     }
   }
 }

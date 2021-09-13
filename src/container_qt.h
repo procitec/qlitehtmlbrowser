@@ -50,6 +50,7 @@ protected:
 
 private:
   void resetScrollBars();
+  QPoint scrollBarPos() const;
 
 private:
   std::shared_ptr<litehtml::document> mDocument;
