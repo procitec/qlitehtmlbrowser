@@ -7,6 +7,7 @@
 #include <QtGui/QPaintEvent>
 #include <QtWidgets/QScrollBar>
 
+#include <cmath>
 container_qt::container_qt( QWidget* parent )
   : QAbstractScrollArea( parent )
 {
@@ -47,8 +48,8 @@ void container_qt::resetScrollBars()
   verticalScrollBar()->setValue( 0 );
   horizontalScrollBar()->setMaximum( mDocument->width() );
   verticalScrollBar()->setMaximum( mDocument->height() );
-  horizontalScrollBar()->setPageStep( viewport()->width() );
-  verticalScrollBar()->setPageStep( viewport()->height() );
+  horizontalScrollBar()->setPageStep( ( viewport()->width() ) );
+  verticalScrollBar()->setPageStep( ( viewport()->height() ) );
 }
 
 QPoint container_qt::scrollBarPos() const
@@ -63,16 +64,20 @@ void container_qt::paintEvent( QPaintEvent* event )
     if ( mDocument )
     {
       /*auto     width = */
-      mDocument->render( this->viewport()->width() );
+      mDocument->render( scaled( this->viewport()->width() ) );
       QPainter p( viewport() );
+      p.setWorldTransform( QTransform().scale( mScale, mScale ) );
       p.setRenderHint( QPainter::SmoothPixmapTransform, true );
       p.setRenderHint( QPainter::Antialiasing, true );
-      const litehtml::position clipRect = { event->rect().x(), event->rect().y(), event->rect().width(), event->rect().height() };
+
+      const litehtml::position clipRect = { scaled( event->rect().x() ), scaled( event->rect().y() ), scaled( event->rect().width() ),
+                                            scaled( event->rect().height() ) };
       // auto                     margins  = contentsMargins();
       auto margins    = viewport()->contentsMargins();
       auto scroll_pos = -scrollBarPos();
 
-      mDocument->draw( reinterpret_cast<litehtml::uint_ptr>( &p ), margins.left() + scroll_pos.x(), margins.top() + scroll_pos.y(), &clipRect );
+      mDocument->draw( reinterpret_cast<litehtml::uint_ptr>( &p ), scaled( margins.left() + scroll_pos.x() ),
+                       scaled( margins.top() + scroll_pos.y() ), &clipRect );
     }
   }
 }
@@ -214,6 +219,12 @@ std::shared_ptr<litehtml::element> container_qt::create_element( const litehtml:
   return {};
 }
 
+void container_qt::setScale( double scale )
+{
+  mScale = scale < mMinScale ? mMinScale : scale > mMaxScale ? mMaxScale : scale;
+  viewport()->update();
+}
+
 void container_qt::get_media_features( litehtml::media_features& media ) const
 {
   litehtml::position client;
@@ -232,4 +243,64 @@ void container_qt::get_language( litehtml::tstring& language, litehtml::tstring&
 {
   language = _t( "en" );
   culture  = _t( "" );
+}
+
+void container_qt::wheelEvent( QWheelEvent* e )
+{
+  if ( e )
+  {
+    if ( ( e->modifiers() & Qt::ControlModifier ) )
+    {
+      e->setAccepted( true );
+      float delta = e->angleDelta().y() / 120.f;
+      auto  scale = this->scale();
+      scale += delta / 10.0; // get scaling in 10 percent steps;
+      setScale( scale );
+    }
+    else
+    {
+      QAbstractScrollArea::wheelEvent( e );
+    }
+  }
+}
+
+void container_qt::keyPressEvent( QKeyEvent* e )
+{
+  if ( e )
+  {
+    QAbstractScrollArea::keyPressEvent( e );
+    if ( e->modifiers() & Qt::ControlModifier )
+    {
+      auto k = e->key();
+
+      switch ( k )
+      {
+        case Qt::Key_Enter:
+          setScale( 1.0 );
+          e->setAccepted( true );
+          break;
+
+        default:
+          break;
+      }
+    }
+  }
+}
+
+QSize container_qt::scaled( const QSize& size )
+{
+  return QSize( std::floor( size.width() / mScale ), std::floor( size.height() / mScale ) );
+}
+QRect container_qt::scaled( const QRect& rect )
+{
+  return QRect( scaled( rect.topLeft() ), scaled( rect.size() ) );
+}
+QPoint container_qt::scaled( const QPoint& point )
+{
+  return QPoint( std::floor( point.x() / mScale ), std::floor( point.y() / mScale ) );
+}
+
+int container_qt::scaled( int i )
+{
+  return std::floor( i / mScale );
 }

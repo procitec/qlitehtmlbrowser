@@ -2,6 +2,7 @@
 #include "container_qt.h"
 
 #include <QtWidgets/QVBoxLayout>
+#include <QtGui/QWheelEvent>
 
 extern const litehtml::tchar_t master_css[] = {
 #include "master.css.inc"
@@ -63,4 +64,35 @@ void QLiteHtmlBrowser::setHtml( const QString& html )
 void QLiteHtmlBrowser::loadStyleSheet()
 {
   mContainer->setCSS( mCSS );
+}
+
+void QLiteHtmlBrowser::setScale( double scale )
+{
+  if ( mContainer )
+  {
+    mContainer->setScale( scale );
+  }
+}
+
+double QLiteHtmlBrowser::scale() const
+{
+  double scale = 0.0;
+  if ( mContainer )
+  {
+    scale = mContainer->scale();
+  }
+  return scale;
+}
+
+void QLiteHtmlBrowser::wheelEvent( QWheelEvent* e )
+{
+  if ( mContainer && ( e->modifiers() & Qt::ControlModifier ) )
+  {
+    e->setAccepted( true );
+    float delta = e->angleDelta().y() / 120.f;
+    auto  scale = mContainer->scale();
+    scale += delta / 10.0; // get scaling in 10 percent steps;
+
+    mContainer->setScale( scale );
+  }
 }

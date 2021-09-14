@@ -9,12 +9,16 @@ class container_qt : public QAbstractScrollArea, protected litehtml::document_co
 public:
   container_qt( QWidget* parent = nullptr );
 
-  void setSource( const char* url );
-  void setHtml( const char* html );
-  void setCSS( const QString& css );
+  void   setSource( const char* url );
+  void   setHtml( const char* html );
+  void   setCSS( const QString& css );
+  void   setScale( double scale );
+  double scale() const { return mScale; }
 
 protected:
   void paintEvent( QPaintEvent* ) override;
+  void wheelEvent( QWheelEvent* ) override;
+  void keyPressEvent( QKeyEvent* ) override;
 
 protected:
   virtual litehtml::uint_ptr create_font(
@@ -49,13 +53,19 @@ protected:
   virtual void get_language( litehtml::tstring& language, litehtml::tstring& culture ) const;
 
 private:
-  void resetScrollBars();
+  void   resetScrollBars();
   QPoint scrollBarPos() const;
+  QSize  scaled( const QSize& size );
+  QRect  scaled( const QRect& rect );
+  QPoint scaled( const QPoint& point );
+  int    scaled( int i );
 
 private:
   std::shared_ptr<litehtml::document> mDocument;
   litehtml::context                   mContext;
   litehtml::tstring                   mBaseUrl;
-  int                                 mFontSize   = 12;
-  int                                 mZoomFactor = 1;
+  int                                 mFontSize = 12;
+  double                              mScale    = 1.0;
+  double                              mMinScale = 0.1;
+  double                              mMaxScale = 4.0;
 };

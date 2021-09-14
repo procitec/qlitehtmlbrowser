@@ -16,9 +16,13 @@ public:
   void setSource( const QUrl& name );
 
   // methods available in QTextBrowser
-  void setHtml( const QString& html );
+  void   setHtml( const QString& html );
+  void   setScale( double scale );
+  double scale() const;
 
 protected:
+  void wheelEvent( QWheelEvent* ) override;
+
   virtual void _setSource( const QUrl& name );
   //  void         resizeEvent( QResizeEvent* ) override;
   void loadStyleSheet();
