@@ -55,20 +55,21 @@ protected:
   virtual void get_language( litehtml::tstring& language, litehtml::tstring& culture ) const;
 
 private:
-  void       resetScrollBars();
-  QPoint     scrollBarPos() const;
-  QSize      scaled( const QSize& size );
-  QRect      scaled( const QRect& rect );
-  QPoint     scaled( const QPoint& point );
-  int        scaled( int i );
-  int        inv_scaled( int i );
-  QPixmap    load_image_data( const QUrl& url );
-  QPixmap    load_pixmap( const QUrl& url );
-  QUrl       resolveUrl( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl ) const;
-  QByteArray loadResource( const QUrl& url );
-  QString    findFile( const QUrl& name ) const;
-  void       render();
-  QColor     toColor( const litehtml::web_color& color ) const { return QColor( color.red, color.green, color.blue, color.alpha ); };
+  void         resetScrollBars();
+  QPoint       scrollBarPos() const;
+  QSize        scaled( const QSize& size );
+  QRect        scaled( const QRect& rect );
+  QPoint       scaled( const QPoint& point );
+  int          scaled( int i );
+  int          inv_scaled( int i );
+  QPixmap      load_image_data( const QUrl& url );
+  QPixmap      load_pixmap( const QUrl& url );
+  QUrl         resolveUrl( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl ) const;
+  QByteArray   loadResource( const QUrl& url );
+  QString      findFile( const QUrl& name ) const;
+  void         render();
+  QColor       toColor( const litehtml::web_color& color ) const { return QColor( color.red, color.green, color.blue, color.alpha ); };
+  Qt::PenStyle toPenStyle( const litehtml::border_style& style ) const;
 
 private:
   std::shared_ptr<litehtml::document> mDocument;
