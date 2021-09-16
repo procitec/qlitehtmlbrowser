@@ -25,13 +25,13 @@ QLiteHtmlBrowser* HTMLContentTest::createMainWindow( const QSize& size )
   return browser;
 }
 
-void HTMLContentTest::testCreation()
+void HTMLContentTest::test_creation()
 {
   createMainWindow( mBrowserSize );
   // QVERIFY( mWnd->centralWidget() );
 }
 
-void HTMLContentTest::testHtml_data()
+void HTMLContentTest::test_html_data()
 {
   QTest::addColumn<QString>( "html" );
   QTest::newRow( "Show a single line of text" ) << "<html><body>This is just text</body></html>";
@@ -51,29 +51,103 @@ void HTMLContentTest::testHtml_data()
 )-";
 }
 
-void HTMLContentTest::testHtml()
+void HTMLContentTest::test_html()
 {
   QFETCH( QString, html );
   auto browser = createMainWindow( mBrowserSize );
   browser->setHtml( html );
 }
 
-void HTMLContentTest::testHtml_Scroll_data()
+void HTMLContentTest::test_fonts_data()
 {
   QTest::addColumn<QString>( "html" );
-
-  auto    lines = 1000;
-  QString html  = QStringLiteral( "<html><body>" );
-  for ( auto line = 0; line < lines; line++ )
-  {
-    html += QString( "<p>This is line %1</p>" ).arg( line );
-  }
-  html += QStringLiteral( "</body></html>" );
-
-  QTest::newRow( QString( "Show %1 lines html with scroll bars" ).arg( lines ).toLocal8Bit().constData() ) << html.toLocal8Bit().constData();
+  QTest::newRow( "Show 2 lines of text" ) << R"-(
+  <!DOCTYPE html>
+  <html>
+  <head>
+  <title>Font Face</title>
+  </head>
+  <body>
+  <font face="Times New Roman" size="5" color="red">Times New Roman in red</font><br />
+  <font face="Verdana" size="5">Verdana</font><br />
+  <font face="Comic sans MS" size="5">Comic Sans MS</font><br />
+  <font face="WildWest" size="5" color="blue">WildWest in blue</font><br />
+  <font face="Bedrock" size="5">Bedrock</font><br />
+  </body>
+  </html>
+  )-";
 }
 
-void HTMLContentTest::testHtml_Scroll()
+void HTMLContentTest::test_fonts()
+{
+  QFETCH( QString, html );
+  auto browser = createMainWindow( mBrowserSize );
+  browser->setHtml( html );
+}
+
+void HTMLContentTest::test_lists_data()
+{
+  QTest::addColumn<QString>( "html" );
+  QTest::newRow( "unordered list" ) << R"-(
+  <html><body>
+    <ul>
+      <li>Coffee</li>
+      <li>Tea</li>
+      <li>Milk</li>
+    </ul>
+  </body></html>)-";
+  QTest::newRow( "ordered list" ) << R"-(
+  <html><body>
+  <ol>
+    <li>Coffee</li>
+    <li>Tea</li>
+    <li>Milk</li>
+  </ol> 
+  </body></html>)-";
+  QTest::newRow( "description list" ) << R"-(
+  <html><body>
+   <dl>
+    <dt>Coffee</dt>
+    <dd>- black hot drink</dd>
+    <dt>Milk</dt>
+    <dd>- white cold drink</dd>
+  </dl> 
+  </body></html>)-";
+  QTest::newRow( "ordered list uppercase Roman" ) << R"-(
+  <html><body>
+  <ol type="I">
+    <li>Coffee</li>
+    <li>Tea</li>
+    <li>Milk</li>
+  </ol> 
+  </body></html>)-";
+  QTest::newRow( "ordered list lowercase alphabet " ) << R"-(
+  <html><body>
+  <ol type="a">
+    <li>Coffee</li>
+    <li>Tea</li>
+    <li>Milk</li>
+  </ol> 
+  </body></html>)-";
+  QTest::newRow( "unordered list disc image " ) << R"-(
+  <html><body>
+  <ul style="list-style-type:disc">
+    <li>US</li>
+    <li>Australia</li>
+    <li>New Zealand</li>
+  </ul>
+  </body></html>)-";
+  QTest::newRow( "unordered list with string definition " ) << R"-(
+  <html><body>
+  <ul style="list-style-type:'ABC'">
+    <li>US</li>
+    <li>Australia</li>
+    <li>New Zealand</li>
+  </ul>
+  </body></html>)-";
+}
+
+void HTMLContentTest::test_lists()
 {
   QFETCH( QString, html );
   auto browser = createMainWindow( mBrowserSize );

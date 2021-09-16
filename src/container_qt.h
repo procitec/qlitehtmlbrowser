@@ -53,19 +53,24 @@ protected:
   virtual void get_language( litehtml::tstring& language, litehtml::tstring& culture ) const;
 
 private:
-  void   resetScrollBars();
-  QPoint scrollBarPos() const;
-  QSize  scaled( const QSize& size );
-  QRect  scaled( const QRect& rect );
-  QPoint scaled( const QPoint& point );
-  int    scaled( int i );
+  void       resetScrollBars();
+  QPoint     scrollBarPos() const;
+  QSize      scaled( const QSize& size );
+  QRect      scaled( const QRect& rect );
+  QPoint     scaled( const QPoint& point );
+  int        scaled( int i );
+  QPixmap    load_image( const std::string& url, const std::string& baseUrl );
+  QUrl       resolveUrl( const QUrl& url, const QUrl& baseUrl ) const;
+  QByteArray loadResource( const QUrl& url );
+  QString    findFile( const QUrl& name ) const;
 
 private:
   std::shared_ptr<litehtml::document> mDocument;
   litehtml::context                   mContext;
   litehtml::tstring                   mBaseUrl;
-  int                                 mFontSize = 12;
-  double                              mScale    = 1.0;
-  double                              mMinScale = 0.1;
-  double                              mMaxScale = 4.0;
+  int                                 mFontSize    = 12;
+  double                              mScale       = 1.0;
+  double                              mMinScale    = 0.1;
+  double                              mMaxScale    = 4.0;
+  QFont*                              mCurrentFont = nullptr;
 };

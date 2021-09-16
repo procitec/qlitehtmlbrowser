@@ -25,20 +25,20 @@ QLiteHtmlBrowser* HTMLCssTest::createMainWindow( const QSize& size )
   return browser;
 }
 
-void HTMLCssTest::testCSS_align_data()
+void HTMLCssTest::test_align_data()
 {
   QTest::addColumn<QString>( "html" );
   QTest::newRow( "Centered single line of text" ) << R"-(<html><body><p style = "text-align:center">This text should be centered</body></html>)-";
 }
 
-void HTMLCssTest::testCSS_align()
+void HTMLCssTest::test_align()
 {
   QFETCH( QString, html );
   auto browser = createMainWindow( mBrowserSize );
   browser->setHtml( html );
 }
 
-void HTMLCssTest::testCSS_font_data()
+void HTMLCssTest::test_font_data()
 {
   QTest::addColumn<QString>( "html" );
   QTest::newRow( "Red foreground color" ) << R"-(<html><body><p style="color:red">This should be red text.</p></body></html>)-";
@@ -59,7 +59,52 @@ void HTMLCssTest::testCSS_font_data()
     )-";
 }
 
-void HTMLCssTest::testCSS_font()
+void HTMLCssTest::test_font()
+{
+  QFETCH( QString, html );
+  auto browser = createMainWindow( mBrowserSize );
+  browser->setHtml( html );
+}
+
+void HTMLCssTest::test_lists_data()
+{
+  QTest::addColumn<QString>( "html" );
+  QTest::newRow( "unordered list disc image " ) << R"-(
+  <html><body>
+  <ul style="list-style-type:disc">
+    <li>US</li>
+    <li>Australia</li>
+    <li>New Zealand</li>
+  </ul>
+  </body></html>)-";
+  QTest::newRow( "unordered list circle image " ) << R"-(
+  <html><body>
+  <ul style="list-style-type:circle">
+    <li>US</li>
+    <li>Australia</li>
+    <li>New Zealand</li>
+  </ul>
+  </body></html>)-";
+  QTest::newRow( "unordered list with square definition " ) << R"-(
+  <html><body>
+  <ul style="list-style-type:square">
+    <li>US</li>
+    <li>Australia</li>
+    <li>New Zealand</li>
+  </ul>
+  </body></html>)-";
+
+  QTest::newRow( "ordered list armenien type " ) << R"-(
+  <html><body>
+  <ol style="list-style-type:armenian">
+    <li>Armenisch1</li>
+    <li>Armenisch2</li>
+    <li>Armenisch3</li>
+  </ol>
+  </body></html>)-";
+}
+
+void HTMLCssTest::test_lists()
 {
   QFETCH( QString, html );
   auto browser = createMainWindow( mBrowserSize );

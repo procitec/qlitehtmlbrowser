@@ -6,6 +6,9 @@
 #include <QtWidgets/QVBoxLayout>
 #include <QtGui/QPaintEvent>
 #include <QtWidgets/QScrollBar>
+#include <QtCore/QFileInfo>
+#include <QtCore/QDir>
+#include <QtCore/QDebug>
 
 #include <cmath>
 container_qt::container_qt( QWidget* parent )
@@ -119,6 +122,7 @@ litehtml::uint_ptr container_qt::create_font(
     fm->draw_spaces = true;
   }
 
+  mCurrentFont = font;
   return reinterpret_cast<litehtml::uint_ptr>( font );
 }
 void container_qt::delete_font( litehtml::uint_ptr hFont )
@@ -126,6 +130,14 @@ void container_qt::delete_font( litehtml::uint_ptr hFont )
   if ( hFont )
   {
     auto* font = reinterpret_cast<QFont*>( hFont );
+    if ( font == mCurrentFont )
+    {
+      mCurrentFont = nullptr;
+    }
+    else
+    {
+      qDebug() << "multiple fonts exists at the same time";
+    }
     delete font;
   }
 }
@@ -173,7 +185,169 @@ const litehtml::tchar_t* container_qt::get_default_font_name() const
   return "Courier New";
 #endif
 }
-void container_qt::draw_list_marker( litehtml::uint_ptr hdc, const litehtml::list_marker& marker ) {}
+void container_qt::draw_list_marker( litehtml::uint_ptr hdc, const litehtml::list_marker& marker )
+{
+  QPainter* p( reinterpret_cast<QPainter*>( hdc ) );
+
+  // does the marker contain an image?
+  if ( !marker.image.empty() )
+  {
+    auto image = load_image( marker.image, marker.baseurl );
+    p->drawPixmap( scaled( QRect( marker.pos.x, marker.pos.y, marker.pos.width, marker.pos.height ) ), image );
+  }
+  else
+  {
+    switch ( marker.marker_type )
+    {
+      case litehtml::list_style_type_none:
+        break;
+      case litehtml::list_style_type_circle:
+        p->setPen( QColor( marker.color.red, marker.color.green, marker.color.blue, marker.color.alpha ) );
+        p->setBrush( Qt::NoBrush );
+        p->drawEllipse( scaled( QRect( marker.pos.x, marker.pos.y, marker.pos.width, marker.pos.height ) ) );
+        break;
+      case litehtml::list_style_type_disc: // filled circle
+        p->setPen( QColor( marker.color.red, marker.color.green, marker.color.blue, marker.color.alpha ) );
+        p->setBrush( QColor( marker.color.red, marker.color.green, marker.color.blue, marker.color.alpha ) );
+        p->drawEllipse( scaled( QRect( marker.pos.x, marker.pos.y, marker.pos.width, marker.pos.height ) ) );
+        break;
+      case litehtml::list_style_type_square:
+        p->setPen( QColor( marker.color.red, marker.color.green, marker.color.blue, marker.color.alpha ) );
+        p->setBrush( QColor( marker.color.red, marker.color.green, marker.color.blue, marker.color.alpha ) );
+        p->drawRect( scaled( QRect( marker.pos.x, marker.pos.y, marker.pos.width, marker.pos.height ) ) );
+        break;
+      case litehtml::list_style_type_decimal:
+      case litehtml::list_style_type_decimal_leading_zero:
+      case litehtml::list_style_type_lower_alpha:
+      case litehtml::list_style_type_lower_greek:
+      case litehtml::list_style_type_lower_latin:
+      case litehtml::list_style_type_lower_roman:
+      case litehtml::list_style_type_upper_alpha:
+      case litehtml::list_style_type_upper_latin:
+      case litehtml::list_style_type_upper_roman:
+      {
+        // this is handled by get_list_marker_text in html_tag of litehtml
+      }
+      break;
+      case litehtml::list_style_type_georgian:
+      case litehtml::list_style_type_armenian:
+      case litehtml::list_style_type_cjk_ideographic:
+      case litehtml::list_style_type_hebrew:
+      case litehtml::list_style_type_hiragana:
+      case litehtml::list_style_type_hiragana_iroha:
+      case litehtml::list_style_type_katakana:
+      case litehtml::list_style_type_katakana_iroha:
+        // this is NOT handled by get_list_marker_text in html_tag of litehtml
+        // fallback strategy required.
+        // TODO: mapping of each index into map or calculcation
+        // e.g. from http://www.i18nguy.com/unicode/hebrew-numbers.html
+        {
+          auto* font = reinterpret_cast<QFont*>( marker.font );
+          p->setPen( QColor( marker.color.red, marker.color.green, marker.color.blue, marker.color.alpha ) );
+          p->setBrush( Qt::NoBrush );
+          p->setFont( *font );
+          auto text     = QString::fromStdString( std::to_string( marker.index ) + "." );
+          auto w        = text_width( ".", marker.font );
+          auto text_pos = marker.pos;
+          text_pos.move_to( marker.pos.left() - w, text_pos.y );
+          text_pos.width = marker.pos.width + w;
+          p->drawText( scaled( QRect( text_pos.x, text_pos.y, text_pos.width, text_pos.height ) ), 0, text );
+        }
+        break;
+    }
+  }
+}
+
+QPixmap container_qt::load_image( const std::string& url, const std::string& baseUrl )
+{
+  auto r_url = resolveUrl( QUrl( QString::fromStdString( url ) ), QUrl( QString::fromStdString( baseUrl ) ) );
+  auto pm    = QPixmap( loadResource( r_url ) );
+  return pm;
+}
+
+// hint: from QTextBrowser Private
+QUrl container_qt::resolveUrl( const QUrl& url, const QUrl& baseUrl ) const
+{
+  if ( !url.isRelative() )
+    return url;
+
+  // For the second case QUrl can merge "#someanchor" with "foo.html"
+  // correctly to "foo.html#someanchor"
+  // auto currentUrl = QUrl( QString::fromStdString( mBaseUrl ) );
+  if ( !( baseUrl.isRelative() || ( baseUrl.scheme() == QLatin1String( "file" ) && !QFileInfo( baseUrl.toLocalFile() ).isAbsolute() ) ) ||
+       ( url.hasFragment() && url.path().isEmpty() ) )
+  {
+    return baseUrl.resolved( url );
+  }
+
+  // this is our last resort when current url and new url are both relative
+  // we try to resolve against the current working directory in the local
+  // file system.
+  QFileInfo fi( baseUrl.toLocalFile() );
+  if ( fi.exists() )
+  {
+    return QUrl::fromLocalFile( fi.absolutePath() + QDir::separator() ).resolved( url );
+  }
+
+  return url;
+}
+
+QByteArray container_qt::loadResource( const QUrl& url )
+{
+  QByteArray data;
+  QString    fileName = findFile( resolveUrl( url, QUrl( QString::fromStdString( mBaseUrl ) ) ) );
+  if ( fileName.isEmpty() )
+    return QByteArray();
+  QFile f( fileName );
+  if ( f.open( QFile::ReadOnly ) )
+  {
+    data = f.readAll();
+    f.close();
+  }
+  else
+  {
+    return QByteArray();
+  }
+
+  return data;
+}
+
+QString container_qt::findFile( const QUrl& name ) const
+{
+  QString fileName;
+  if ( name.scheme() == QLatin1String( "qrc" ) )
+  {
+    fileName = QLatin1String( ":/" ) + name.path();
+  }
+  else if ( name.scheme().isEmpty() )
+  {
+    fileName = name.path();
+  }
+  else
+  {
+    fileName = name.toLocalFile();
+  }
+
+  if ( fileName.isEmpty() )
+    return fileName;
+
+  if ( QFileInfo( fileName ).isAbsolute() )
+    return fileName;
+
+  // TODO search paths relative to baseurl or document source
+
+  //  for ( QString path : qAsConst( searchPaths ) )
+  //  {
+  //    if ( !path.endsWith( QLatin1Char( '/' ) ) )
+  //      path.append( QLatin1Char( '/' ) );
+  //    path.append( fileName );
+  //    if ( QFileInfo( path ).isReadable() )
+  //      return path;
+  //  }
+
+  return fileName;
+}
+
 void container_qt::load_image( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl, bool redraw_on_ready ) {}
 void container_qt::get_image_size( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl, litehtml::size& sz ) {}
 void container_qt::draw_background( litehtml::uint_ptr hdc, const litehtml::background_paint& bg )
