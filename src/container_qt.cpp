@@ -274,7 +274,8 @@ void container_qt::draw_list_marker( litehtml::uint_ptr hdc, const litehtml::lis
 
 QPixmap container_qt::load_image_data( const QUrl& url )
 {
-  auto pm = QPixmap( loadResource( url ) );
+  QPixmap pm;
+  pm.loadFromData( loadResource( url ) );
   return pm;
 }
 
@@ -286,25 +287,26 @@ QUrl container_qt::resolveUrl( const litehtml::tchar_t* src, const litehtml::tch
   if ( !_url.isRelative() )
     return _url;
 
-  // For the second case QUrl can merge "#someanchor" with "foo.html"
-  // correctly to "foo.html#someanchor"
-  // auto currentUrl = QUrl( QString::fromStdString( mBaseUrl ) );
-  if ( !( _baseurl.isRelative() || ( _baseurl.scheme() == QLatin1String( "file" ) && !QFileInfo( _baseurl.toLocalFile() ).isAbsolute() ) ) ||
-       ( _url.hasFragment() && _url.path().isEmpty() ) )
+  QUrl resolved_url;
+
+  if ( !_baseurl.isEmpty() )
   {
-    return _baseurl.resolved( _url );
+    resolved_url = QUrl( _baseurl.toString() + "/" + _url.toString() );
+  }
+  else
+  {
+
+    // this is our last resort when current url and new url are both relative
+    // we try to resolve against the current working directory in the local
+    // file system.
+    QFileInfo fi( _baseurl.toLocalFile() );
+    if ( fi.exists() )
+    {
+      resolved_url = QUrl::fromLocalFile( fi.absolutePath() + QDir::separator() ).resolved( _url );
+    }
   }
 
-  // this is our last resort when current url and new url are both relative
-  // we try to resolve against the current working directory in the local
-  // file system.
-  QFileInfo fi( _baseurl.toLocalFile() );
-  if ( fi.exists() )
-  {
-    return QUrl::fromLocalFile( fi.absolutePath() + QDir::separator() ).resolved( _url );
-  }
-
-  return _url;
+  return resolved_url;
 }
 
 QByteArray container_qt::loadResource( const QUrl& url )

@@ -181,5 +181,6 @@ void HTMLContentTest::test_img()
 {
   QFETCH( QString, html );
   auto browser = createMainWindow( mBrowserSize );
+  browser->setBaseUrl( QDir::currentPath() );
   browser->setHtml( html );
 }
