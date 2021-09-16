@@ -14,6 +14,7 @@ public:
 
   void   setSource( const char* url );
   void   setHtml( const char* html );
+  void   setBaseUrl( const QString& baseurl );
   void   setCSS( const QString& css );
   void   setScale( double scale );
   double scale() const { return mScale; }
@@ -64,7 +65,7 @@ private:
   int        scaled( int i );
   QPixmap    load_image_data( const QUrl& url );
   QPixmap    load_pixmap( const QUrl& url );
-  QUrl       resolveUrl( const QUrl& url, const QUrl& baseUrl ) const;
+  QUrl       resolveUrl( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl ) const;
   QByteArray loadResource( const QUrl& url );
   QString    findFile( const QUrl& name ) const;
   void       render();
@@ -72,7 +73,7 @@ private:
 private:
   std::shared_ptr<litehtml::document> mDocument;
   litehtml::context                   mContext;
-  litehtml::tstring                   mBaseUrl;
+  QString                             mBaseUrl;
   int                                 mFontSize    = 12;
   double                              mScale       = 1.0;
   double                              mMinScale    = 0.1;

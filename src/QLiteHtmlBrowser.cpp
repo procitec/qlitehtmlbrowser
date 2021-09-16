@@ -61,6 +61,23 @@ void QLiteHtmlBrowser::setHtml( const QString& html )
   }
 }
 
+void QLiteHtmlBrowser::setBaseUrl( const QString& baseurl )
+{
+  if ( mContainer )
+  {
+    mContainer->setBaseUrl( baseurl );
+  }
+}
+
+// void QLiteHtmlBrowser::setUrl( const QUrl& url )
+//{
+//  if ( mContainer )
+//  {
+//    mContainer->setBaseDirectory( url.path() );
+//    mContainer->setHtml()
+//  }
+//}
+
 void QLiteHtmlBrowser::loadStyleSheet()
 {
   mContainer->setCSS( mCSS );

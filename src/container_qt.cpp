@@ -44,6 +44,10 @@ void container_qt::setHtml( const char* html )
     viewport()->update();
   }
 }
+void container_qt::setBaseUrl( const QString& baseurl )
+{
+  mBaseUrl = baseurl;
+}
 
 void container_qt::resetScrollBars()
 {
@@ -62,8 +66,11 @@ QPoint container_qt::scrollBarPos() const
 
 void container_qt::render()
 {
-  mDocument->render( scaled( this->viewport()->width() ) );
-  viewport()->update();
+  if ( mDocument )
+  {
+    mDocument->render( scaled( this->viewport()->width() ) );
+    viewport()->update();
+  }
 }
 
 void container_qt::paintEvent( QPaintEvent* event )
@@ -198,9 +205,9 @@ void container_qt::draw_list_marker( litehtml::uint_ptr hdc, const litehtml::lis
   // does the marker contain an image?
   if ( !marker.image.empty() )
   {
-    auto url   = resolveUrl( QString::fromStdString( marker.image ), QString::fromStdString( marker.baseurl ) );
+    auto url   = resolveUrl( marker.image.c_str(), marker.baseurl );
     auto image = load_pixmap( url );
-    p->drawPixmap( scaled( QRect( marker.pos.x, marker.pos.y, marker.pos.width, marker.pos.height ) ), image );
+    p->drawPixmap( /*scaled*/ ( QRect( marker.pos.x, marker.pos.y, marker.pos.width, marker.pos.height ) ), image );
   }
   else
   {
@@ -272,30 +279,32 @@ QPixmap container_qt::load_image_data( const QUrl& url )
 }
 
 // hint: from QTextBrowser Private
-QUrl container_qt::resolveUrl( const QUrl& url, const QUrl& baseUrl ) const
+QUrl container_qt::resolveUrl( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl ) const
 {
-  if ( !url.isRelative() )
-    return url;
+  QUrl _url     = ( src == nullptr ) ? QUrl() : QUrl( QString::fromStdString( src ) );
+  QUrl _baseurl = ( baseurl == nullptr ) ? QUrl( mBaseUrl ) : QUrl( QString::fromStdString( baseurl ) );
+  if ( !_url.isRelative() )
+    return _url;
 
   // For the second case QUrl can merge "#someanchor" with "foo.html"
   // correctly to "foo.html#someanchor"
   // auto currentUrl = QUrl( QString::fromStdString( mBaseUrl ) );
-  if ( !( baseUrl.isRelative() || ( baseUrl.scheme() == QLatin1String( "file" ) && !QFileInfo( baseUrl.toLocalFile() ).isAbsolute() ) ) ||
-       ( url.hasFragment() && url.path().isEmpty() ) )
+  if ( !( _baseurl.isRelative() || ( _baseurl.scheme() == QLatin1String( "file" ) && !QFileInfo( _baseurl.toLocalFile() ).isAbsolute() ) ) ||
+       ( _url.hasFragment() && _url.path().isEmpty() ) )
   {
-    return baseUrl.resolved( url );
+    return _baseurl.resolved( _url );
   }
 
   // this is our last resort when current url and new url are both relative
   // we try to resolve against the current working directory in the local
   // file system.
-  QFileInfo fi( baseUrl.toLocalFile() );
+  QFileInfo fi( _baseurl.toLocalFile() );
   if ( fi.exists() )
   {
-    return QUrl::fromLocalFile( fi.absolutePath() + QDir::separator() ).resolved( url );
+    return QUrl::fromLocalFile( fi.absolutePath() + QDir::separator() ).resolved( _url );
   }
 
-  return url;
+  return _url;
 }
 
 QByteArray container_qt::loadResource( const QUrl& url )
@@ -356,7 +365,7 @@ QString container_qt::findFile( const QUrl& name ) const
 
 void container_qt::load_image( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl, bool redraw_on_ready )
 {
-  auto url = resolveUrl( QString::fromUtf8( src ), QString::fromUtf8( baseurl ) );
+  auto url = resolveUrl( src, baseurl );
   if ( !mPixmapCache.contains( url ) )
   {
     auto image = load_image_data( url );
@@ -377,16 +386,17 @@ void container_qt::load_image( const litehtml::tchar_t* src, const litehtml::tch
 }
 QPixmap container_qt::load_pixmap( const QUrl& url )
 {
-  if ( mPixmapCache.contains( url ) )
+  if ( !url.isEmpty() && mPixmapCache.contains( url ) )
   {
     return mPixmapCache[url];
   }
+
   return QPixmap( ":/images/broken_link.png" );
 }
 
 void container_qt::get_image_size( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl, litehtml::size& sz )
 {
-  auto url = resolveUrl( QString::fromUtf8( src ), QString::fromUtf8( baseurl ) );
+  auto url = resolveUrl( src, baseurl );
   if ( !url.isEmpty() )
   {
     if ( mPixmapCache.contains( url ) )
@@ -406,7 +416,7 @@ void container_qt::draw_background( litehtml::uint_ptr hdc, const litehtml::back
   p->drawRect( bg.border_box.x, bg.border_box.y, bg.border_box.width, bg.border_box.height );
   if ( !bg.image.empty() )
   {
-    auto url = resolveUrl( QString::fromStdString( bg.image ), QString::fromStdString( bg.baseurl ) );
+    auto url = resolveUrl( bg.image.c_str(), bg.baseurl.c_str() );
     auto pm  = load_pixmap( url );
     switch ( bg.repeat )
     {
