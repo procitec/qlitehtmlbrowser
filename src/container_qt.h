@@ -12,9 +12,7 @@ class container_qt : public QAbstractScrollArea, protected litehtml::document_co
 public:
   container_qt( QWidget* parent = nullptr );
 
-  void   setSource( const char* url );
-  void   setHtml( const char* html );
-  void   setBaseUrl( const QString& baseurl );
+  void   setHtml( const QString& html, const QString& baseurl = QString() );
   void   setCSS( const QString& css );
   void   setScale( double scale );
   double scale() const { return mScale; }

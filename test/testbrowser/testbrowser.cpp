@@ -36,8 +36,7 @@ void TestBrowser::loadHtml( const QString& html_file )
   {
     auto html = f.readAll();
     f.close();
-    mBrowser->setBaseUrl( mLastDirectory.absolutePath() );
-    mBrowser->setHtml( html );
+    mBrowser->setHtml( html, mLastDirectory.absolutePath() );
 
     mBrowser->update();
     update();

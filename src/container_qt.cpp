@@ -29,24 +29,16 @@ void container_qt::setCSS( const QString& css )
   mContext.load_master_stylesheet( css.toUtf8().constData() );
 }
 
-void container_qt::setSource( const char* url )
+void container_qt::setHtml( const QString& html, const QString& baseurl )
 {
-  // mDocument = litehtml::document::createFromString( url, this, );
-}
-
-void container_qt::setHtml( const char* html )
-{
-  if ( html )
+  if ( !html.isEmpty() )
   {
-    mDocument = litehtml::document::createFromUTF8( html, this, &mContext );
+    mBaseUrl  = baseurl;
+    mDocument = litehtml::document::createFromUTF8( html.toUtf8(), this, &mContext );
     mDocument->render( this->viewport()->width(), litehtml::render_all );
     resetScrollBars();
     viewport()->update();
   }
-}
-void container_qt::setBaseUrl( const QString& baseurl )
-{
-  mBaseUrl = baseurl;
 }
 
 void container_qt::resetScrollBars()
@@ -283,7 +275,8 @@ QPixmap container_qt::load_image_data( const QUrl& url )
 QUrl container_qt::resolveUrl( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl ) const
 {
   QUrl _url     = ( src == nullptr ) ? QUrl() : QUrl( QString::fromStdString( src ) );
-  QUrl _baseurl = ( baseurl == nullptr ) ? QUrl( mBaseUrl ) : QUrl( QString::fromStdString( baseurl ) );
+  QUrl _baseurl = ( baseurl == nullptr || std::string( baseurl ).empty() ) ? QUrl( mBaseUrl ) : QUrl( QString::fromStdString( baseurl ) );
+
   if ( !_url.isRelative() )
     return _url;
 

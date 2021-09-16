@@ -38,7 +38,7 @@ QUrl QLiteHtmlBrowser::source() const
 {
   return mSource;
 }
-void QLiteHtmlBrowser::setSource( const QUrl& name )
+void QLiteHtmlBrowser::setUrl( const QUrl& name )
 {
   _setSource( name );
 }
@@ -48,24 +48,15 @@ void QLiteHtmlBrowser::_setSource( const QUrl& name )
   mSource = name;
   if ( mContainer )
   {
-    mContainer->setSource( name.toString().toUtf8().constData() );
-  }
-  // mContainer->set_base_url( name.toString().toStdString().c_str() );
-}
-
-void QLiteHtmlBrowser::setHtml( const QString& html )
-{
-  if ( mContainer )
-  {
-    mContainer->setHtml( html.toUtf8().constData() );
+    // get the content of the url and display the html
   }
 }
 
-void QLiteHtmlBrowser::setBaseUrl( const QString& baseurl )
+void QLiteHtmlBrowser::setHtml( const QString& html, const QString& baseurl )
 {
   if ( mContainer )
   {
-    mContainer->setBaseUrl( baseurl );
+    mContainer->setHtml( html, baseurl );
   }
 }
 
