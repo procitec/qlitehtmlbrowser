@@ -1,7 +1,10 @@
 #pragma once
 
 #include "litehtml.h"
+
 #include <QtWidgets/QAbstractScrollArea>
+#include <QtCore/QHash>
+#include <QtCore/QUrl>
 
 class container_qt : public QAbstractScrollArea, protected litehtml::document_container
 {
@@ -59,10 +62,12 @@ private:
   QRect      scaled( const QRect& rect );
   QPoint     scaled( const QPoint& point );
   int        scaled( int i );
-  QPixmap    load_image( const std::string& url, const std::string& baseUrl );
+  QPixmap    load_image_data( const QUrl& url );
+  QPixmap    load_pixmap( const QUrl& url );
   QUrl       resolveUrl( const QUrl& url, const QUrl& baseUrl ) const;
   QByteArray loadResource( const QUrl& url );
   QString    findFile( const QUrl& name ) const;
+  void       render();
 
 private:
   std::shared_ptr<litehtml::document> mDocument;
@@ -73,4 +78,5 @@ private:
   double                              mMinScale    = 0.1;
   double                              mMaxScale    = 4.0;
   QFont*                              mCurrentFont = nullptr;
+  QHash<QUrl, QPixmap>                mPixmapCache;
 };

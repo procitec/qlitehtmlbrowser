@@ -60,6 +60,12 @@ QPoint container_qt::scrollBarPos() const
   return { horizontalScrollBar()->value(), verticalScrollBar()->value() };
 }
 
+void container_qt::render()
+{
+  mDocument->render( scaled( this->viewport()->width() ) );
+  viewport()->update();
+}
+
 void container_qt::paintEvent( QPaintEvent* event )
 {
   if ( event )
@@ -192,7 +198,8 @@ void container_qt::draw_list_marker( litehtml::uint_ptr hdc, const litehtml::lis
   // does the marker contain an image?
   if ( !marker.image.empty() )
   {
-    auto image = load_image( marker.image, marker.baseurl );
+    auto url   = resolveUrl( QString::fromStdString( marker.image ), QString::fromStdString( marker.baseurl ) );
+    auto image = load_pixmap( url );
     p->drawPixmap( scaled( QRect( marker.pos.x, marker.pos.y, marker.pos.width, marker.pos.height ) ), image );
   }
   else
@@ -258,10 +265,9 @@ void container_qt::draw_list_marker( litehtml::uint_ptr hdc, const litehtml::lis
   }
 }
 
-QPixmap container_qt::load_image( const std::string& url, const std::string& baseUrl )
+QPixmap container_qt::load_image_data( const QUrl& url )
 {
-  auto r_url = resolveUrl( QUrl( QString::fromStdString( url ) ), QUrl( QString::fromStdString( baseUrl ) ) );
-  auto pm    = QPixmap( loadResource( r_url ) );
+  auto pm = QPixmap( loadResource( url ) );
   return pm;
 }
 
@@ -295,7 +301,7 @@ QUrl container_qt::resolveUrl( const QUrl& url, const QUrl& baseUrl ) const
 QByteArray container_qt::loadResource( const QUrl& url )
 {
   QByteArray data;
-  QString    fileName = findFile( resolveUrl( url, QUrl( QString::fromStdString( mBaseUrl ) ) ) );
+  QString    fileName = findFile( url );
   if ( fileName.isEmpty() )
     return QByteArray();
   QFile f( fileName );
@@ -348,14 +354,73 @@ QString container_qt::findFile( const QUrl& name ) const
   return fileName;
 }
 
-void container_qt::load_image( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl, bool redraw_on_ready ) {}
-void container_qt::get_image_size( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl, litehtml::size& sz ) {}
+void container_qt::load_image( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl, bool redraw_on_ready )
+{
+  auto url = resolveUrl( QString::fromUtf8( src ), QString::fromUtf8( baseurl ) );
+  if ( !mPixmapCache.contains( url ) )
+  {
+    auto image = load_image_data( url );
+    if ( !image.isNull() )
+    {
+      mPixmapCache.insert( url, image );
+    }
+    else
+    {
+      auto pm = QPixmap( ":/images/broken_link.png" );
+      mPixmapCache.insert( url, pm );
+    }
+  }
+  if ( redraw_on_ready )
+  {
+    render();
+  }
+}
+QPixmap container_qt::load_pixmap( const QUrl& url )
+{
+  if ( mPixmapCache.contains( url ) )
+  {
+    return mPixmapCache[url];
+  }
+  return QPixmap( ":/images/broken_link.png" );
+}
+
+void container_qt::get_image_size( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl, litehtml::size& sz )
+{
+  auto url = resolveUrl( QString::fromUtf8( src ), QString::fromUtf8( baseurl ) );
+  if ( !url.isEmpty() )
+  {
+    if ( mPixmapCache.contains( url ) )
+    {
+      const auto& pm = mPixmapCache[url];
+      sz.width       = pm.width();
+      sz.height      = pm.height();
+    }
+  }
+}
 void container_qt::draw_background( litehtml::uint_ptr hdc, const litehtml::background_paint& bg )
 {
   QPainter* p( reinterpret_cast<QPainter*>( hdc ) );
   p->save();
-  p->setBrush( Qt::green );
+  p->setPen( Qt::NoPen );
+  p->setBrush( QColor( bg.color.red, bg.color.green, bg.color.blue, bg.color.alpha ) );
   p->drawRect( bg.border_box.x, bg.border_box.y, bg.border_box.width, bg.border_box.height );
+  if ( !bg.image.empty() )
+  {
+    auto url = resolveUrl( QString::fromStdString( bg.image ), QString::fromStdString( bg.baseurl ) );
+    auto pm  = load_pixmap( url );
+    switch ( bg.repeat )
+    {
+      case litehtml::background_repeat_no_repeat:
+        p->drawPixmap( QRect( bg.position_x, bg.position_y, bg.image_size.width, bg.image_size.height ), pm );
+        break;
+
+      case litehtml::background_repeat_repeat:
+      case litehtml::background_repeat_repeat_x:
+      case litehtml::background_repeat_repeat_y:
+        // todo handlie this
+        break;
+    }
+  }
   p->restore();
 }
 void container_qt::draw_borders( litehtml::uint_ptr hdc, const litehtml::borders& borders, const litehtml::position& draw_pos, bool root ) {}

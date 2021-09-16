@@ -8,6 +8,7 @@
 int main( int argc, char** argv )
 {
   QApplication app( argc, argv );
+  Q_INIT_RESOURCE( QLiteHtmlBrowser );
 
   HTMLContentTest mContentTest;
   QTest::qExec( &mContentTest, mContentTest.args() );
@@ -148,6 +149,35 @@ void HTMLContentTest::test_lists_data()
 }
 
 void HTMLContentTest::test_lists()
+{
+  QFETCH( QString, html );
+  auto browser = createMainWindow( mBrowserSize );
+  browser->setHtml( html );
+}
+
+void HTMLContentTest::test_img_data()
+{
+  QTest::addColumn<QString>( "html" );
+  QTest::newRow( "invalid image" ) << R"-(
+  <!DOCTYPE html>
+  <html>
+  <body>
+  <img src="does_not_exist.png"/>
+  </body>
+  </html>
+  )-";
+
+  QTest::newRow( "Simple local image" ) << R"-(
+  <!DOCTYPE html>
+  <html>
+  <body>
+  <img src="images/16x16/arrow_up_green.png"/>
+  </body>
+  </html>
+  )-";
+}
+
+void HTMLContentTest::test_img()
 {
   QFETCH( QString, html );
   auto browser = createMainWindow( mBrowserSize );

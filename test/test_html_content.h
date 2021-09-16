@@ -28,6 +28,8 @@ private Q_SLOTS:
   void test_html();
   void test_fonts_data();
   void test_fonts();
+  void test_img_data();
+  void test_img();
 
 private:
   QLiteHtmlBrowser*            createMainWindow( const QSize& );

@@ -16,13 +16,15 @@ foreach( name ${test_names})
       PRIVATE
       ${name}.cpp
       ${name}.h
+      test_base.h
       ${${name}_mocs}
     )
     target_include_directories( ${name} PUBLIC ${PROJECT_SOURCE_DIR}/include/qlitehtmlbrowser)
 
     target_link_libraries(${name} PRIVATE QLiteHtmlBrowser Qt5::Widgets Qt5::Gui Qt5::Test )
 
-    add_test( NAME ${name} COMMAND ${name} )
+    add_test( NAME ${name} COMMAND ${name}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 endforeach()
 

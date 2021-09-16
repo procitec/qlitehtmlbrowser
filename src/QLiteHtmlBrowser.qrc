@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="images/broken_link.png">images/broken_link.png</file>
+    </qresource>
+</RCC>

@@ -1,4 +1,3 @@
-
 add_executable( testbrowser )
 
 qt5_wrap_cpp ( testbrowser_mocs
