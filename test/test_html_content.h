@@ -26,8 +26,8 @@ private Q_SLOTS:
   void test_lists();
   void test_html_data();
   void test_html();
-  void test_fonts_data();
-  void test_fonts();
+  //  void test_fonts_data();
+  //  void test_fonts();
   void test_img_data();
   void test_img();
 

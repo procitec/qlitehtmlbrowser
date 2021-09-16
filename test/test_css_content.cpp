@@ -39,7 +39,7 @@ void HTMLCssTest::test_align()
   browser->setHtml( html );
 }
 
-void HTMLCssTest::test_font_data()
+void HTMLCssTest::test_fonts_data()
 {
   QTest::addColumn<QString>( "html" );
   QTest::newRow( "Red foreground color" ) << R"-(<html><body><p style="color:red">This should be red text.</p></body></html>)-";
@@ -58,9 +58,40 @@ void HTMLCssTest::test_font_data()
       <p style="font-size:20px">This should be 20px text.</p>
     </body></html>
     )-";
+
+  QTest::newRow( "Font families" ) << R"-(
+    <html><body>
+      <p style="font-size:14px; font-family: Times">This should be 14px text times.</p>
+      <p style="font-size:14px; font-family: monospace">This should be 14px text monospace.</p>
+      <p style="font-size:14px; font-family: Helvetica">This should be 14px text helvetica.</p>
+      <p style="font-size:14px; font-family: Arial">This should be 14px text arial.</p>
+      <p style="font-size:14px; font-family: serif">This should be 14px text serif.</p>
+      <p style="font-size:14px; font-family: sans-serif">This should be 14px text sans-serif.</p>
+      <p style="font-size:14px; font-family: cursive">This should be 14px text cursive.</p>
+      <p style="font-size:14px; font-family: typewriter">This should be 14px text typewriter.</p>
+      <p style="font-size:14px; font-family: fantasy">This should be 14px text fantasy.</p>
+      <p style="font-size:14px; font-family: system">This should be 14px text system.</p>
+    </body></html>
+    )-";
+
+  /// @see https://www.w3schools.com/cssref/css_websafe_fonts.asp
+  QTest::newRow( "Font families recommended" ) << R"-(
+    <html><body>
+      <p style="font-size:14px; font-family: Arial">This should be 14px text Arial.</p>
+      <p style="font-size:14px; font-family: Verdana">This should be 14px text Verdana.</p>
+      <p style="font-size:14px; font-family: Helvetica">This should be 14px text Helvetica.</p>
+      <p style="font-size:14px; font-family: Tahoma">This should be 14px text Tahoma.</p>
+      <p style="font-size:14px; font-family: 'Trebuchet MS'">This should be 14px text Trebuchet.</p>
+      <p style="font-size:14px; font-family: 'Times New Roman'">This should be 14px text Times.</p>
+      <p style="font-size:14px; font-family: 'Georgia'">This should be 14px text Georgia.</p>
+      <p style="font-size:14px; font-family: 'Garamond'">This should be 14px text Garamond.</p>
+      <p style="font-size:14px; font-family: 'Courier New'">This should be 14px text Courier New.</p>
+      <p style="font-size:14px; font-family: 'Brush Script MT'">This should be 14px Brush.</p>
+    </body></html>
+    )-";
 }
 
-void HTMLCssTest::test_font()
+void HTMLCssTest::test_fonts()
 {
   QFETCH( QString, html );
   auto browser = createMainWindow( mBrowserSize );

@@ -9,6 +9,7 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QDir>
 #include <QtCore/QDebug>
+#include <QtCore/QRegularExpression>
 
 #include <cmath>
 container_qt::container_qt( QWidget* parent )
@@ -45,8 +46,8 @@ void container_qt::resetScrollBars()
 {
   horizontalScrollBar()->setValue( 0 );
   verticalScrollBar()->setValue( 0 );
-  horizontalScrollBar()->setMaximum( mDocument->width() );
-  verticalScrollBar()->setMaximum( mDocument->height() );
+  horizontalScrollBar()->setMaximum( inv_scaled( mDocument->width() ) );
+  verticalScrollBar()->setMaximum( inv_scaled( mDocument->height() ) );
   horizontalScrollBar()->setPageStep( ( viewport()->width() ) );
   verticalScrollBar()->setPageStep( ( viewport()->height() ) );
 }
@@ -94,7 +95,18 @@ litehtml::uint_ptr container_qt::create_font(
   const litehtml::tchar_t* faceName, int size, int weight, litehtml::font_style italic, unsigned int decoration, litehtml::font_metrics* fm )
 {
   auto* font = new QFont();
-  font->setFamily( "Monospace" );
+
+  litehtml::string_vector fonts;
+  litehtml::split_string( faceName, fonts, "," );
+  QStringList familyNames;
+
+  for ( const auto& f : fonts )
+  {
+    familyNames.append( QString::fromStdString( f ).trimmed().remove( QRegularExpression( R"-('")-" ) ) );
+  }
+
+  font->setFamilies( familyNames );
+  // font->setFamily( QString::fromStdString( fonts[0] ) );
   font->setFixedPitch( true );
   font->setPixelSize( size );
 
@@ -127,7 +139,6 @@ litehtml::uint_ptr container_qt::create_font(
     fm->draw_spaces = true;
   }
 
-  mCurrentFont = font;
   return reinterpret_cast<litehtml::uint_ptr>( font );
 }
 void container_qt::delete_font( litehtml::uint_ptr hFont )
@@ -135,14 +146,6 @@ void container_qt::delete_font( litehtml::uint_ptr hFont )
   if ( hFont )
   {
     auto* font = reinterpret_cast<QFont*>( hFont );
-    if ( font == mCurrentFont )
-    {
-      mCurrentFont = nullptr;
-    }
-    else
-    {
-      qDebug() << "multiple fonts exists at the same time";
-    }
     delete font;
   }
 }
@@ -466,6 +469,8 @@ std::shared_ptr<litehtml::element> container_qt::create_element( const litehtml:
 void container_qt::setScale( double scale )
 {
   mScale = scale < mMinScale ? mMinScale : scale > mMaxScale ? mMaxScale : scale;
+  resetScrollBars();
+  update();
   viewport()->update();
 }
 
@@ -547,4 +552,9 @@ QPoint container_qt::scaled( const QPoint& point )
 int container_qt::scaled( int i )
 {
   return std::floor( i / mScale );
+}
+
+int container_qt::inv_scaled( int i )
+{
+  return std::floor( i * mScale );
 }

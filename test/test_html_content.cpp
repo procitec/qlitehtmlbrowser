@@ -59,33 +59,6 @@ void HTMLContentTest::test_html()
   browser->setHtml( html );
 }
 
-void HTMLContentTest::test_fonts_data()
-{
-  QTest::addColumn<QString>( "html" );
-  QTest::newRow( "Show 2 lines of text" ) << R"-(
-  <!DOCTYPE html>
-  <html>
-  <head>
-  <title>Font Face</title>
-  </head>
-  <body>
-  <font face="Times New Roman" size="5" color="red">Times New Roman in red</font><br />
-  <font face="Verdana" size="5">Verdana</font><br />
-  <font face="Comic sans MS" size="5">Comic Sans MS</font><br />
-  <font face="WildWest" size="5" color="blue">WildWest in blue</font><br />
-  <font face="Bedrock" size="5">Bedrock</font><br />
-  </body>
-  </html>
-  )-";
-}
-
-void HTMLContentTest::test_fonts()
-{
-  QFETCH( QString, html );
-  auto browser = createMainWindow( mBrowserSize );
-  browser->setHtml( html );
-}
-
 void HTMLContentTest::test_lists_data()
 {
   QTest::addColumn<QString>( "html" );

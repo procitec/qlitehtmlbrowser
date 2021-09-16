@@ -61,6 +61,7 @@ private:
   QRect      scaled( const QRect& rect );
   QPoint     scaled( const QPoint& point );
   int        scaled( int i );
+  int        inv_scaled( int i );
   QPixmap    load_image_data( const QUrl& url );
   QPixmap    load_pixmap( const QUrl& url );
   QUrl       resolveUrl( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl ) const;
@@ -72,10 +73,9 @@ private:
   std::shared_ptr<litehtml::document> mDocument;
   litehtml::context                   mContext;
   QString                             mBaseUrl;
-  int                                 mFontSize    = 12;
-  double                              mScale       = 1.0;
-  double                              mMinScale    = 0.1;
-  double                              mMaxScale    = 4.0;
-  QFont*                              mCurrentFont = nullptr;
+  int                                 mFontSize = 12;
+  double                              mScale    = 1.0;
+  double                              mMinScale = 0.1;
+  double                              mMaxScale = 4.0;
   QHash<QUrl, QPixmap>                mPixmapCache;
 };
