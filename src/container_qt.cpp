@@ -204,17 +204,17 @@ void container_qt::draw_list_marker( litehtml::uint_ptr hdc, const litehtml::lis
       case litehtml::list_style_type_circle:
         p->setPen( QColor( marker.color.red, marker.color.green, marker.color.blue, marker.color.alpha ) );
         p->setBrush( Qt::NoBrush );
-        p->drawEllipse( scaled( QRect( marker.pos.x, marker.pos.y, marker.pos.width, marker.pos.height ) ) );
+        p->drawEllipse( /*scaled*/ ( QRect( marker.pos.x, marker.pos.y, marker.pos.width, marker.pos.height ) ) );
         break;
       case litehtml::list_style_type_disc: // filled circle
         p->setPen( QColor( marker.color.red, marker.color.green, marker.color.blue, marker.color.alpha ) );
         p->setBrush( QColor( marker.color.red, marker.color.green, marker.color.blue, marker.color.alpha ) );
-        p->drawEllipse( scaled( QRect( marker.pos.x, marker.pos.y, marker.pos.width, marker.pos.height ) ) );
+        p->drawEllipse( /*scaled*/ ( QRect( marker.pos.x, marker.pos.y, marker.pos.width, marker.pos.height ) ) );
         break;
       case litehtml::list_style_type_square:
         p->setPen( QColor( marker.color.red, marker.color.green, marker.color.blue, marker.color.alpha ) );
         p->setBrush( QColor( marker.color.red, marker.color.green, marker.color.blue, marker.color.alpha ) );
-        p->drawRect( scaled( QRect( marker.pos.x, marker.pos.y, marker.pos.width, marker.pos.height ) ) );
+        p->drawRect( /*scaled*/ ( QRect( marker.pos.x, marker.pos.y, marker.pos.width, marker.pos.height ) ) );
         break;
       case litehtml::list_style_type_decimal:
       case litehtml::list_style_type_decimal_leading_zero:
@@ -251,7 +251,7 @@ void container_qt::draw_list_marker( litehtml::uint_ptr hdc, const litehtml::lis
           auto text_pos = marker.pos;
           text_pos.move_to( marker.pos.left() - w, text_pos.y );
           text_pos.width = marker.pos.width + w;
-          p->drawText( scaled( QRect( text_pos.x, text_pos.y, text_pos.width, text_pos.height ) ), 0, text );
+          p->drawText( /*scaled*/ ( QRect( text_pos.x, text_pos.y, text_pos.width, text_pos.height ) ), 0, text );
         }
         break;
     }
