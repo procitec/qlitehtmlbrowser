@@ -68,6 +68,7 @@ private:
   QByteArray loadResource( const QUrl& url );
   QString    findFile( const QUrl& name ) const;
   void       render();
+  QColor     toColor( const litehtml::web_color& color ) const { return QColor( color.red, color.green, color.blue, color.alpha ); };
 
 private:
   std::shared_ptr<litehtml::document> mDocument;
