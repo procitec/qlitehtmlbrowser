@@ -660,7 +660,15 @@ void container_qt::link( const std::shared_ptr<litehtml::document>& doc, const l
 void container_qt::on_anchor_click( const litehtml::tchar_t* url, const litehtml::element::ptr& el ) {}
 void container_qt::set_cursor( const litehtml::tchar_t* cursor ) {}
 void container_qt::transform_text( litehtml::tstring& text, litehtml::text_transform tt ) {}
-void container_qt::import_css( litehtml::tstring& text, const litehtml::tstring& url, litehtml::tstring& baseurl ) {}
+void container_qt::import_css( litehtml::tstring& text, const litehtml::tstring& url, litehtml::tstring& baseurl )
+{
+  auto resolved_url = resolveUrl( url.c_str(), baseurl.c_str() );
+  auto content      = loadResource( resolved_url );
+  if ( !content.isEmpty() )
+  {
+    text = QString::fromUtf8( content.constData() ).toStdString();
+  }
+}
 void container_qt::set_clip( const litehtml::position& pos, const litehtml::border_radiuses& brd_radius, bool valid_x, bool valid_y ) {}
 void container_qt::del_clip() {}
 
