@@ -5,6 +5,7 @@
 #include <QtGui/QWheelEvent>
 #include <QtCore/QDir>
 #include <QtCore/QDebug>
+#include <QtGui/QPalette>
 
 extern const litehtml::tchar_t master_css[] = {
 #include "master.css.inc"
@@ -30,9 +31,12 @@ QLiteHtmlBrowser::QLiteHtmlBrowser( QWidget* parent )
 
   setLayout( layout );
 
+  // autodetect stylesheet due to lightness of default palette
+  //  auto lightness = QPalette().color( QPalette::Window ).lightnessF();
+  //  bool dark_mode = ( lightness > 0.5 ) ? false : true;
+
   mCSS = QString::fromUtf8( master_css_x );
   loadStyleSheet();
-  setMouseTracking( true );
 }
 
 // void QLiteHtmlBrowser::resizeEvent( QResizeEvent* ev )
@@ -61,7 +65,7 @@ void QLiteHtmlBrowser::_setSource( const QUrl& url )
     auto pure_url = QUrl( url );
     pure_url.setFragment( {} );
     QString html;
-    QString workingDirectory;
+    QString baseUrl;
 
     if ( pure_url.isLocalFile() )
     {
@@ -72,7 +76,7 @@ void QLiteHtmlBrowser::_setSource( const QUrl& url )
       {
         html = f.readAll();
         f.close();
-        workingDirectory = QDir( f.fileName() ).absolutePath();
+        baseUrl = pure_url.adjusted( QUrl::RemoveFilename ).toString();
       }
     }
     else
@@ -85,7 +89,7 @@ void QLiteHtmlBrowser::_setSource( const QUrl& url )
     {
       mUrl = pure_url;
       mUrl.setFragment( fragment );
-      mContainer->setHtml( html, workingDirectory );
+      mContainer->setHtml( html, baseUrl );
       if ( !fragment.isEmpty() )
       {
         mContainer->scrollToAnchor( fragment );

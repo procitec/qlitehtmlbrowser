@@ -216,3 +216,35 @@ void HTMLContentTest::test_tables()
   auto browser = createMainWindow( mBrowserSize );
   browser->setHtml( html );
 }
+void HTMLContentTest::test_qstyles_data()
+{
+  /// https://www.w3schools.com/html/html_tables.asp
+  QTest::addColumn<QString>( "html" );
+  QTest::addColumn<QString>( "style" );
+  QString fixed_html = R"-(
+<!DOCTYPE html>
+<html><body>
+<h1>Header One</h1>
+<p>This is the text</p>
+</body></html>)-";
+
+  // QTest::newRow( "Normal without qstyle " ) << fixed_html << QString( R"-()-" );
+  QTest::newRow( "QWidget with darkmode " ) << fixed_html << QString( R"-(
+QWidget {
+  background-color: #19232D;
+  border: 0px solid #32414B;
+  padding: 0px;
+  color: #F0F0F0;
+  selection-background-color: #1464A0;
+  selection-color: #F0F0F0;
+})-" );
+}
+
+void HTMLContentTest::test_qstyles()
+{
+  QFETCH( QString, html );
+  QFETCH( QString, style );
+  auto browser = createMainWindow( mBrowserSize );
+  browser->setStyleSheet( style );
+  browser->setHtml( html );
+}

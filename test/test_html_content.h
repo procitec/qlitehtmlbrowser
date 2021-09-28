@@ -32,6 +32,8 @@ private Q_SLOTS:
   void test_img();
   void test_tables_data();
   void test_tables();
+  void test_qstyles_data();
+  void test_qstyles();
 
 private:
   QLiteHtmlBrowser*            createMainWindow( const QSize& );
