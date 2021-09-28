@@ -1,5 +1,6 @@
 #include "testbrowser.h"
 #include <QtWidgets/QFileDialog>
+#include <QtWidgets/QLineEdit>
 #include <QtCore/QFileInfo>
 
 TestBrowser::TestBrowser()
@@ -9,16 +10,29 @@ TestBrowser::TestBrowser()
   setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
   setMinimumSize( { 1024, 768 } );
   mBrowser->show();
-  mLoadAction.setText( tr( "Open File" ) );
-  mExitAction.setText( tr( "Quit" ) );
-  connect( &mLoadAction, &QAction::triggered, this, &TestBrowser::openHtml );
-  connect( &mExitAction, &QAction::triggered, this, [this]() { close(); } );
 
   auto file_menu = mMenu.addMenu( "File" );
-  file_menu->addAction( &mLoadAction );
-  file_menu->addAction( &mExitAction );
+
+  auto action = new QAction( this );
+  action->setText( tr( "Open File" ) );
+  file_menu->addAction( action );
+  connect( action, &QAction::triggered, this, &TestBrowser::openHtml );
+  action = new QAction( this );
+  action->setText( tr( "Quit" ) );
+  file_menu->addAction( action );
+  connect( action, &QAction::triggered, this, [this]() { close(); } );
+
+  mUrl = new QLineEdit( this );
+  mToolBar.addWidget( mUrl );
+  connect( mUrl, &QLineEdit::editingFinished, this, [this]() { loadHtml( mUrl->text() ); } );
+  connect( mBrowser, &QLiteHtmlBrowser::urlChanged, mUrl, [this]( const QUrl& url ) {
+    mUrl->blockSignals( true );
+    mUrl->setText( url.toString() );
+    mUrl->blockSignals( false );
+  } );
 
   setMenuBar( &mMenu );
+  addToolBar( Qt::TopToolBarArea, &mToolBar );
   mLastDirectory = QDir::current();
 }
 
@@ -29,17 +43,22 @@ TestBrowser::~TestBrowser()
 }
 void TestBrowser::loadHtml( const QString& html_file )
 {
-  QFileInfo fi( html_file );
-  mLastDirectory.setPath( fi.absoluteDir().absolutePath() );
-  QFile f( html_file );
-  if ( f.open( QIODevice::ReadOnly ) )
+  if ( !html_file.isEmpty() )
   {
-    auto html = f.readAll();
-    f.close();
-    mBrowser->setHtml( html, mLastDirectory.absolutePath() );
+    QFileInfo fi( html_file );
+    mLastDirectory.setPath( fi.absoluteDir().absolutePath() );
+    //  QFile f( html_file );
+    //  if ( f.open( QIODevice::ReadOnly ) )
+    //  {
+    //    auto html = f.readAll();
+    //    f.close();
+    //    mBrowser->setHtml( html, mLastDirectory.absolutePath() );
 
-    mBrowser->update();
-    update();
+    //    mBrowser->update();
+    //    update();
+    //  }
+    auto url = QUrl::fromUserInput( html_file );
+    mBrowser->setUrl( url );
   }
 }
 
@@ -50,5 +69,6 @@ void TestBrowser::openHtml()
   if ( !fileName.isEmpty() )
   {
     loadHtml( fileName );
+    mUrl->setText( mBrowser->url().toString() );
   }
 }

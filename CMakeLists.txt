@@ -13,6 +13,8 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
     endif()
 endif()
 
+set( CMAKE_CXX_STANDARD 17 )
+
 find_package( Qt5 COMPONENTS Widgets Gui Test Core Svg REQUIRED)
 
 include( CTest )

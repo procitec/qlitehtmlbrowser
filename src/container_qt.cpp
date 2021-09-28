@@ -574,6 +574,48 @@ void container_qt::draw_borders( litehtml::uint_ptr hdc, const litehtml::borders
   p->restore();
 }
 
+void container_qt::scrollToAnchor( const QString& anchor )
+{
+  auto [x, y] = findAnchorPos( anchor );
+  horizontalScrollBar()->setValue( x );
+  verticalScrollBar()->setValue( y );
+}
+
+litehtml::element::ptr container_qt::findAnchor( const QString& anchor )
+{
+  litehtml::element::ptr element = nullptr;
+  if ( mDocument )
+  {
+    ///@see https://github.com/litehtml/litehtml/wiki/How-to-use-litehtml#processing-named-anchors
+
+    element = mDocument->root()->select_one( QString( "#%1" ).arg( anchor ).toStdString() );
+    /// @see https://de.wikipedia.org/wiki/Anker_(HTML)
+    if ( !element ) // no anchor in form of site.html#Anchor found
+    {
+      element = mDocument->root()->select_one( QString( "[id=%1]" ).arg( anchor ).toStdString() );
+    }
+    if ( !element ) // no anchor in form of id= found
+    {
+      element = mDocument->root()->select_one( QString( "[name=%1]" ).arg( anchor ).toStdString() );
+    }
+  }
+
+  return element;
+}
+
+std::pair<int, int> container_qt::findAnchorPos( const QString& anchor )
+{
+  std::pair<int, int> pos     = { 0, 0 };
+  auto                element = findAnchor( anchor );
+  if ( element )
+  {
+    ///@see https://github.com/litehtml/litehtml/wiki/How-to-use-litehtml#processing-named-anchors
+    /// example there with placement instead of position
+    pos = { element->get_placement().x, element->get_placement().y };
+  }
+  return pos;
+}
+
 void container_qt::set_caption( const litehtml::tchar_t* caption ) {}
 
 void container_qt::set_base_url( const litehtml::tchar_t* base_url )
@@ -582,7 +624,31 @@ void container_qt::set_base_url( const litehtml::tchar_t* base_url )
 }
 
 void container_qt::link( const std::shared_ptr<litehtml::document>& doc, const litehtml::element::ptr& el ) {}
-void container_qt::on_anchor_click( const litehtml::tchar_t* url, const litehtml::element::ptr& el ) {}
+void container_qt::on_anchor_click( const litehtml::tchar_t* url, const litehtml::element::ptr& el )
+{
+  if ( mDocument )
+  {
+    auto resolved_url = resolveUrl( url, nullptr );
+    if ( resolved_url.hasFragment() )
+    {
+      auto frag     = resolved_url.fragment();
+      auto pure_url = resolved_url;
+      pure_url.setFragment( {} );
+      if ( pure_url.path() == mBaseUrl )
+      {
+        if ( !frag.isEmpty() )
+        {
+          scrollToAnchor( frag );
+        }
+      }
+      else
+      {
+        // not the same document!
+        emit anchorClicked( resolved_url );
+      }
+    }
+  }
+}
 void container_qt::set_cursor( const litehtml::tchar_t* cursor ) {}
 void container_qt::transform_text( litehtml::tstring& text, litehtml::text_transform tt ) {}
 void container_qt::import_css( litehtml::tstring& text, const litehtml::tstring& url, litehtml::tstring& baseurl )

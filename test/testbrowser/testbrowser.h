@@ -3,6 +3,8 @@
 #include "QLiteHtmlBrowser.h"
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenuBar>
+#include <QtWidgets/QToolBar>
+#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QAction>
 #include <QtCore/QDir>
 
@@ -30,7 +32,7 @@ protected:
 private:
   QLiteHtmlBrowser* mBrowser;
   QMenuBar          mMenu;
-  QAction           mLoadAction;
-  QAction           mExitAction;
   QDir              mLastDirectory;
+  QLineEdit*        mUrl = nullptr;
+  QToolBar          mToolBar;
 };

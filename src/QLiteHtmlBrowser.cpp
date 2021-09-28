@@ -3,6 +3,8 @@
 
 #include <QtWidgets/QVBoxLayout>
 #include <QtGui/QWheelEvent>
+#include <QtCore/QDir>
+#include <QtCore/QDebug>
 
 extern const litehtml::tchar_t master_css[] = {
 #include "master.css.inc"
@@ -16,6 +18,10 @@ QLiteHtmlBrowser::QLiteHtmlBrowser( QWidget* parent )
   setMinimumSize( 200, 200 );
   setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
   mContainer = new container_qt( this );
+  connect( mContainer, &container_qt::anchorClicked, this, [this]( const QUrl& url ) {
+    setUrl( url );
+    emit urlChanged( url );
+  } );
   mContainer->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
   mContainer->show();
 
@@ -26,6 +32,7 @@ QLiteHtmlBrowser::QLiteHtmlBrowser( QWidget* parent )
 
   mCSS = QString::fromUtf8( master_css_x );
   loadStyleSheet();
+  setMouseTracking( true );
 }
 
 // void QLiteHtmlBrowser::resizeEvent( QResizeEvent* ev )
@@ -45,12 +52,46 @@ void QLiteHtmlBrowser::setUrl( const QUrl& name )
   _setSource( name );
 }
 
-void QLiteHtmlBrowser::_setSource( const QUrl& name )
+void QLiteHtmlBrowser::_setSource( const QUrl& url )
 {
-  mSource = name;
+  mSource = url;
   if ( mContainer )
   {
-    // get the content of the url and display the html
+    auto fragment = url.fragment();
+    auto pure_url = QUrl( url );
+    pure_url.setFragment( {} );
+    QString html;
+    QString workingDirectory;
+
+    if ( pure_url.isLocalFile() )
+    {
+      // get the content of the url and display the html
+
+      QFile f( pure_url.toLocalFile() );
+      if ( f.open( QIODevice::ReadOnly ) )
+      {
+        html = f.readAll();
+        f.close();
+        workingDirectory = QDir( f.fileName() ).absolutePath();
+      }
+    }
+    else
+    {
+      // todo
+      qWarning() << "url scheme is not supported: " << url.toString();
+    }
+
+    if ( !html.isEmpty() )
+    {
+      mUrl = pure_url;
+      mUrl.setFragment( fragment );
+      mContainer->setHtml( html, workingDirectory );
+      if ( !fragment.isEmpty() )
+      {
+        mContainer->scrollToAnchor( fragment );
+      }
+      update();
+    }
   }
 }
 

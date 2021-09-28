@@ -19,8 +19,9 @@ public:
   /// for the given html code to resolve file system dependencies
   void setHtml( const QString& html, const QString& baseurl = QString() );
 
-  void   setScale( double scale );
-  double scale() const;
+  void        setScale( double scale );
+  double      scale() const;
+  const QUrl& url() const { return mUrl; }
 
 protected:
   void wheelEvent( QWheelEvent* ) override;
@@ -29,8 +30,12 @@ protected:
   //  void         resizeEvent( QResizeEvent* ) override;
   void loadStyleSheet();
 
+Q_SIGNALS:
+  void urlChanged( const QUrl& );
+
 private:
   container_qt* mContainer = nullptr;
   QUrl          mSource;
   QString       mCSS;
+  QUrl          mUrl;
 };
