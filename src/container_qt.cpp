@@ -502,30 +502,45 @@ void container_qt::draw_borders( litehtml::uint_ptr hdc, const litehtml::borders
 
     if ( r_left )
     {
-      double end_angle   = M_PI * 3.0 / 2.0;
-      double start_angle = end_angle - M_PI / 2.0 / ( (double)brd_left / (double)brd_top + 1 );
-
-      //      add_path_arc( cr, draw_pos.left() + r_left, draw_pos.top() + r_left, r_left, r_left, end_angle, start_angle, true );
-
-      //      add_path_arc( cr, draw_pos.left() + r_left, draw_pos.top() + r_left, r_left - brd_top + ( brd_top - brd_left ), r_left - brd_top,
-      //      start_angle,
-      //                    end_angle, false );
+      p->drawArc( draw_pos.left(), draw_pos.top(), 2 * r_left, 2 * borders.radius.top_left_y, 90 * 16, 90 * 16 );
     }
 
-    p->drawLine( QPoint( draw_pos.left(), draw_pos.top() ), QPoint( draw_pos.right() - brd_left, draw_pos.top() /*+ brd_top*/ ) );
+    p->drawLine( QPoint( draw_pos.left() + r_left, draw_pos.top() ), QPoint( draw_pos.right() - r_right - brd_right, draw_pos.top() /*+ brd_top*/ ) );
 
     if ( r_right )
     {
-      //      cairo_line_to( cr, draw_pos.right() - r_right, draw_pos.top() + brd_top );
-
-      double start_angle = M_PI * 3.0 / 2.0;
-      double end_angle   = start_angle + M_PI / 2.0 / ( (double)brd_right / (double)brd_top + 1 );
-
-      //      add_path_arc( cr, draw_pos.right() - r_right, draw_pos.top() + r_right, r_right - brd_top + ( brd_top - brd_right ), r_right - brd_top,
-      //                    start_angle, end_angle, false );
-
-      //      add_path_arc( cr, draw_pos.right() - r_right, draw_pos.top() + r_right, r_right, r_right, end_angle, start_angle, true );
+      p->drawArc( draw_pos.right() - brd_right - 2 * r_right, draw_pos.top(), 2 * r_right, 2 * borders.radius.top_right_y, 0 * 16, 90 * 16 );
     }
+  }
+
+  if ( brd_left )
+  {
+    QPen pen( toColor( borders.left.color ) );
+    pen.setWidth( brd_left );
+    pen.setStyle( toPenStyle( borders.left.style ) );
+
+    p->setPen( pen );
+
+    double r_top    = borders.radius.top_left_x;
+    double r_bottom = borders.radius.bottom_left_x;
+
+    p->drawLine( QPoint( draw_pos.left() /* + brd_left*/, draw_pos.top() /*+ brd_top*/ + r_top ),
+                 QPoint( draw_pos.left() /*+ brd_left*/, draw_pos.bottom() - brd_bottom - r_bottom ) );
+  }
+
+  // draw right border
+  if ( brd_right )
+  {
+    QPen pen( toColor( borders.right.color ) );
+    pen.setWidth( brd_right );
+    pen.setStyle( toPenStyle( borders.right.style ) );
+    p->setPen( pen );
+
+    double r_top    = borders.radius.top_right_x;
+    double r_bottom = borders.radius.bottom_right_x;
+
+    p->drawLine( QPoint( draw_pos.right() - brd_right, draw_pos.top() /* + brd_top*/ + r_top ),
+                 QPoint( draw_pos.right() - brd_right, draw_pos.bottom() - brd_bottom - r_bottom ) );
   }
 
   // draw bottom border
@@ -542,109 +557,19 @@ void container_qt::draw_borders( litehtml::uint_ptr hdc, const litehtml::borders
 
     if ( r_left )
     {
-      double start_angle = M_PI / 2.0;
-      double end_angle   = start_angle + M_PI / 2.0 / ( (double)brd_left / (double)brd_bottom + 1 );
-
-      //      add_path_arc( cr, draw_pos.left() + r_left, draw_pos.bottom() - r_left, r_left - brd_bottom + ( brd_bottom - brd_left ), r_left -
-      //      brd_bottom,
-      //                    start_angle, end_angle, false );
-
-      //      add_path_arc( cr, draw_pos.left() + r_left, draw_pos.bottom() - r_left, r_left, r_left, end_angle, start_angle, true );
+      p->drawArc( draw_pos.left(), draw_pos.bottom() - brd_bottom - 2 * borders.radius.bottom_left_y, 2 * r_left, 2 * borders.radius.bottom_left_y,
+                  180 * 16, 90 * 16 );
     }
-    p->drawLine( QPoint( draw_pos.left(), draw_pos.bottom() - brd_bottom ), QPoint( draw_pos.right(), draw_pos.bottom() - brd_bottom ) );
+
+    p->drawLine( QPoint( draw_pos.left() + r_left, draw_pos.bottom() - brd_bottom ),
+                 QPoint( draw_pos.right() - brd_right - r_right, draw_pos.bottom() - brd_bottom ) );
 
     if ( r_right )
     {
-      //      cairo_line_to( cr, draw_pos.right() - r_right, draw_pos.bottom() );
-
-      //      double end_angle   = M_PI / 2.0;
-      //      double start_angle = end_angle - M_PI / 2.0 / ( (double)brd_right / (double)brd_bottom + 1 );
-
-      //      add_path_arc( cr, draw_pos.right() - r_right, draw_pos.bottom() - r_right, r_right, r_right, end_angle, start_angle, true );
-
-      //      add_path_arc( cr, draw_pos.right() - r_right, draw_pos.bottom() - r_right, r_right - brd_bottom + ( brd_bottom - brd_right ),
-      //                    r_right - brd_bottom, start_angle, end_angle, false );
+      p->drawArc( draw_pos.right() - brd_right - 2 * r_right, draw_pos.bottom() - brd_bottom - 2 * borders.radius.bottom_right_y, 2 * r_right,
+                  2 * borders.radius.bottom_right_y, 270 * 16, 90 * 16 );
     }
   }
-
-  if ( brd_left )
-  {
-    QPen pen( toColor( borders.left.color ) );
-    pen.setWidth( brd_left );
-    pen.setStyle( toPenStyle( borders.left.style ) );
-
-    p->setPen( pen );
-
-    double r_top    = borders.radius.top_left_x;
-    double r_bottom = borders.radius.bottom_left_x;
-
-    if ( r_top )
-    {
-      double start_angle = M_PI;
-      double end_angle   = start_angle + M_PI / 2.0 / ( (double)brd_top / (double)brd_left + 1 );
-
-      //      add_path_arc( cr, draw_pos.left() + r_top, draw_pos.top() + r_top, r_top - brd_left, r_top - brd_left + ( brd_left - brd_top ),
-      //      start_angle,
-      //                    end_angle, false );
-
-      //      add_path_arc( cr, draw_pos.left() + r_top, draw_pos.top() + r_top, r_top, r_top, end_angle, start_angle, true );
-    }
-
-    p->drawLine( QPoint( draw_pos.left() /* + brd_left*/, draw_pos.top() /*+ brd_top*/ ),
-                 QPoint( draw_pos.left() /*+ brd_left*/, draw_pos.bottom() - brd_bottom ) );
-
-    if ( r_bottom )
-    {
-      //      cairo_line_to( cr, draw_pos.left(), draw_pos.bottom() - r_bottom );
-
-      double end_angle   = M_PI;
-      double start_angle = end_angle - M_PI / 2.0 / ( (double)brd_bottom / (double)brd_left + 1 );
-
-      //      add_path_arc( cr, draw_pos.left() + r_bottom, draw_pos.bottom() - r_bottom, r_bottom, r_bottom, end_angle, start_angle, true );
-
-      //      add_path_arc( cr, draw_pos.left() + r_bottom, draw_pos.bottom() - r_bottom, r_bottom - brd_left,
-      //                    r_bottom - brd_left + ( brd_left - brd_bottom ), start_angle, end_angle, false );
-    }
-  }
-
-  // draw right border
-  if ( brd_right )
-  {
-    QPen pen( toColor( borders.right.color ) );
-    pen.setWidth( brd_right );
-    pen.setStyle( toPenStyle( borders.right.style ) );
-    p->setPen( pen );
-
-    double r_top    = borders.radius.top_right_x;
-    double r_bottom = borders.radius.bottom_right_x;
-
-    if ( r_top )
-    {
-      double end_angle   = 2 * M_PI;
-      double start_angle = end_angle - M_PI / 2.0 / ( (double)brd_top / (double)brd_right + 1 );
-      // p->drawArc( draw_pos.right() - r_top, draw_pos.top() + r_top, r_top - brd_right, r_top - brd_right + ( brd_right - brd_top ), end_angle,
-      //            start_angle );
-
-      //  p->drawArc( draw_pos.right() - r_top, draw_pos.top() + r_top, r_top, r_top, start_angle, end_angle );
-    }
-    p->drawLine( QPoint( draw_pos.right() /*- brd_right*/, draw_pos.top() /* + brd_top*/ ),
-                 QPoint( draw_pos.right(), draw_pos.bottom() - brd_bottom ) );
-
-    if ( r_bottom )
-    {
-      //          cairo_line_to( cr, draw_pos.right(), draw_pos.bottom() - r_bottom );
-
-      //          double start_angle = 0;
-      //          double end_angle   = start_angle + M_PI / 2.0 / ( (double)brd_bottom / (double)brd_right + 1 );
-
-      //          add_path_arc( cr, draw_pos.right() - r_bottom, draw_pos.bottom() - r_bottom, r_bottom, r_bottom, start_angle, end_angle, false );
-
-      //          add_path_arc( cr, draw_pos.right() - r_bottom, draw_pos.bottom() - r_bottom, r_bottom - brd_right,
-      //                        r_bottom - brd_right + ( brd_right - brd_bottom ), end_angle, start_angle, true );
-    }
-  }
-
-  // draw left border
 
   p->restore();
 }

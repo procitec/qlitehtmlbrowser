@@ -6,7 +6,9 @@
 
 extern const litehtml::tchar_t master_css[] = {
 #include "master.css.inc"
-  , 0 };
+};
+
+QByteArray master_css_x = { master_css };
 
 QLiteHtmlBrowser::QLiteHtmlBrowser( QWidget* parent )
   : QWidget( parent )
@@ -22,7 +24,7 @@ QLiteHtmlBrowser::QLiteHtmlBrowser( QWidget* parent )
 
   setLayout( layout );
 
-  mCSS = master_css;
+  mCSS = QString::fromUtf8( master_css_x );
   loadStyleSheet();
 }
 
