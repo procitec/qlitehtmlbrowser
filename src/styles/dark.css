@@ -1,0 +1,4 @@
+html, body {
+    background-color: @QPalette::Window@;
+    color: @QPalette::Text@;
+}

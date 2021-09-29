@@ -24,11 +24,17 @@ TestBrowser::TestBrowser()
 
   mUrl = new QLineEdit( this );
   mToolBar.addWidget( mUrl );
-  connect( mUrl, &QLineEdit::editingFinished, this, [this]() { loadHtml( mUrl->text() ); } );
+  connect( mUrl, &QLineEdit::editingFinished, this, [this]() {
+    if ( mUrl )
+      loadHtml( mUrl->text() );
+  } );
   connect( mBrowser, &QLiteHtmlBrowser::urlChanged, mUrl, [this]( const QUrl& url ) {
-    mUrl->blockSignals( true );
-    mUrl->setText( url.toString() );
-    mUrl->blockSignals( false );
+    if ( mUrl )
+    {
+      mUrl->blockSignals( true );
+      mUrl->setText( url.toString() );
+      mUrl->blockSignals( false );
+    }
   } );
 
   setMenuBar( &mMenu );
@@ -36,11 +42,8 @@ TestBrowser::TestBrowser()
   mLastDirectory = QDir::current();
 }
 
-TestBrowser::~TestBrowser()
-{
-  delete mBrowser;
-  mBrowser = nullptr;
-}
+TestBrowser::~TestBrowser() {}
+
 void TestBrowser::loadHtml( const QString& html_file )
 {
   if ( !html_file.isEmpty() )
@@ -58,7 +61,10 @@ void TestBrowser::loadHtml( const QString& html_file )
     //    update();
     //  }
     auto url = QUrl::fromUserInput( html_file );
-    mBrowser->setUrl( url );
+    if ( mBrowser )
+    {
+      mBrowser->setUrl( url );
+    }
   }
 }
 

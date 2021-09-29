@@ -25,6 +25,7 @@ public:
 
 protected:
   void wheelEvent( QWheelEvent* ) override;
+  void changeEvent( QEvent* ) override;
 
   virtual void _setSource( const QUrl& name );
   //  void         resizeEvent( QResizeEvent* ) override;

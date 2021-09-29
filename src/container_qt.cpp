@@ -10,6 +10,7 @@
 #include <QtCore/QDir>
 #include <QtCore/QDebug>
 #include <QtCore/QRegularExpression>
+#include <QtGui/QPalette>
 
 #include <cmath>
 container_qt::container_qt( QWidget* parent )
@@ -23,11 +24,13 @@ container_qt::container_qt( QWidget* parent )
 
   //  layout->addWidget( new QPushButton( "text" ) );
   //  setLayout( layout );
+  setMouseTracking( true );
 }
 
 void container_qt::setCSS( const QString& css )
 {
   mContext.load_master_stylesheet( css.toUtf8().constData() );
+  render();
 }
 
 void container_qt::setHtml( const QString& html, const QString& baseurl )
@@ -168,7 +171,11 @@ void container_qt::draw_text(
   QFont*    f = reinterpret_cast<QFont*>( hFont );
   p->save();
   p->setFont( *f );
-  p->setPen( QColor( color.red, color.green, color.blue, color.alpha ) );
+  auto web_color = toColor( color );
+  // todo: how to handle darkmode
+  //  auto widget_color = QPalette().color( QPalette::Text );
+  //  auto widget_bg_color = QPalette().color( QPalette::Window );
+  p->setPen( web_color );
   //  litehtml::position clientPos;
   //  get_client_rect( clientPos );
   //  QRect rect;

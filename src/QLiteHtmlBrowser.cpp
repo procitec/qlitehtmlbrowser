@@ -6,6 +6,8 @@
 #include <QtCore/QDir>
 #include <QtCore/QDebug>
 #include <QtGui/QPalette>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QStyle>
 
 extern const litehtml::tchar_t master_css[] = {
 #include "master.css.inc"
@@ -31,12 +33,32 @@ QLiteHtmlBrowser::QLiteHtmlBrowser( QWidget* parent )
 
   setLayout( layout );
 
-  // autodetect stylesheet due to lightness of default palette
-  //  auto lightness = QPalette().color( QPalette::Window ).lightnessF();
-  //  bool dark_mode = ( lightness > 0.5 ) ? false : true;
-
   mCSS = QString::fromUtf8( master_css_x );
   loadStyleSheet();
+}
+
+void QLiteHtmlBrowser::changeEvent( QEvent* e )
+{
+  QWidget::changeEvent( e );
+  if ( e && e->type() == QEvent::PaletteChange )
+  {
+    auto lightness = this->palette().color( QPalette::Window ).lightnessF();
+    bool dark_mode = ( lightness > 0.5 ) ? false : true;
+    if ( dark_mode )
+    {
+      mCSS = QString::fromUtf8( master_css_x );
+      QFile dark_css( ":/styles/dark.css" );
+      dark_css.open( QIODevice::ReadOnly );
+      if ( dark_css.isOpen() )
+      {
+        auto css = QString::fromUtf8( dark_css.readAll() );
+        css.replace( "@QPalette::Window@", palette().color( QPalette::Window ).name() );
+        css.replace( "@QPalette::Text@", palette().color( QPalette::Text ).name() );
+        mCSS += css;
+        loadStyleSheet();
+      }
+    }
+  }
 }
 
 // void QLiteHtmlBrowser::resizeEvent( QResizeEvent* ev )

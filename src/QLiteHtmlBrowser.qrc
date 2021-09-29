@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file alias="images/broken_link.png">images/broken_link.png</file>
+        <file alias="styles/dark.css">styles/dark.css</file>
     </qresource>
 </RCC>

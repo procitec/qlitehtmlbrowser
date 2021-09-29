@@ -244,7 +244,7 @@ void HTMLContentTest::test_qstyles()
 {
   QFETCH( QString, html );
   QFETCH( QString, style );
+  qApp->setStyleSheet( style );
   auto browser = createMainWindow( mBrowserSize );
-  browser->setStyleSheet( style );
   browser->setHtml( html );
 }
