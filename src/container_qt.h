@@ -22,6 +22,9 @@ protected:
   void paintEvent( QPaintEvent* ) override;
   void wheelEvent( QWheelEvent* ) override;
   void keyPressEvent( QKeyEvent* ) override;
+  void mouseMoveEvent( QMouseEvent* ) override;
+  void mouseReleaseEvent( QMouseEvent* ) override;
+  void mousePressEvent( QMouseEvent* ) override;
 
 Q_SIGNALS:
   void anchorClicked( const QUrl& );
@@ -55,8 +58,9 @@ protected:
   virtual std::shared_ptr<litehtml::element>
   create_element( const litehtml::tchar_t* tag_name, const litehtml::string_map& attributes, const std::shared_ptr<litehtml::document>& doc );
 
-  virtual void get_media_features( litehtml::media_features& media ) const;
-  virtual void get_language( litehtml::tstring& language, litehtml::tstring& culture ) const;
+  virtual void       get_media_features( litehtml::media_features& media ) const;
+  virtual void       get_language( litehtml::tstring& language, litehtml::tstring& culture ) const;
+  virtual QByteArray loadResource( const QUrl& url );
 
 private:
   void                   resetScrollBars();
@@ -69,7 +73,6 @@ private:
   QPixmap                load_image_data( const QUrl& url );
   QPixmap                load_pixmap( const QUrl& url );
   QUrl                   resolveUrl( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl ) const;
-  QByteArray             loadResource( const QUrl& url );
   QString                findFile( const QUrl& name ) const;
   void                   render();
   QColor                 toColor( const litehtml::web_color& color ) const { return QColor( color.red, color.green, color.blue, color.alpha ); };
@@ -80,7 +83,7 @@ private:
 private:
   std::shared_ptr<litehtml::document> mDocument;
   litehtml::context                   mContext;
-  QString                             mBaseUrl;
+  QUrl                                mBaseUrl;
   int                                 mFontSize = 12;
   double                              mScale    = 1.0;
   double                              mMinScale = 0.1;

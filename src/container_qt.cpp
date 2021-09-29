@@ -37,7 +37,9 @@ void container_qt::setHtml( const QString& html, const QString& baseurl )
 {
   if ( !html.isEmpty() )
   {
-    mBaseUrl  = baseurl;
+    auto url = QUrl( baseurl );
+    url.setFragment( {} );
+    mBaseUrl  = url;
     mDocument = litehtml::document::createFromUTF8( html.toUtf8(), this, &mContext );
     mDocument->render( this->viewport()->width(), litehtml::render_all );
     resetScrollBars();
@@ -285,7 +287,7 @@ QPixmap container_qt::load_image_data( const QUrl& url )
 QUrl container_qt::resolveUrl( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl ) const
 {
   QUrl _url     = ( src == nullptr ) ? QUrl() : QUrl( QString::fromStdString( src ) );
-  QUrl _baseurl = ( baseurl == nullptr || std::string( baseurl ).empty() ) ? QUrl( mBaseUrl ) : QUrl( QString::fromStdString( baseurl ) );
+  QUrl _baseurl = ( baseurl == nullptr || std::string( baseurl ).empty() ) ? mBaseUrl : QUrl( QString::fromStdString( baseurl ) );
 
   if ( !_url.isRelative() )
     return _url;
@@ -294,7 +296,7 @@ QUrl container_qt::resolveUrl( const litehtml::tchar_t* src, const litehtml::tch
 
   if ( !_baseurl.isEmpty() )
   {
-    resolved_url = QUrl( _baseurl.toString() + "/" + _url.toString() );
+    resolved_url = QUrl( _baseurl.toString() + ( _baseurl.path().endsWith( "/" ) ? "" : "/" ) + _url.toString() );
   }
   else
   {
@@ -315,18 +317,25 @@ QUrl container_qt::resolveUrl( const litehtml::tchar_t* src, const litehtml::tch
 QByteArray container_qt::loadResource( const QUrl& url )
 {
   QByteArray data;
-  QString    fileName = findFile( url );
-  if ( fileName.isEmpty() )
-    return QByteArray();
-  QFile f( fileName );
-  if ( f.open( QFile::ReadOnly ) )
+  if ( url.scheme() == "qthelp" )
   {
-    data = f.readAll();
-    f.close();
+    // load from help engine, must be implemented in a derived class
   }
   else
   {
-    return QByteArray();
+    QString fileName = findFile( url );
+    if ( fileName.isEmpty() )
+      return QByteArray();
+    QFile f( fileName );
+    if ( f.open( QFile::ReadOnly ) )
+    {
+      data = f.readAll();
+      f.close();
+    }
+    else
+    {
+      return QByteArray();
+    }
   }
 
   return data;
@@ -335,11 +344,7 @@ QByteArray container_qt::loadResource( const QUrl& url )
 QString container_qt::findFile( const QUrl& name ) const
 {
   QString fileName;
-  if ( name.scheme() == QLatin1String( "qrc" ) )
-  {
-    fileName = QLatin1String( ":/" ) + name.path();
-  }
-  else if ( name.scheme().isEmpty() )
+  if ( name.scheme().isEmpty() )
   {
     fileName = name.path();
   }
@@ -627,6 +632,8 @@ void container_qt::set_caption( const litehtml::tchar_t* caption ) {}
 
 void container_qt::set_base_url( const litehtml::tchar_t* base_url )
 {
+  auto url = QUrl( base_url );
+  url.setFragment( {} );
   mBaseUrl = base_url;
 }
 
@@ -635,28 +642,34 @@ void container_qt::on_anchor_click( const litehtml::tchar_t* url, const litehtml
 {
   if ( mDocument )
   {
-    auto resolved_url = resolveUrl( url, nullptr );
-    if ( resolved_url.hasFragment() )
+    auto url_str = QString( url );
+    if ( url_str.startsWith( "#" ) )
     {
-      auto frag     = resolved_url.fragment();
-      auto pure_url = resolved_url;
-      pure_url.setFragment( {} );
-      if ( pure_url.path() == mBaseUrl )
-      {
-        if ( !frag.isEmpty() )
-        {
-          scrollToAnchor( frag );
-        }
-      }
-      else
-      {
-        // not the same document!
-        emit anchorClicked( resolved_url );
-      }
+      assert( std::string( el->get_attr( "class", "" ) ) == std::string( "reference internal" ) );
+      scrollToAnchor( url_str.remove( 0, 1 ) );
+    }
+    else
+    {
+      auto resolved_url = resolveUrl( url, nullptr );
+      emit anchorClicked( resolved_url );
     }
   }
 }
-void container_qt::set_cursor( const litehtml::tchar_t* cursor ) {}
+void container_qt::set_cursor( const litehtml::tchar_t* cursor )
+{
+  // todo
+  /// @see https://www.w3schools.com/cssref/pr_class_cursor.asp
+  ///
+  /// manually switch to cursor type from string
+
+  auto c = Qt::ArrowCursor;
+
+  if ( cursor == QLatin1String( "pointer" ) )
+  {
+    c = Qt::PointingHandCursor;
+  }
+  viewport()->setCursor( c );
+}
 void container_qt::transform_text( litehtml::tstring& text, litehtml::text_transform tt ) {}
 void container_qt::import_css( litehtml::tstring& text, const litehtml::tstring& url, litehtml::tstring& baseurl )
 {
@@ -779,4 +792,53 @@ int container_qt::scaled( int i )
 int container_qt::inv_scaled( int i )
 {
   return std::floor( i * mScale );
+}
+
+void container_qt::mouseMoveEvent( QMouseEvent* e )
+{
+
+  if ( e && mDocument )
+  {
+    auto                       client_pos = scrollBarPos();
+    auto                       mouse_pos  = mapFromGlobal( e->globalPos() );
+    litehtml::position::vector redraw_boxes;
+    if ( mDocument->on_mouse_over( mouse_pos.x() + client_pos.x(), mouse_pos.y() + client_pos.y(), client_pos.x(), client_pos.y(), redraw_boxes ) )
+    {
+      // something changed, redraw of boxes required;
+    }
+    //  bool litehtml::document::on_mouse_leave( position::vector& redraw_boxes );
+  }
+}
+void container_qt::mouseReleaseEvent( QMouseEvent* e )
+{
+  if ( e && mDocument )
+  {
+    if ( Qt::LeftButton == e->button() )
+    {
+      auto                       client_pos = scrollBarPos();
+      auto                       mouse_pos  = mapFromGlobal( e->globalPos() );
+      litehtml::position::vector redraw_boxes;
+      if ( mDocument->on_lbutton_up( mouse_pos.x() + client_pos.x(), mouse_pos.y() + client_pos.y(), client_pos.x(), client_pos.y(), redraw_boxes ) )
+      {
+        // something changed, redraw of boxes required;
+      }
+    }
+  }
+}
+void container_qt::mousePressEvent( QMouseEvent* e )
+{
+  if ( e && mDocument )
+  {
+    if ( Qt::LeftButton == e->button() )
+    {
+      auto                       client_pos = scrollBarPos();
+      auto                       mouse_pos  = mapFromGlobal( e->globalPos() );
+      litehtml::position::vector redraw_boxes;
+      if ( mDocument->on_lbutton_down( mouse_pos.x() + client_pos.x(), mouse_pos.y() + client_pos.y(), client_pos.x(), client_pos.y(),
+                                       redraw_boxes ) )
+      {
+        // something changed, redraw of boxes required;
+      }
+    }
+  }
 }

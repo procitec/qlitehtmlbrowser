@@ -25,6 +25,7 @@ QLiteHtmlBrowser::QLiteHtmlBrowser( QWidget* parent )
     setUrl( url );
     emit urlChanged( url );
   } );
+
   mContainer->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
   mContainer->show();
 
@@ -103,8 +104,9 @@ void QLiteHtmlBrowser::_setSource( const QUrl& url )
     }
     else
     {
-      // todo
-      qWarning() << "url scheme is not supported: " << url.toString();
+      // eg. if ( url.scheme() == "qthelp" )
+      html    = loadResource( url );
+      baseUrl = pure_url.adjusted( QUrl::RemoveFilename ).toString();
     }
 
     if ( !html.isEmpty() )
