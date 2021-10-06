@@ -21,6 +21,7 @@ include( CTest )
 enable_testing()
 
 add_subdirectory( foreign )
+#add_subdirectory( include )
 add_subdirectory( src )
 
 add_subdirectory( test )
