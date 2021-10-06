@@ -11,6 +11,7 @@ QLiteHtmlBrowser Library
    :caption: Contents:
 
    Usage
+   API
    RTR
 
 

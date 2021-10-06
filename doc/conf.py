@@ -12,7 +12,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
+import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
@@ -40,6 +40,8 @@ release = ''
 # ones.
 extensions = ["sphinxcontrib.needs"
             , 'sphinx.ext.autosectionlabel'
+            , 'sphinx.ext.ifconfig'
+            , 'breathe'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -58,3 +60,11 @@ html_theme = 'alabaster'
 html_static_path = ['_static']
 
 needs_id_length = 5
+
+doxygen_build_dir = f"{os.getcwd()}/_build/xml"
+
+if os.path.isdir(doxygen_build_dir):
+    breathe_projects = { "QLiteHtmlBrowser": doxygen_build_dir }
+    breathe_default_project = "QLiteHtmlBrowser"
+else:
+    raise Exception(f"required {doxygen_build_dir} not generated, first run build process")
