@@ -19,10 +19,6 @@ public:
   /// without any parent.
   QLiteHtmlBrowser( QWidget* parent = nullptr );
 
-  /// return the URL which was explicitly set by setUrl
-  /// @see setUrl
-  QUrl source() const;
-
   /// set URL to given url. The URL may be an url to local file, qthelp, http etc.
   /// The URL could contain an anchor element. Currenlty parameters to URL like
   /// '?name=value are not explicitly supported.

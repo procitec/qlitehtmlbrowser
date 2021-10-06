@@ -31,6 +31,9 @@ QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
     },
     Qt::QueuedConnection );
 
+  connect(
+    mContainer, &container_qt::urlChanged, this, [this]( const QUrl& url ) { emit urlChanged( url ); }, Qt::QueuedConnection );
+
   mContainer->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
   mContainer->show();
 
@@ -83,25 +86,15 @@ void QLiteHtmlBrowserImpl::changeEvent( QEvent* e )
 //  }
 //}
 
-QUrl QLiteHtmlBrowserImpl::source() const
+void QLiteHtmlBrowserImpl::setUrl( const QUrl& url )
 {
-  return mSource;
-}
-void QLiteHtmlBrowserImpl::setUrl( const QUrl& name )
-{
-  setSource( name );
-}
-
-void QLiteHtmlBrowserImpl::setSource( const QUrl& url )
-{
-  mSource = url;
+  mUrl = url;
   if ( mContainer )
   {
     auto fragment = url.fragment();
     auto pure_url = QUrl( url );
     pure_url.setFragment( {} );
     QString html;
-    QString baseUrl;
 
     if ( pure_url.isLocalFile() )
     {
@@ -112,35 +105,27 @@ void QLiteHtmlBrowserImpl::setSource( const QUrl& url )
       {
         html = f.readAll();
         f.close();
-        baseUrl = pure_url.adjusted( QUrl::RemoveFilename ).toString();
       }
     }
     else
     {
       // eg. if ( url.scheme() == "qthelp" )
-      html    = mResourceHandler( url );
-      baseUrl = pure_url.adjusted( QUrl::RemoveFilename ).toString();
+      html = mResourceHandler( url );
     }
 
     if ( !html.isEmpty() )
     {
-      mUrl = pure_url;
-      mUrl.setFragment( fragment );
-      mContainer->setHtml( html, baseUrl );
-      if ( !fragment.isEmpty() )
-      {
-        mContainer->scrollToAnchor( fragment );
-      }
+      mContainer->setHtml( html, url );
       update();
     }
   }
 }
 
-void QLiteHtmlBrowserImpl::setHtml( const QString& html, const QString& baseurl )
+void QLiteHtmlBrowserImpl::setHtml( const QString& html, const QUrl& source_url )
 {
   if ( mContainer )
   {
-    mContainer->setHtml( html, baseurl );
+    mContainer->setHtml( html, source_url );
   }
 }
 

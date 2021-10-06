@@ -19,14 +19,11 @@ public:
   QLiteHtmlBrowserImpl( QWidget* parent = nullptr );
   virtual ~QLiteHtmlBrowserImpl();
 
-  QUrl source() const;
-
   void        setUrl( const QUrl& url );
-  void        setHtml( const QString& html, const QString& baseurl = QString() );
+  void        setHtml( const QString& html, const QUrl& source_url = {} );
   void        setScale( double scale );
   double      scale() const;
   const QUrl& url() const { return mUrl; }
-  void        setSource( const QUrl& name );
   void        loadStyleSheet();
   void        setResourceHandler( const std::function<QByteArray( QUrl )>& rh );
 

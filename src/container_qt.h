@@ -12,7 +12,7 @@ class container_qt : public QAbstractScrollArea, protected litehtml::document_co
 public:
   container_qt( QWidget* parent = nullptr );
 
-  void   setHtml( const QString& html, const QString& baseurl = QString() );
+  void   setHtml( const QString& html, const QUrl& source_url = {} );
   void   setCSS( const QString& css );
   void   setScale( double scale );
   double scale() const { return mScale; }
@@ -30,6 +30,7 @@ protected:
 
 Q_SIGNALS:
   void anchorClicked( const QUrl& );
+  void urlChanged( const QUrl& );
 
 protected:
   virtual litehtml::uint_ptr create_font(
@@ -86,6 +87,7 @@ private:
   std::shared_ptr<litehtml::document>      mDocument;
   litehtml::context                        mContext;
   QUrl                                     mBaseUrl;
+  QUrl                                     mSourceUrl;
   int                                      mFontSize = 12;
   double                                   mScale    = 1.0;
   double                                   mMinScale = 0.1;

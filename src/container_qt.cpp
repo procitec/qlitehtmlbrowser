@@ -33,17 +33,23 @@ void container_qt::setCSS( const QString& css )
   render();
 }
 
-void container_qt::setHtml( const QString& html, const QString& baseurl )
+void container_qt::setHtml( const QString& html, const QUrl& source_url )
 {
   if ( !html.isEmpty() )
   {
-    auto url = QUrl( baseurl );
-    url.setFragment( {} );
-    mBaseUrl  = url;
-    mDocument = litehtml::document::createFromUTF8( html.toUtf8(), this, &mContext );
+    auto pure_url = source_url;
+    pure_url.setFragment( {} );
+    mBaseUrl   = pure_url.adjusted( QUrl::RemoveFilename );
+    mSourceUrl = pure_url;
+    mDocument  = litehtml::document::createFromUTF8( html.toUtf8(), this, &mContext );
     mDocument->render( this->viewport()->width(), litehtml::render_all );
     resetScrollBars();
     viewport()->update();
+    auto frag = source_url.fragment();
+    if ( !frag.isEmpty() )
+    {
+      scrollToAnchor( frag );
+    }
   }
 }
 
@@ -646,7 +652,14 @@ void container_qt::on_anchor_click( const litehtml::tchar_t* url, const litehtml
     if ( url_str.startsWith( "#" ) )
     {
       // assert( std::string( el->get_attr( "class", "" ) ) == std::string( "reference internal" ) );
-      scrollToAnchor( url_str.remove( 0, 1 ) );
+      auto frag = url_str.remove( 0, 1 );
+      if ( mSourceUrl.isValid() )
+      {
+        auto anchor_url = mSourceUrl;
+        anchor_url.setFragment( frag );
+        emit urlChanged( anchor_url );
+      }
+      scrollToAnchor( frag );
     }
     else
     {
