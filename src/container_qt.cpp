@@ -55,6 +55,10 @@ void container_qt::resetScrollBars()
   verticalScrollBar()->setMaximum( inv_scaled( mDocument->height() ) );
   horizontalScrollBar()->setPageStep( ( viewport()->width() ) );
   verticalScrollBar()->setPageStep( ( viewport()->height() ) );
+
+  const QFontMetrics _fm( this->font() );
+  horizontalScrollBar()->setSingleStep( _fm.averageCharWidth() );
+  verticalScrollBar()->setSingleStep( _fm.height() );
 }
 
 QPoint container_qt::scrollBarPos() const
