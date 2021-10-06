@@ -18,6 +18,8 @@ public:
   double scale() const { return mScale; }
   void   scrollToAnchor( const QString& anchor );
 
+  void setResourceHandler( const std::function<QByteArray( const QUrl& )>& rh ) { mResourceHandler = rh; };
+
 protected:
   void paintEvent( QPaintEvent* ) override;
   void wheelEvent( QWheelEvent* ) override;
@@ -81,12 +83,13 @@ private:
   litehtml::element::ptr findAnchor( const QString& anchor );
 
 private:
-  std::shared_ptr<litehtml::document> mDocument;
-  litehtml::context                   mContext;
-  QUrl                                mBaseUrl;
-  int                                 mFontSize = 12;
-  double                              mScale    = 1.0;
-  double                              mMinScale = 0.1;
-  double                              mMaxScale = 4.0;
-  QHash<QUrl, QPixmap>                mPixmapCache;
+  std::shared_ptr<litehtml::document>      mDocument;
+  litehtml::context                        mContext;
+  QUrl                                     mBaseUrl;
+  int                                      mFontSize = 12;
+  double                                   mScale    = 1.0;
+  double                                   mMinScale = 0.1;
+  double                                   mMaxScale = 4.0;
+  QHash<QUrl, QPixmap>                     mPixmapCache;
+  std::function<QByteArray( const QUrl& )> mResourceHandler;
 };

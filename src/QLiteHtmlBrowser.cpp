@@ -9,6 +9,8 @@
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QStyle>
 
+#include <functional>
+
 extern const litehtml::tchar_t master_css[] = {
 #include "master.css.inc"
 };
@@ -21,10 +23,14 @@ QLiteHtmlBrowser::QLiteHtmlBrowser( QWidget* parent )
   setMinimumSize( 200, 200 );
   setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
   mContainer = new container_qt( this );
-  connect( mContainer, &container_qt::anchorClicked, this, [this]( const QUrl& url ) {
-    setUrl( url );
-    emit urlChanged( url );
-  } );
+  mContainer->setResourceHandler( std::bind( &QLiteHtmlBrowser::loadResource, this, std::placeholders::_1 ) );
+  connect(
+    mContainer, &container_qt::anchorClicked, this,
+    [this]( const QUrl& url ) {
+      setUrl( url );
+      emit urlChanged( url );
+    },
+    Qt::QueuedConnection );
 
   mContainer->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
   mContainer->show();

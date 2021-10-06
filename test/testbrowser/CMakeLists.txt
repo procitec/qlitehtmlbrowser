@@ -2,6 +2,7 @@ add_executable( testbrowser )
 
 qt5_wrap_cpp ( testbrowser_mocs
   testbrowser.h
+  QHelpBrowser.h
 )
 
 target_sources( testbrowser
@@ -9,8 +10,10 @@ target_sources( testbrowser
       main.cpp
       testbrowser.cpp
       testbrowser.h
+      QHelpBrowser.cpp
+      QHelpBrowser.h
       ${testbrowser_mocs}
     )
 
 target_include_directories( testbrowser PUBLIC ${PROJECT_SOURCE_DIR}/include/qlitehtmlbrowser)
-target_link_libraries( testbrowser PRIVATE QLiteHtmlBrowser Qt5::Widgets Qt5::Gui Qt5::Test )
+target_link_libraries( testbrowser PRIVATE QLiteHtmlBrowser Qt5::Widgets Qt5::Gui Qt5::Test Qt5::Help )

@@ -2,10 +2,11 @@
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QLineEdit>
 #include <QtCore/QFileInfo>
+#include <QtWidgets/QApplication>
 
 TestBrowser::TestBrowser()
 {
-  mBrowser = new QLiteHtmlBrowser( this );
+  mBrowser = new QHelpBrowser( this );
   setCentralWidget( mBrowser );
   setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
   setMinimumSize( { 1024, 768 } );
@@ -17,6 +18,10 @@ TestBrowser::TestBrowser()
   action->setText( tr( "Open File" ) );
   file_menu->addAction( action );
   connect( action, &QAction::triggered, this, &TestBrowser::openHtml );
+  action = new QAction( this );
+  action->setText( tr( "Open QtHelp" ) );
+  file_menu->addAction( action );
+  connect( action, &QAction::triggered, this, &TestBrowser::openHelp );
   action = new QAction( this );
   action->setText( tr( "Quit" ) );
   file_menu->addAction( action );
@@ -40,9 +45,19 @@ TestBrowser::TestBrowser()
   setMenuBar( &mMenu );
   addToolBar( Qt::TopToolBarArea, &mToolBar );
   mLastDirectory = QDir::current();
+
+  auto collectionFile = QString( "%1/%2-%3.qhc" ).arg( QDir::tempPath(), qApp->applicationName(), QString::number( qApp->applicationPid() ) );
+  mHelpEngine         = new QHelpEngine( collectionFile );
+  mHelpEngine->setupData();
+  mBrowser->setHelpEnginge( mHelpEngine );
 }
 
-TestBrowser::~TestBrowser() {}
+TestBrowser::~TestBrowser()
+{
+  mBrowser->setHelpEnginge( nullptr );
+  delete mHelpEngine;
+  mHelpEngine = nullptr;
+}
 
 void TestBrowser::loadHtml( const QString& html_file )
 {
@@ -70,11 +85,45 @@ void TestBrowser::loadHtml( const QString& html_file )
 
 void TestBrowser::openHtml()
 {
-  QString fileName = QFileDialog::getOpenFileName( this, tr( "Open File" ), mLastDirectory.absolutePath(), tr( "HTML (*.html *.htm)" ) );
+  QString fileName = QFileDialog::getOpenFileName( this, tr( "Open HTML File" ), mLastDirectory.absolutePath(), tr( "HTML (*.html *.htm)" ) );
 
   if ( !fileName.isEmpty() )
   {
     loadHtml( fileName );
     mUrl->setText( mBrowser->url().toString() );
+  }
+}
+
+void TestBrowser::openHelp()
+{
+  QString fileName = QFileDialog::getOpenFileName( this, tr( "Open Help File" ), mLastDirectory.absolutePath(), tr( "Qt Help (*.qch)" ) );
+
+  if ( !fileName.isEmpty() )
+  {
+    auto ns = QHelpEngineCore::namespaceName( fileName );
+    mHelpEngine->unregisterDocumentation( ns );
+    auto reg = mHelpEngine->registerDocumentation( fileName );
+    if ( reg )
+    {
+      loadHelp();
+    }
+  }
+}
+void TestBrowser::loadHelp()
+{
+  if ( mHelpEngine )
+  {
+    auto nss = mHelpEngine->registeredDocumentations();
+    if ( !nss.isEmpty() )
+    {
+      auto ns    = nss.first();
+      auto files = mHelpEngine->files( ns, QStringList() );
+      if ( !files.isEmpty() )
+      {
+        auto f = files.first();
+        mBrowser->setUrl( f );
+        mUrl->setText( f.toString() );
+      }
+    }
   }
 }

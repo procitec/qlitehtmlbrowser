@@ -317,25 +317,21 @@ QUrl container_qt::resolveUrl( const litehtml::tchar_t* src, const litehtml::tch
 QByteArray container_qt::loadResource( const QUrl& url )
 {
   QByteArray data;
-  if ( url.scheme() == "qthelp" )
+
+  QString fileName = findFile( url );
+  if ( !fileName.isEmpty() )
   {
-    // load from help engine, must be implemented in a derived class
-  }
-  else
-  {
-    QString fileName = findFile( url );
-    if ( fileName.isEmpty() )
-      return QByteArray();
     QFile f( fileName );
     if ( f.open( QFile::ReadOnly ) )
     {
       data = f.readAll();
       f.close();
     }
-    else
-    {
-      return QByteArray();
-    }
+  }
+
+  if ( data.isEmpty() )
+  {
+    data = mResourceHandler( url );
   }
 
   return data;
@@ -645,7 +641,7 @@ void container_qt::on_anchor_click( const litehtml::tchar_t* url, const litehtml
     auto url_str = QString( url );
     if ( url_str.startsWith( "#" ) )
     {
-      assert( std::string( el->get_attr( "class", "" ) ) == std::string( "reference internal" ) );
+      // assert( std::string( el->get_attr( "class", "" ) ) == std::string( "reference internal" ) );
       scrollToAnchor( url_str.remove( 0, 1 ) );
     }
     else

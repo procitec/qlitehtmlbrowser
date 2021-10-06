@@ -1,12 +1,13 @@
 #pragma once
 
-#include "QLiteHtmlBrowser.h"
+#include "QHelpBrowser.h"
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QToolBar>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QAction>
 #include <QtCore/QDir>
+#include <QtHelp/QHelpEngine>
 
 class TestBrowser : public QMainWindow
 {
@@ -28,11 +29,14 @@ public:
 
 protected:
   void openHtml();
+  void openHelp();
+  void loadHelp();
 
 private:
-  QLiteHtmlBrowser* mBrowser;
-  QMenuBar          mMenu;
-  QDir              mLastDirectory;
-  QLineEdit*        mUrl = nullptr;
-  QToolBar          mToolBar;
+  QHelpBrowser* mBrowser;
+  QMenuBar      mMenu;
+  QDir          mLastDirectory;
+  QLineEdit*    mUrl = nullptr;
+  QToolBar      mToolBar;
+  QHelpEngine*  mHelpEngine = nullptr;
 };
