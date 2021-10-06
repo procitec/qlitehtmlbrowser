@@ -1,10 +1,5 @@
-.. QLiteHtmlBrowser documentation master file, created by
-   sphinx-quickstart on Wed Oct  6 09:24:21 2021.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-QLiteHtmlBrowser Library
-========================
+|library_name| Library
+======================
 
 .. toctree::
    :maxdepth: 2
@@ -13,6 +8,8 @@ QLiteHtmlBrowser Library
    Usage
    API
    RTR
+   CR
+   Bugs
 
 
 

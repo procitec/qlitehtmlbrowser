@@ -18,11 +18,16 @@ set( CMAKE_CXX_STANDARD 17 )
 find_package( Qt5 COMPONENTS Widgets Gui Test Core Svg Help REQUIRED)
 find_package(Doxygen REQUIRED)
 
+if( NOT MSVC)
+    set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address,undefined")
+endif()
+
 include( CTest )
 enable_testing()
 
 add_subdirectory( foreign )
-#add_subdirectory( include )
+add_subdirectory( include )
 add_subdirectory( src )
+
 
 add_subdirectory( test )

@@ -7,23 +7,24 @@ qt5_add_resources( qrcs
 qt5_wrap_cpp ( mocs
     container_qt.h
     ${PROJECT_SOURCE_DIR}/include/qlitehtmlbrowser/QLiteHtmlBrowser.h
+    QLiteHtmlBrowserImpl.h
     )
 
 target_sources(QLiteHtmlBrowser
     PUBLIC
-        ${PROJECT_SOURCE_DIR}/include/qlitehtmlbrowser/QLiteHtmlBrowser.h
+#       ${PROJECT_SOURCE_DIR}/include/qlitehtmlbrowser/QLiteHtmlBrowser.h
 
     PRIVATE
         QLiteHtmlBrowser.cpp
+        QLiteHtmlBrowserImpl.cpp
+        QLiteHtmlBrowserImpl.h
         container_qt.cpp
         container_qt.h
         ${mocs}
         ${qrcs}
 )
 
-target_include_directories( QLiteHtmlBrowser PUBLIC ${PROJECT_SOURCE_DIR}/include/qlitehtmlbrowser)
-
-target_link_libraries(QLiteHtmlBrowser PRIVATE litehtml Qt5::Widgets)
+target_link_libraries(QLiteHtmlBrowser PUBLIC QLiteHtmlBrowserIfc PRIVATE litehtml Qt5::Widgets)
 
 if( DOXYGEN_FOUND)
     set(DOXYGEN_GENERATE_HTML NO)

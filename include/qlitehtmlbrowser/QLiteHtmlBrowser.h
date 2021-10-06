@@ -1,10 +1,8 @@
 #pragma once
 
 #include <QtWidgets/QWidget>
-#include <QtCore/QUrl>
 
-class container_qt;
-
+class QLiteHtmlBrowserImpl;
 ///
 /// \brief The QLiteHtmlBrowser class
 ///
@@ -15,7 +13,7 @@ class container_qt;
 class QLiteHtmlBrowser : public QWidget
 {
   Q_OBJECT
-  Q_PROPERTY( QUrl source MEMBER mSource )
+  //  Q_PROPERTY( QUrl source MEMBER mSource )
 public:
   /// create the widget with given parent or nullptr if used
   /// without any parent.
@@ -44,25 +42,19 @@ public:
   double scale() const;
 
   /// return current url
-  const QUrl& url() const { return mUrl; }
+  const QUrl& url() const;
 
 protected:
-  void wheelEvent( QWheelEvent* ) override;
-  void changeEvent( QEvent* ) override;
-
-  virtual QByteArray loadResource( const QUrl& /*url*/ ) { return {}; }
-  void               _setSource( const QUrl& name );
-
-  //  void         resizeEvent( QResizeEvent* ) override;
-  void loadStyleSheet();
+  /// Used to load binary resources from given url. If your implementation needs
+  /// to handle resources that are not located in the current filesystem, you
+  /// have to reimplement this method to handle resource loading e.g. of qthelp
+  /// urls via QHelpEngine or http urls with QNetworkRequest
+  virtual QByteArray loadResource( const QUrl& /*url*/ );
 
 Q_SIGNALS:
   /// emited when the url changed due to user interaction, e.g. link activation
   void urlChanged( const QUrl& );
 
 private:
-  container_qt* mContainer = nullptr;
-  QUrl          mSource;
-  QString       mCSS;
-  QUrl          mUrl;
+  QLiteHtmlBrowserImpl* mImpl = nullptr;
 };

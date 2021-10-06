@@ -68,3 +68,36 @@ if os.path.isdir(doxygen_build_dir):
     breathe_default_project = "QLiteHtmlBrowser"
 else:
     raise Exception(f"required {doxygen_build_dir} not generated, first run build process")
+
+needs_types = [
+    dict(directive="req", title="Requirement", prefix="R_", color="#BFD8D2", style="node"),
+    dict(directive="spec", title="Specification", prefix="S_", color="#FEDCD2", style="node"),
+    dict(directive="impl", title="Implementation", prefix="I_", color="#DF744A", style="node"),
+    dict(directive="test", title="Test Case", prefix="T_", color="#DCB239", style="node"),
+]
+
+needs_types += [
+    dict(directive="cr", title="Change Request", prefix="CR_", color="#DCB239", style="node"),
+    dict(directive="bug", title="Bug", prefix="BUG_", color="#DCB239", style="node")
+]
+
+needs_statuses = [
+    dict(name="open", description="Nothing done yet"),
+    dict(name="in progress", description="Someone is working on it"),
+    dict(name="implemented", description="Work is done and implemented"),
+]
+
+needs_default_layout = "complete"
+
+library_name = project
+library_widget_name = project
+
+rst_epilog = """
+.. |library_name| replace:: %s
+.. |library_widget_name| replace:: %s
+""" % (library_name, library_name)
+
+#def setup(app):
+#    app.add_config_value('library_name', library, 'env')
+#    app.add_config_value('library_name_uc', library.upper(), 'env')
+#    app.add_config_value('library_name_lc', library.lower(), 'env')

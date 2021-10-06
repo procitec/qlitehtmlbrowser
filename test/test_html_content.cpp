@@ -87,7 +87,9 @@ void HTMLContentTest::test_lists_data()
     <dd>- white cold drink</dd>
   </dl> 
   </body></html>)-";
-  QTest::newRow( "ordered list uppercase Roman" ) << R"-(
+
+  // litehtml seems to support this via css only
+  QTest::newRow( "ordered list uppercase Roman WILL_FAIL" ) << R"-(
   <html><body>
   <ol type="I">
     <li>Coffee</li>
@@ -95,7 +97,9 @@ void HTMLContentTest::test_lists_data()
     <li>Milk</li>
   </ol> 
   </body></html>)-";
-  QTest::newRow( "ordered list lowercase alphabet " ) << R"-(
+
+  // litehtml seems to support this via css only
+  QTest::newRow( "ordered list lowercase alphabet WILL_FAIL " ) << R"-(
   <html><body>
   <ol type="a">
     <li>Coffee</li>
@@ -140,7 +144,7 @@ void HTMLContentTest::test_img_data()
   </html>
   )-";
 
-  QTest::newRow( "Simple local image" ) << R"-(
+  QTest::newRow( "Simple local image <execute in SOURCE_DIR required>" ) << R"-(
   <!DOCTYPE html>
   <html>
   <body>
@@ -161,7 +165,7 @@ void HTMLContentTest::test_tables_data()
 {
   /// https://www.w3schools.com/html/html_tables.asp
   QTest::addColumn<QString>( "html" );
-  QTest::newRow( "example table with alternating row cols " ) << R"-(
+  QTest::newRow( "example table with header and rows" ) << R"-(
 <!DOCTYPE html>
 <html>
 <body>
@@ -169,11 +173,11 @@ void HTMLContentTest::test_tables_data()
 <h2>HTML Table</h2>
   
 <table>
-  <tr>
+  <th>
     <th>Company</th>
     <th>Contact</th>
     <th>Country</th>
-  </tr>
+  </th>
   <tr>
     <td>Alfreds Futterkiste</td>
     <td>Maria Anders</td>
