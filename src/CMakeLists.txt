@@ -26,7 +26,7 @@ target_sources(QLiteHtmlBrowser
 
 target_include_directories( QLiteHtmlBrowser PRIVATE ${PROJECT_SOURCE_DIR}/include )
 target_link_libraries(QLiteHtmlBrowser PUBLIC PRIVATE litehtml Qt5::Widgets)
-#set_target_properties(QLiteHtmlBrowser PROPERTIES VERSION ${QLiteHtmlBrowser_VERSION})
+set_target_properties(QLiteHtmlBrowser PROPERTIES VERSION ${QLiteHtmlBrowser_VERSION})
 
 if( DOXYGEN_FOUND)
     set(DOXYGEN_GENERATE_HTML NO)

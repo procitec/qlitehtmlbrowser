@@ -1,22 +1,16 @@
 
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
+    cmake_minimum_required( VERSION 3.2 )
 
     if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "In-source builds are not allowed.")
     endif()
     cmake_policy( SET CMP0048 NEW )
 
-    cmake_minimum_required( VERSION 3.2 )
-
     set( CMAKE_CXX_STANDARD 17 )
 
     set( CMAKE_INSTALL_MESSAGE "LAZY" ) # one of NEVER, LAZY, ALWAYS
     set( CMAKE_INSTALL_PREFIX "" )
-
-    add_custom_target(install-qlitehtmlbrowser
-                    COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_COMPONENT=QLiteHtmlBrowser -P ${CMAKE_BINARY_DIR}/cmake_install.cmake
-
-    )
 
     option( WITH_ASAN "Build with sanitizer" OFF)
 
@@ -28,7 +22,6 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
         set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
         set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
     endif()
-
 endif()
 
 
@@ -51,4 +44,9 @@ add_subdirectory( include )
 add_subdirectory( src )
 add_subdirectory( dist )
 add_subdirectory( test )
+
+
+add_custom_target(install-qlitehtmlbrowser
+                COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX="" -DCMAKE_INSTALL_COMPONENT=QLiteHtmlBrowser -P ${CMAKE_BINARY_DIR}/cmake_install.cmake
+)
 
