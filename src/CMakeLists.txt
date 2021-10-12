@@ -1,4 +1,4 @@
-add_library( QLiteHtmlBrowser STATIC "")
+add_library( QLiteHtmlBrowser SHARED "")
 
 qt5_add_resources( qrcs
     QLiteHtmlBrowser.qrc
@@ -12,7 +12,7 @@ qt5_wrap_cpp ( mocs
 
 target_sources(QLiteHtmlBrowser
     PUBLIC
-#       ${PROJECT_SOURCE_DIR}/include/qlitehtmlbrowser/QLiteHtmlBrowser.h
+       ${PROJECT_SOURCE_DIR}/include/qlitehtmlbrowser/QLiteHtmlBrowser.h
 
     PRIVATE
         QLiteHtmlBrowser.cpp
@@ -24,7 +24,9 @@ target_sources(QLiteHtmlBrowser
         ${qrcs}
 )
 
-target_link_libraries(QLiteHtmlBrowser PUBLIC QLiteHtmlBrowserIfc PRIVATE litehtml Qt5::Widgets)
+target_include_directories( QLiteHtmlBrowser PRIVATE ${PROJECT_SOURCE_DIR}/include )
+target_link_libraries(QLiteHtmlBrowser PUBLIC PRIVATE litehtml Qt5::Widgets)
+#set_target_properties(QLiteHtmlBrowser PROPERTIES VERSION ${QLiteHtmlBrowser_VERSION})
 
 if( DOXYGEN_FOUND)
     set(DOXYGEN_GENERATE_HTML NO)
@@ -37,3 +39,6 @@ if( DOXYGEN_FOUND)
 
     )
 endif()
+
+install( TARGETS QLiteHtmlBrowser DESTINATION lib COMPONENT QLiteHtmlBrowser )
+

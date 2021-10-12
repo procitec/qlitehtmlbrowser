@@ -20,7 +20,7 @@ public:
   QLiteHtmlBrowser( QWidget* parent = nullptr );
 
   /// set URL to given url. The URL may be an url to local file, qthelp, http etc.
-  /// The URL could contain an anchor element. Currenlty parameters to URL like
+  /// The URL could contain an anchor element. Currently parameters to URL like
   /// '?name=value are not explicitly supported.
   void setUrl( const QUrl& url );
 

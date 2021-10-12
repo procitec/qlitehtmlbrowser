@@ -1,6 +1,6 @@
 #pragma once
 
-#include "QLiteHtmlBrowser.h"
+#include <qlitehtmlbrowser/QLiteHtmlBrowser>
 
 #include <QtHelp/QHelpEngineCore>
 

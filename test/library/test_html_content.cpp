@@ -1,5 +1,5 @@
 #include "test_html_content.h"
-#include "QLiteHtmlBrowser.h"
+#include <qlitehtmlbrowser/QLiteHtmlBrowser>
 #include "test_base.h"
 
 #include <QtWidgets/QMainWindow>
