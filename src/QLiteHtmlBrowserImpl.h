@@ -21,7 +21,7 @@ public:
 
   using ResourceHandlerType = container_qt::ResourceHandlerType;
 
-  void        setUrl( const QUrl& url );
+  void        setUrl( const QUrl& url, int resourceType = static_cast<int>( ResourceType::Unknown ) );
   void        setHtml( const QString& html, const QUrl& source_url = {} );
   void        setScale( double scale );
   double      scale() const;
@@ -45,7 +45,6 @@ Q_SIGNALS:
 private:
   using ResourceType = container_qt::ResourceType;
   QString findFile( const QUrl& name ) const;
-  int     mapToResourceType( const QString& scheme ) const;
 
   Q_DISABLE_COPY( QLiteHtmlBrowserImpl );
   Q_DISABLE_MOVE( QLiteHtmlBrowserImpl );

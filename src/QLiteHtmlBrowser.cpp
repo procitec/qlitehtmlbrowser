@@ -71,9 +71,9 @@ QByteArray QLiteHtmlBrowser::loadResource( int type, const QUrl& url )
   return mImpl->loadResource( type, url );
 }
 
-void QLiteHtmlBrowser::setSource( const QUrl& name )
+void QLiteHtmlBrowser::setSource( const QUrl& name, const ResourceType& type )
 {
-  mImpl->setUrl( name );
+  mImpl->setUrl( name, static_cast<int>( type ) );
 }
 
 void QLiteHtmlBrowser::setHtml( const QString& html, const QString& baseurl )

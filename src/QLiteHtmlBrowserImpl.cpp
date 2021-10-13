@@ -86,12 +86,11 @@ void QLiteHtmlBrowserImpl::changeEvent( QEvent* e )
 //  }
 //}
 
-void QLiteHtmlBrowserImpl::setUrl( const QUrl& url )
+void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type )
 {
   mUrl = url;
   if ( mContainer )
   {
-    auto fragment = url.fragment();
     auto pure_url = QUrl( url );
     pure_url.setFragment( {} );
     QString html;
@@ -110,7 +109,7 @@ void QLiteHtmlBrowserImpl::setUrl( const QUrl& url )
     else
     {
       // eg. if ( url.scheme() == "qthelp" )
-      html = mResourceHandler( mapToResourceType( url.scheme() ), url );
+      html = mResourceHandler( type, url );
     }
 
     if ( !html.isEmpty() )
@@ -119,17 +118,6 @@ void QLiteHtmlBrowserImpl::setUrl( const QUrl& url )
       update();
     }
   }
-}
-
-int QLiteHtmlBrowserImpl::mapToResourceType( const QString& scheme ) const
-{
-  ResourceType type = ResourceType::Unknown;
-
-  if ( scheme.startsWith( QLatin1String( "http" ) ) || scheme.startsWith( QLatin1String( "file" ) ) )
-  {
-    type = ResourceType::Html;
-  }
-  return static_cast<int>( type );
 }
 
 void QLiteHtmlBrowserImpl::setHtml( const QString& html, const QUrl& source_url )

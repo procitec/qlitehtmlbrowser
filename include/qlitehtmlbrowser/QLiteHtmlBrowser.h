@@ -16,8 +16,10 @@ class QLiteHtmlBrowser : public QWidget
 {
   Q_OBJECT
 
-  // todo QTextBrowser
+  /// propery to access the url that is currently shown in the browser
   Q_PROPERTY( QUrl source READ source WRITE setSource )
+
+  // todo QTextBrowser
   //  Q_PROPERTY(QTextDocument::ResourceType sourceType READ sourceType)
   //  Q_OVERRIDE(bool modified SCRIPTABLE false)
   //  Q_OVERRIDE(bool readOnly DESIGNABLE false SCRIPTABLE false)
@@ -27,6 +29,18 @@ class QLiteHtmlBrowser : public QWidget
   //  Q_PROPERTY(bool openLinks READ openLinks WRITE setOpenLinks)
 
 public:
+  /// identifier for the type of resouce that should get loaded as hint
+  /// for the implementation where to look for the resource
+  /// In case of Unknown the resource should be loaded due to url scheme
+  /// or url path properly
+  enum class ResourceType : int
+  {
+    Unknown,
+    Html,
+    Image,
+    Css
+  };
+
   /// create the widget with given parent or nullptr if used
   /// without any parent.
   QLiteHtmlBrowser( QWidget* parent = nullptr );
@@ -36,7 +50,7 @@ public:
   /// '?name=value are not explicitly supported.
   /// Unlike QTextBrowser no automatic detection for different types (markdown, css)
   /// is supported, HTML only is supported.
-  void setSource( const QUrl& url );
+  void setSource( const QUrl& url, const ResourceType& type = ResourceType::Unknown );
 
   /// if setHtml is called with the html content,
   /// it is require to set the base directory if not in current working directory
@@ -46,11 +60,15 @@ public:
   /// return current url
   QUrl source() const;
 
+  /// Used to load binary resources from given url. If your implementation needs
+  /// to handle resources that are not located in the current filesystem, you
+  /// have to reimplement this method to handle resource loading e.g. of qthelp
+  /// urls via QHelpEngine or http urls with QNetworkRequest
+  virtual QByteArray loadResource( int, const QUrl& );
+
   // todo QTextBrowser
   //  QStringList searchPaths() const;
   //  void setSearchPaths(const QStringList &paths);
-
-  virtual QByteArray loadResource( int, const QUrl& );
 
   //  bool isBackwardAvailable() const;
   //  bool isForwardAvailable() const;
@@ -100,10 +118,6 @@ public:
   double scale() const;
 
 protected:
-  /// Used to load binary resources from given url. If your implementation needs
-  /// to handle resources that are not located in the current filesystem, you
-  /// have to reimplement this method to handle resource loading e.g. of qthelp
-  /// urls via QHelpEngine or http urls with QNetworkRequest
   // virtual QByteArray loadResource( const QUrl& /*url*/ );
 
   // todo QTextBrowser
