@@ -78,7 +78,7 @@ void TestBrowser::loadHtml( const QString& html_file )
     auto url = QUrl::fromUserInput( html_file );
     if ( mBrowser )
     {
-      mBrowser->setUrl( url );
+      mBrowser->setSource( url );
     }
   }
 }
@@ -90,7 +90,7 @@ void TestBrowser::openHtml()
   if ( !fileName.isEmpty() )
   {
     loadHtml( fileName );
-    mUrl->setText( mBrowser->url().toString() );
+    mUrl->setText( mBrowser->source().toString() );
   }
 }
 
@@ -121,7 +121,7 @@ void TestBrowser::loadHelp()
       if ( !files.isEmpty() )
       {
         auto f = files.first();
-        mBrowser->setUrl( f );
+        mBrowser->setSource( f );
         mUrl->setText( f.toString() );
       }
     }

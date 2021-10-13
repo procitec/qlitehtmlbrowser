@@ -10,6 +10,16 @@ class container_qt : public QAbstractScrollArea, protected litehtml::document_co
 {
   Q_OBJECT
 public:
+  enum class ResourceType : int
+  {
+    Unknown,
+    Html,
+    Image,
+    Css
+  };
+
+  using ResourceHandlerType = std::function<QByteArray( int, const QUrl& )>;
+
   container_qt( QWidget* parent = nullptr );
 
   void   setHtml( const QString& html, const QUrl& source_url = {} );
@@ -18,7 +28,7 @@ public:
   double scale() const { return mScale; }
   void   scrollToAnchor( const QString& anchor );
 
-  void setResourceHandler( const std::function<QByteArray( const QUrl& )>& rh ) { mResourceHandler = rh; };
+  void setResourceHandler( const ResourceHandlerType& rh ) { mResourceHandler = rh; };
 
 protected:
   void paintEvent( QPaintEvent* ) override;
@@ -61,9 +71,8 @@ protected:
   virtual std::shared_ptr<litehtml::element>
   create_element( const litehtml::tchar_t* tag_name, const litehtml::string_map& attributes, const std::shared_ptr<litehtml::document>& doc );
 
-  virtual void       get_media_features( litehtml::media_features& media ) const;
-  virtual void       get_language( litehtml::tstring& language, litehtml::tstring& culture ) const;
-  virtual QByteArray loadResource( const QUrl& url );
+  virtual void get_media_features( litehtml::media_features& media ) const;
+  virtual void get_language( litehtml::tstring& language, litehtml::tstring& culture ) const;
 
 private:
   void                   resetScrollBars();
@@ -76,22 +85,22 @@ private:
   QPixmap                load_image_data( const QUrl& url );
   QPixmap                load_pixmap( const QUrl& url );
   QUrl                   resolveUrl( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl ) const;
-  QString                findFile( const QUrl& name ) const;
   void                   render();
   QColor                 toColor( const litehtml::web_color& color ) const { return QColor( color.red, color.green, color.blue, color.alpha ); };
   Qt::PenStyle           toPenStyle( const litehtml::border_style& style ) const;
   std::pair<int, int>    findAnchorPos( const QString& anchor );
   litehtml::element::ptr findAnchor( const QString& anchor );
+  QByteArray             loadResource( ResourceType type, const QUrl& url );
 
 private:
-  std::shared_ptr<litehtml::document>      mDocument;
-  litehtml::context                        mContext;
-  QUrl                                     mBaseUrl;
-  QUrl                                     mSourceUrl;
-  int                                      mFontSize = 12;
-  double                                   mScale    = 1.0;
-  double                                   mMinScale = 0.1;
-  double                                   mMaxScale = 4.0;
-  QHash<QUrl, QPixmap>                     mPixmapCache;
-  std::function<QByteArray( const QUrl& )> mResourceHandler;
+  std::shared_ptr<litehtml::document> mDocument;
+  litehtml::context                   mContext;
+  QUrl                                mBaseUrl;
+  QUrl                                mSourceUrl;
+  int                                 mFontSize = 12;
+  double                              mScale    = 1.0;
+  double                              mMinScale = 0.1;
+  double                              mMaxScale = 4.0;
+  QHash<QUrl, QPixmap>                mPixmapCache;
+  ResourceHandlerType                 mResourceHandler;
 };

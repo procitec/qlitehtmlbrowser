@@ -48,7 +48,7 @@ QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
 
 QLiteHtmlBrowserImpl::~QLiteHtmlBrowserImpl() {}
 
-void QLiteHtmlBrowserImpl::setResourceHandler( const std::function<QByteArray( QUrl )>& rh )
+void QLiteHtmlBrowserImpl::setResourceHandler( const ResourceHandlerType& rh )
 {
   mResourceHandler = rh;
   mContainer->setResourceHandler( rh );
@@ -110,7 +110,7 @@ void QLiteHtmlBrowserImpl::setUrl( const QUrl& url )
     else
     {
       // eg. if ( url.scheme() == "qthelp" )
-      html = mResourceHandler( url );
+      html = mResourceHandler( mapToResourceType( url.scheme() ), url );
     }
 
     if ( !html.isEmpty() )
@@ -119,6 +119,17 @@ void QLiteHtmlBrowserImpl::setUrl( const QUrl& url )
       update();
     }
   }
+}
+
+int QLiteHtmlBrowserImpl::mapToResourceType( const QString& scheme ) const
+{
+  ResourceType type = ResourceType::Unknown;
+
+  if ( scheme.startsWith( QLatin1String( "http" ) ) || scheme.startsWith( QLatin1String( "file" ) ) )
+  {
+    type = ResourceType::Html;
+  }
+  return static_cast<int>( type );
 }
 
 void QLiteHtmlBrowserImpl::setHtml( const QString& html, const QUrl& source_url )
@@ -172,4 +183,59 @@ void QLiteHtmlBrowserImpl::wheelEvent( QWheelEvent* e )
 
     mContainer->setScale( scale );
   }
+}
+
+QByteArray QLiteHtmlBrowserImpl::loadResource( int type, const QUrl& url )
+{
+  QByteArray data;
+
+  QString fileName = findFile( url );
+  if ( !fileName.isEmpty() )
+  {
+    QFile f( fileName );
+    if ( f.open( QFile::ReadOnly ) )
+    {
+      data = f.readAll();
+      f.close();
+    }
+  }
+
+  //  if ( data.isEmpty() )
+  //  {
+  //    data = mResourceHandler( url );
+  //  }
+
+  return data;
+}
+
+QString QLiteHtmlBrowserImpl::findFile( const QUrl& name ) const
+{
+  QString fileName;
+  if ( name.scheme().isEmpty() )
+  {
+    fileName = name.path();
+  }
+  else
+  {
+    fileName = name.toLocalFile();
+  }
+
+  if ( fileName.isEmpty() )
+    return fileName;
+
+  if ( QFileInfo( fileName ).isAbsolute() )
+    return fileName;
+
+  // TODO search paths relative to baseurl or document source
+
+  //  for ( QString path : qAsConst( searchPaths ) )
+  //  {
+  //    if ( !path.endsWith( QLatin1Char( '/' ) ) )
+  //      path.append( QLatin1Char( '/' ) );
+  //    path.append( fileName );
+  //    if ( QFileInfo( path ).isReadable() )
+  //      return path;
+  //  }
+
+  return fileName;
 }

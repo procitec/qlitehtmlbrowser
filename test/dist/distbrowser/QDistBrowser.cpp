@@ -5,7 +5,7 @@ QDistBrowser::QDistBrowser( QWidget* parent )
 {
 }
 
-QByteArray QDistBrowser::loadResource( const QUrl& url )
+QByteArray QDistBrowser::loadResource( int, const QUrl& )
 {
   QByteArray ret;
   return ret;

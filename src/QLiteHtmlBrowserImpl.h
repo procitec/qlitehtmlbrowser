@@ -1,9 +1,9 @@
 #pragma once
 
+#include "container_qt.h"
+
 #include <QtWidgets/QWidget>
 #include <QtCore/QUrl>
-
-class container_qt;
 
 ///
 /// \brief The QLiteHtmlBrowser class
@@ -19,13 +19,16 @@ public:
   QLiteHtmlBrowserImpl( QWidget* parent = nullptr );
   virtual ~QLiteHtmlBrowserImpl();
 
+  using ResourceHandlerType = container_qt::ResourceHandlerType;
+
   void        setUrl( const QUrl& url );
   void        setHtml( const QString& html, const QUrl& source_url = {} );
   void        setScale( double scale );
   double      scale() const;
   const QUrl& url() const { return mUrl; }
   void        loadStyleSheet();
-  void        setResourceHandler( const std::function<QByteArray( QUrl )>& rh );
+  void        setResourceHandler( const ResourceHandlerType& rh );
+  QByteArray  loadResource( int type, const QUrl& url );
 
 protected:
   void wheelEvent( QWheelEvent* ) override;
@@ -40,12 +43,16 @@ Q_SIGNALS:
   void urlChanged( const QUrl& );
 
 private:
+  using ResourceType = container_qt::ResourceType;
+  QString findFile( const QUrl& name ) const;
+  int     mapToResourceType( const QString& scheme ) const;
+
   Q_DISABLE_COPY( QLiteHtmlBrowserImpl );
   Q_DISABLE_MOVE( QLiteHtmlBrowserImpl );
 
-  container_qt*                            mContainer = nullptr;
-  QUrl                                     mSource;
-  QString                                  mCSS;
-  QUrl                                     mUrl;
-  std::function<QByteArray( const QUrl& )> mResourceHandler;
+  container_qt*       mContainer = nullptr;
+  QUrl                mSource;
+  QString             mCSS;
+  QUrl                mUrl;
+  ResourceHandlerType mResourceHandler;
 };

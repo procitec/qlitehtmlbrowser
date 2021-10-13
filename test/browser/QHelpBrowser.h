@@ -12,7 +12,7 @@ public:
   void setHelpEnginge( QHelpEngineCore* engine ) { mHelpEngine = engine; }
 
 protected:
-  virtual QByteArray loadResource( const QUrl& ) override;
+  virtual QByteArray loadResource( int, const QUrl& ) override;
 
 private:
   QHelpEngineCore* mHelpEngine = nullptr;

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QtWidgets/QWidget>
+#include <QtCore/QUrl>
+#include <QtCore/QByteArray>
 
 class QLiteHtmlBrowserImpl;
 ///
@@ -13,10 +15,9 @@ class QLiteHtmlBrowserImpl;
 class QLiteHtmlBrowser : public QWidget
 {
   Q_OBJECT
-  //  Q_PROPERTY( QUrl source MEMBER mSource )
 
   // todo QTextBrowser
-  //  Q_PROPERTY(QUrl source READ source WRITE setSource)
+  Q_PROPERTY( QUrl source READ source WRITE setSource )
   //  Q_PROPERTY(QTextDocument::ResourceType sourceType READ sourceType)
   //  Q_OVERRIDE(bool modified SCRIPTABLE false)
   //  Q_OVERRIDE(bool readOnly DESIGNABLE false SCRIPTABLE false)
@@ -33,32 +34,23 @@ public:
   /// set URL to given url. The URL may be an url to local file, qthelp, http etc.
   /// The URL could contain an anchor element. Currently parameters to URL like
   /// '?name=value are not explicitly supported.
-  void setUrl( const QUrl& url );
+  /// Unlike QTextBrowser no automatic detection for different types (markdown, css)
+  /// is supported, HTML only is supported.
+  void setSource( const QUrl& url );
 
   /// if setHtml is called with the html content,
   /// it is require to set the base directory if not in current working directory
   /// for the given html code to resolve file system dependencies.
   void setHtml( const QString& html, const QString& baseurl = QString() );
 
-  /// set scaling factor for the widgets html content.
-  /// 1.0 means normal view, 2.0 zooms in to 150%, 0.5 zooms out to 50%.
-  /// The scaling is internally limited for max and min scaling.
-  void setScale( double scale );
-
-  /// return current scaling.
-  double scale() const;
-
   /// return current url
-  const QUrl& url() const;
+  QUrl source() const;
 
   // todo QTextBrowser
-  //  QUrl source() const;
-  //  QTextDocument::ResourceType sourceType() const;
-
   //  QStringList searchPaths() const;
   //  void setSearchPaths(const QStringList &paths);
 
-  //  virtual QVariant loadResource(int type, const QUrl &name) override;
+  virtual QByteArray loadResource( int, const QUrl& );
 
   //  bool isBackwardAvailable() const;
   //  bool isForwardAvailable() const;
@@ -98,12 +90,21 @@ public:
   //#endif
   //  void anchorClicked(const QUrl &);
 
+  /// set scaling factor for the widgets html content.
+  /// 1.0 means normal view, 2.0 zooms in to 150%, 0.5 zooms out to 50%.
+  /// The scaling is internally limited for max and min scaling.
+  /// Unlike QTextBrowser the scaling is not limited to Text only
+  void setScale( double scale );
+
+  /// return current scaling.
+  double scale() const;
+
 protected:
   /// Used to load binary resources from given url. If your implementation needs
   /// to handle resources that are not located in the current filesystem, you
   /// have to reimplement this method to handle resource loading e.g. of qthelp
   /// urls via QHelpEngine or http urls with QNetworkRequest
-  virtual QByteArray loadResource( const QUrl& /*url*/ );
+  // virtual QByteArray loadResource( const QUrl& /*url*/ );
 
   // todo QTextBrowser
   //  virtual void keyPressEvent(QKeyEvent *ev) override;

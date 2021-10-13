@@ -26,10 +26,10 @@ QLiteHtmlBrowser::QLiteHtmlBrowser( QWidget* parent )
   mImpl->show();
   //  mImpl->
   connect( mImpl, &QLiteHtmlBrowserImpl::urlChanged, this, &QLiteHtmlBrowser::urlChanged );
-  mImpl->setResourceHandler( std::bind( &QLiteHtmlBrowser::loadResource, this, std::placeholders::_1 ) );
+  mImpl->setResourceHandler( std::bind( &QLiteHtmlBrowser::loadResource, this, std::placeholders::_1, std::placeholders::_2 ) );
 }
 
-const QUrl& QLiteHtmlBrowser::url() const
+QUrl QLiteHtmlBrowser::source() const
 {
   return mImpl->url();
 }
@@ -66,12 +66,12 @@ const QUrl& QLiteHtmlBrowser::url() const
 //  }
 //}
 
-QByteArray QLiteHtmlBrowser::loadResource( const QUrl& /*url*/ )
+QByteArray QLiteHtmlBrowser::loadResource( int type, const QUrl& url )
 {
-  return {};
+  return mImpl->loadResource( type, url );
 }
 
-void QLiteHtmlBrowser::setUrl( const QUrl& name )
+void QLiteHtmlBrowser::setSource( const QUrl& name )
 {
   mImpl->setUrl( name );
 }

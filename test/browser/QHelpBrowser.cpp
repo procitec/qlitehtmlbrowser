@@ -5,12 +5,16 @@ QHelpBrowser::QHelpBrowser( QWidget* parent )
 {
 }
 
-QByteArray QHelpBrowser::loadResource( const QUrl& url )
+QByteArray QHelpBrowser::loadResource( int resourceType, const QUrl& url )
 {
   QByteArray ret;
   if ( mHelpEngine && url.scheme() == "qthelp" )
   {
     ret = mHelpEngine->fileData( url );
+  }
+  if ( ret.isEmpty() )
+  {
+    ret = QLiteHtmlBrowser::loadResource( resourceType, url );
   }
   return ret;
 }

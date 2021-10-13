@@ -289,7 +289,7 @@ void container_qt::draw_list_marker( litehtml::uint_ptr hdc, const litehtml::lis
 QPixmap container_qt::load_image_data( const QUrl& url )
 {
   QPixmap pm;
-  pm.loadFromData( loadResource( url ) );
+  pm.loadFromData( loadResource( ResourceType::Image, url ) );
   return pm;
 }
 
@@ -324,60 +324,42 @@ QUrl container_qt::resolveUrl( const litehtml::tchar_t* src, const litehtml::tch
   return resolved_url;
 }
 
-QByteArray container_qt::loadResource( const QUrl& url )
+QByteArray container_qt::loadResource( ResourceType type, const QUrl& url )
 {
-  QByteArray data;
-
-  QString fileName = findFile( url );
-  if ( !fileName.isEmpty() )
-  {
-    QFile f( fileName );
-    if ( f.open( QFile::ReadOnly ) )
-    {
-      data = f.readAll();
-      f.close();
-    }
-  }
-
-  if ( data.isEmpty() )
-  {
-    data = mResourceHandler( url );
-  }
-
-  return data;
+  return mResourceHandler( static_cast<int>( type ), url );
 }
 
-QString container_qt::findFile( const QUrl& name ) const
-{
-  QString fileName;
-  if ( name.scheme().isEmpty() )
-  {
-    fileName = name.path();
-  }
-  else
-  {
-    fileName = name.toLocalFile();
-  }
+// QString container_qt::findFile( const QUrl& name ) const
+//{
+//  QString fileName;
+//  if ( name.scheme().isEmpty() )
+//  {
+//    fileName = name.path();
+//  }
+//  else
+//  {
+//    fileName = name.toLocalFile();
+//  }
 
-  if ( fileName.isEmpty() )
-    return fileName;
+//  if ( fileName.isEmpty() )
+//    return fileName;
 
-  if ( QFileInfo( fileName ).isAbsolute() )
-    return fileName;
+//  if ( QFileInfo( fileName ).isAbsolute() )
+//    return fileName;
 
-  // TODO search paths relative to baseurl or document source
+//  // TODO search paths relative to baseurl or document source
 
-  //  for ( QString path : qAsConst( searchPaths ) )
-  //  {
-  //    if ( !path.endsWith( QLatin1Char( '/' ) ) )
-  //      path.append( QLatin1Char( '/' ) );
-  //    path.append( fileName );
-  //    if ( QFileInfo( path ).isReadable() )
-  //      return path;
-  //  }
+//  //  for ( QString path : qAsConst( searchPaths ) )
+//  //  {
+//  //    if ( !path.endsWith( QLatin1Char( '/' ) ) )
+//  //      path.append( QLatin1Char( '/' ) );
+//  //    path.append( fileName );
+//  //    if ( QFileInfo( path ).isReadable() )
+//  //      return path;
+//  //  }
 
-  return fileName;
-}
+//  return fileName;
+//}
 
 void container_qt::load_image( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl, bool redraw_on_ready )
 {
@@ -687,7 +669,7 @@ void container_qt::transform_text( litehtml::tstring& text, litehtml::text_trans
 void container_qt::import_css( litehtml::tstring& text, const litehtml::tstring& url, litehtml::tstring& baseurl )
 {
   auto resolved_url = resolveUrl( url.c_str(), baseurl.c_str() );
-  auto content      = loadResource( resolved_url );
+  auto content      = loadResource( ResourceType::Css, resolved_url );
   if ( !content.isEmpty() )
   {
     text = QString::fromUtf8( content.constData() ).toStdString();
