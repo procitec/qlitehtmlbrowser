@@ -14,6 +14,17 @@ class QLiteHtmlBrowser : public QWidget
 {
   Q_OBJECT
   //  Q_PROPERTY( QUrl source MEMBER mSource )
+
+  // todo QTextBrowser
+  //  Q_PROPERTY(QUrl source READ source WRITE setSource)
+  //  Q_PROPERTY(QTextDocument::ResourceType sourceType READ sourceType)
+  //  Q_OVERRIDE(bool modified SCRIPTABLE false)
+  //  Q_OVERRIDE(bool readOnly DESIGNABLE false SCRIPTABLE false)
+  //  Q_OVERRIDE(bool undoRedoEnabled DESIGNABLE false SCRIPTABLE false)
+  //  Q_PROPERTY(QStringList searchPaths READ searchPaths WRITE setSearchPaths)
+  //  Q_PROPERTY(bool openExternalLinks READ openExternalLinks WRITE setOpenExternalLinks)
+  //  Q_PROPERTY(bool openLinks READ openLinks WRITE setOpenLinks)
+
 public:
   /// create the widget with given parent or nullptr if used
   /// without any parent.
@@ -40,12 +51,72 @@ public:
   /// return current url
   const QUrl& url() const;
 
+  // todo QTextBrowser
+  //  QUrl source() const;
+  //  QTextDocument::ResourceType sourceType() const;
+
+  //  QStringList searchPaths() const;
+  //  void setSearchPaths(const QStringList &paths);
+
+  //  virtual QVariant loadResource(int type, const QUrl &name) override;
+
+  //  bool isBackwardAvailable() const;
+  //  bool isForwardAvailable() const;
+  //  void clearHistory();
+  //  QString historyTitle(int) const;
+  //  QUrl historyUrl(int) const;
+  //  int backwardHistoryCount() const;
+  //  int forwardHistoryCount() const;
+
+  //  bool openExternalLinks() const;
+  //  void setOpenExternalLinks(bool open);
+
+  //  bool openLinks() const;
+  //  void setOpenLinks(bool open);
+
+  // public Q_SLOTS:
+  //#if QT_VERSION < QT_VERSION_CHECK(6,0,0)
+  //  virtual void setSource(const QUrl &name);
+  //  void setSource(const QUrl &name, QTextDocument::ResourceType type);
+  //#else
+  //  void setSource(const QUrl &name, QTextDocument::ResourceType type = QTextDocument::UnknownResource);
+  //#endif
+  //  virtual void backward();
+  //  virtual void forward();
+  //  virtual void home();
+  //  virtual void reload();
+
+  // Q_SIGNALS:
+  //  void backwardAvailable(bool);
+  //  void forwardAvailable(bool);
+  //  void historyChanged();
+  //  void sourceChanged(const QUrl &);
+  //  void highlighted(const QUrl &);
+  //#if QT_DEPRECATED_SINCE(5, 15)
+  //  QT_DEPRECATED_VERSION_X_5_15("Use QTextBrowser::highlighted(QUrl) instead")
+  //  void highlighted(const QString &);
+  //#endif
+  //  void anchorClicked(const QUrl &);
+
 protected:
   /// Used to load binary resources from given url. If your implementation needs
   /// to handle resources that are not located in the current filesystem, you
   /// have to reimplement this method to handle resource loading e.g. of qthelp
   /// urls via QHelpEngine or http urls with QNetworkRequest
   virtual QByteArray loadResource( const QUrl& /*url*/ );
+
+  // todo QTextBrowser
+  //  virtual void keyPressEvent(QKeyEvent *ev) override;
+  //  virtual void mouseMoveEvent(QMouseEvent *ev) override;
+  //  virtual void mousePressEvent(QMouseEvent *ev) override;
+  //  virtual void mouseReleaseEvent(QMouseEvent *ev) override;
+  //  virtual void focusOutEvent(QFocusEvent *ev) override;
+  //  virtual bool focusNextPrevChild(bool next) override;
+  //  virtual void paintEvent(QPaintEvent *e) override;
+  //#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
+  //  virtual
+  //#endif
+  //    void doSetSource(const QUrl &name, QTextDocument::ResourceType type = QTextDocument::UnknownResource);
 
 Q_SIGNALS:
   /// emited when the url changed due to user interaction, e.g. link activation

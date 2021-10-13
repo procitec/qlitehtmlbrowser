@@ -3,7 +3,7 @@ execute_process( COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_INSTALL_PR
 execute_process( COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_INSTALL_PREFIX}/library-dist-test-src )
 #execute_process( COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_INSTALL_PREFIX}/home )
 
-execute_process( COMMAND ${CMAKE_COMMAND} -E copy_directory ${TESTBROWSER_DIR} ${CMAKE_INSTALL_PREFIX}/library-dist-test-src
+execute_process( COMMAND ${CMAKE_COMMAND} -E copy_directory ${DISTBROWSER_DIR} ${CMAKE_INSTALL_PREFIX}/library-dist-test-src
                  RESULT_VARIABLE BUILD_STATUS
 )
 
