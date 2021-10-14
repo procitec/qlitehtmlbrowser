@@ -10,7 +10,11 @@ class TestBase : public QObject
 {
   Q_OBJECT
 public:
-  TestBase( const QStringList& args ) { parseArgs( args ); }
+  TestBase( const QStringList& args, bool interactive = true )
+    : mInteractive( interactive )
+  {
+    parseArgs( args );
+  }
 
   TestBase() { parseArgs( qApp->arguments() ); }
   virtual ~TestBase() {}
@@ -32,7 +36,7 @@ protected:
   void cleanup()
   {
     QTest::qWait( 100 );
-    if ( qApp->arguments().contains( QStringLiteral( "--interactive" ) ) )
+    if ( mInteractive && qApp->arguments().contains( QStringLiteral( "--interactive" ) ) )
     {
       auto* tag = QTest::currentDataTag();
       if ( tag )
@@ -45,5 +49,6 @@ protected:
 
 private:
   // QArgsToStdArgs mArgs;
-  QStringList mArgs;
+  QStringList mArgs        = {};
+  bool        mInteractive = true;
 };

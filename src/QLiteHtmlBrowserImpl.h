@@ -23,8 +23,9 @@ public:
 
   using UrlType = std::tuple<QUrl, int>;
 
-  void           setUrl( const QUrl& url, int resourceType = static_cast<int>( Browser::ResourceType::Unknown ), bool addToHistory = false );
+  void           setUrl( const QUrl& url, int resourceType = static_cast<int>( Browser::ResourceType::Unknown ) );
   void           setHtml( const QString& html, const QUrl& source_url = {} );
+  QString        html() const;
   void           setScale( double scale );
   double         scale() const;
   const UrlType& url() const { return mUrl; }
@@ -42,23 +43,24 @@ public:
   const QStringList& searchPaths() const { return mSearchPaths; }
   void               setSearchPaths( const QStringList& paths ) { mSearchPaths = paths; }
 
-  bool isBackwardAvailable() const { return ( 1 < mHistoryStack.count() ) && mHistoryStackIter != mHistoryStack.begin(); }
-  bool isForwardAvailable() const { return ( 1 < mHistoryStack.count() ) && mHistoryStackIter != mHistoryStack.end(); }
+  bool isBackwardAvailable() const { return ( 1 < mBWHistStack.count() ); }
+  bool isForwardAvailable() const { return ( 0 < mFWHistStack.count() ); }
   void clearHistory()
   {
-    mHistoryStack.clear();
-    mHistoryStackIter = mHistoryStack.begin();
+    mBWHistStack.clear();
+    mFWHistStack.clear();
   }
 
   void forward();
   void backward();
+  void reload();
 
   // todo from there is the title?
   QString historyTitle( int ) const { return {}; }
 
   QUrl historyUrl( int ) const;
-  int  backwardHistoryCount() const { return ( mHistoryStackIter - mHistoryStack.begin() ); }
-  int  forwardHistoryCount() const { return ( mHistoryStack.end() - mHistoryStackIter ); }
+  int  backwardHistoryCount() const { return ( 1 < mBWHistStack.count() ) ? mBWHistStack.count() - 1 : 0; }
+  int  forwardHistoryCount() const { return ( 0 < mFWHistStack.count() ) ? mFWHistStack.count() : 0; }
 
 protected:
   void wheelEvent( QWheelEvent* ) override;
@@ -73,6 +75,7 @@ private:
   class HistoryEntry
   {
   public:
+    HistoryEntry() = default;
     HistoryEntry( const QUrl& name, int type )
     {
       url     = name;
@@ -81,6 +84,7 @@ private:
 
     QUrl url     = {};
     int  urlType = static_cast<int>( Browser::ResourceType::Unknown );
+    bool operator==( const HistoryEntry& rhs ) { return ( rhs.url == url && rhs.urlType == urlType ); }
   };
 
   QString findFile( const QUrl& name ) const;
@@ -89,14 +93,14 @@ private:
   Q_DISABLE_COPY( QLiteHtmlBrowserImpl );
   Q_DISABLE_MOVE( QLiteHtmlBrowserImpl );
 
-  container_qt*                  mContainer = nullptr;
-  QUrl                           mSource    = {};
-  QString                        mCSS       = {};
-  UrlType                        mUrl       = {};
-  Browser::ResourceHandlerType   mResourceHandler;
-  QStack<HistoryEntry>           mHistoryStack     = {};
-  QStack<HistoryEntry>::iterator mHistoryStackIter = mHistoryStack.begin();
-  UrlType                        mHome             = {};
-  QStringList                    mSearchPaths      = {};
-  QStringList                    mValidSchemes     = { "file", "qrc", "qthelp" };
+  container_qt*                mContainer = nullptr;
+  QUrl                         mSource    = {};
+  QString                      mCSS       = {};
+  UrlType                      mUrl       = {};
+  Browser::ResourceHandlerType mResourceHandler;
+  QStack<HistoryEntry>         mBWHistStack  = {};
+  QStack<HistoryEntry>         mFWHistStack  = {};
+  UrlType                      mHome         = {};
+  QStringList                  mSearchPaths  = {};
+  QStringList                  mValidSchemes = { "file", "qrc", "qthelp" };
 };

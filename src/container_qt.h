@@ -13,11 +13,12 @@ class container_qt : public QAbstractScrollArea, protected litehtml::document_co
 public:
   container_qt( QWidget* parent = nullptr );
 
-  void   setHtml( const QString& html, const QUrl& source_url = {} );
-  void   setCSS( const QString& css );
-  void   setScale( double scale );
-  double scale() const { return mScale; }
-  void   scrollToAnchor( const QString& anchor );
+  void    setHtml( const QString& html, const QUrl& source_url = {} );
+  QString html() const { return QString::fromUtf8( mDocumentSource ); }
+  void    setCSS( const QString& css );
+  void    setScale( double scale );
+  double  scale() const { return mScale; }
+  void    scrollToAnchor( const QString& anchor );
 
   void setResourceHandler( const Browser::ResourceHandlerType& rh ) { mResourceHandler = rh; };
   bool openLinks() const { return mOpenLinks; }
@@ -91,15 +92,17 @@ private:
 
 private:
   std::shared_ptr<litehtml::document> mDocument;
+  QByteArray                          mDocumentSource;
   litehtml::context                   mContext;
   QUrl                                mBaseUrl;
   QUrl                                mSourceUrl;
-  int                                 mFontSize = 12;
-  double                              mScale    = 1.0;
-  double                              mMinScale = 0.1;
-  double                              mMaxScale = 4.0;
-  QHash<QUrl, QPixmap>                mPixmapCache;
-  Browser::ResourceHandlerType        mResourceHandler;
+  int                                 mFontSize        = 12;
+  double                              mScale           = 1.0;
+  double                              mMinScale        = 0.1;
+  double                              mMaxScale        = 4.0;
+  QHash<QUrl, QPixmap>                mPixmapCache     = {};
+  Browser::ResourceHandlerType        mResourceHandler = {};
   bool                                mOpenLinks       = true;
   bool                                mOpenExternLinks = false;
+  QByteArray                          mFontInfo        = {};
 };

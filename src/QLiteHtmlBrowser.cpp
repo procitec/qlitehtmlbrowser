@@ -83,6 +83,11 @@ void QLiteHtmlBrowser::setHtml( const QString& html, const QString& baseurl )
   mImpl->setHtml( html, baseurl );
 }
 
+QString QLiteHtmlBrowser::html() const
+{
+  return mImpl->html();
+}
+
 void QLiteHtmlBrowser::home()
 {
   auto [url, type] = mImpl->home();
@@ -94,11 +99,7 @@ void QLiteHtmlBrowser::home()
 
 void QLiteHtmlBrowser::reload()
 {
-  auto [url, type] = mImpl->url();
-  if ( url.isValid() )
-  {
-    mImpl->setUrl( url, type );
-  }
+  mImpl->reload();
 }
 
 void QLiteHtmlBrowser::setScale( double scale )

@@ -101,7 +101,7 @@ void QLiteHtmlBrowserImpl::changeEvent( QEvent* e )
 //  }
 //}
 
-void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type, bool addToHistory )
+void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type )
 {
   mUrl                       = UrlType( url, type );
   auto [home_url, home_type] = mHome;
@@ -110,10 +110,7 @@ void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type, bool addToHistory 
     mHome = UrlType( url, type );
   }
 
-  if ( addToHistory )
-  {
-    mHistoryStack.push( { url, type } );
-  }
+  mBWHistStack.push( { url, type } );
 
   if ( mContainer )
   {
@@ -152,6 +149,11 @@ void QLiteHtmlBrowserImpl::setHtml( const QString& html, const QUrl& source_url 
   {
     mContainer->setHtml( html, source_url );
   }
+}
+
+QString QLiteHtmlBrowserImpl::html() const
+{
+  return ( mContainer ) ? mContainer->html() : QString();
 }
 
 // void QLiteHtmlBrowser::setUrl( const QUrl& url )
@@ -281,18 +283,29 @@ QUrl QLiteHtmlBrowserImpl::historyUrl( int ) const
 
 void QLiteHtmlBrowserImpl::forward()
 {
-  if ( mHistoryStackIter != mHistoryStack.end() )
+  if ( !mFWHistStack.isEmpty() )
   {
-    ++mHistoryStackIter;
-    setUrl( mHistoryStackIter->url, mHistoryStackIter->urlType, false );
+    auto entry = mFWHistStack.pop();
+    setUrl( entry.url, entry.urlType );
   }
 }
 
 void QLiteHtmlBrowserImpl::backward()
 {
-  if ( mHistoryStackIter != mHistoryStack.begin() )
+  if ( 1 < mBWHistStack.count() )
   {
-    --mHistoryStackIter;
-    setUrl( mHistoryStackIter->url, mHistoryStackIter->urlType, false );
+    // this is current site
+    auto entry = mBWHistStack.pop();
+    mFWHistStack.push( { entry.url, entry.urlType } );
+    entry = mBWHistStack.pop();
+    setUrl( entry.url, entry.urlType );
+  }
+}
+void QLiteHtmlBrowserImpl::reload()
+{
+  if ( !mBWHistStack.isEmpty() )
+  {
+    auto entry = mBWHistStack.pop();
+    setUrl( entry.url, entry.urlType );
   }
 }

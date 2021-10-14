@@ -61,6 +61,9 @@ public:
   /// If no baseurl is set, the baseurl will be set to the current working directory
   void setHtml( const QString& html, const QString& baseurl = QString() );
 
+  /// return the loaded document source html
+  QString html() const;
+
   /// return current url
   QUrl source() const;
 

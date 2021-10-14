@@ -11,6 +11,7 @@
 #include <QtCore/QDebug>
 #include <QtCore/QRegularExpression>
 #include <QtGui/QPalette>
+#include <QtWidgets/QApplication>
 
 #include <cmath>
 container_qt::container_qt( QWidget* parent )
@@ -25,6 +26,7 @@ container_qt::container_qt( QWidget* parent )
   //  layout->addWidget( new QPushButton( "text" ) );
   //  setLayout( layout );
   setMouseTracking( true );
+  connect( qApp, &QApplication::fontChanged, this, [this]() { mFontInfo = this->fontInfo().family().toLocal8Bit(); } );
 }
 
 void container_qt::setCSS( const QString& css )
@@ -45,9 +47,10 @@ void container_qt::setHtml( const QString& html, const QUrl& source_url )
     }
 
     pure_url.setFragment( {} );
-    mBaseUrl   = baseUrl( pure_url );
-    mSourceUrl = pure_url;
-    mDocument  = litehtml::document::createFromUTF8( html.toUtf8(), this, &mContext );
+    mBaseUrl        = baseUrl( pure_url );
+    mSourceUrl      = pure_url;
+    mDocumentSource = html.toUtf8();
+    mDocument       = litehtml::document::createFromUTF8( mDocumentSource, this, &mContext );
     mDocument->render( this->viewport()->width(), litehtml::render_all );
     resetScrollBars();
     viewport()->update();
@@ -182,6 +185,7 @@ void container_qt::delete_font( litehtml::uint_ptr hFont )
     delete font;
   }
 }
+
 int container_qt::text_width( const litehtml::tchar_t* text, litehtml::uint_ptr hFont )
 {
   int text_width = -1;
@@ -194,6 +198,7 @@ int container_qt::text_width( const litehtml::tchar_t* text, litehtml::uint_ptr 
   }
   return text_width;
 }
+
 void container_qt::draw_text(
   litehtml::uint_ptr hdc, const litehtml::tchar_t* text, litehtml::uint_ptr hFont, litehtml::web_color color, const litehtml::position& pos )
 {
@@ -214,22 +219,22 @@ void container_qt::draw_text(
   p->drawText( QRect( pos.x, pos.y, pos.width, pos.height ), 0, QString::fromUtf8( text ) );
   p->restore();
 }
+
 int container_qt::pt_to_px( int pt )
 {
   return this->viewport()->physicalDpiY() * pt / this->viewport()->logicalDpiY();
 }
+
 int container_qt::get_default_font_size() const
 {
   return mFontSize;
 }
+
 const litehtml::tchar_t* container_qt::get_default_font_name() const
 {
-#ifdef Q_OS_LINUX
-  return "Monospace";
-#else
-  return "Courier New";
-#endif
+  return mFontInfo.constData();
 }
+
 void container_qt::draw_list_marker( litehtml::uint_ptr hdc, const litehtml::list_marker& marker )
 {
   QPainter* p( reinterpret_cast<QPainter*>( hdc ) );
@@ -348,38 +353,6 @@ QByteArray container_qt::loadResource( Browser::ResourceType type, const QUrl& u
 {
   return mResourceHandler( static_cast<int>( type ), url );
 }
-
-// QString container_qt::findFile( const QUrl& name ) const
-//{
-//  QString fileName;
-//  if ( name.scheme().isEmpty() )
-//  {
-//    fileName = name.path();
-//  }
-//  else
-//  {
-//    fileName = name.toLocalFile();
-//  }
-
-//  if ( fileName.isEmpty() )
-//    return fileName;
-
-//  if ( QFileInfo( fileName ).isAbsolute() )
-//    return fileName;
-
-//  // TODO search paths relative to baseurl or document source
-
-//  //  for ( QString path : qAsConst( searchPaths ) )
-//  //  {
-//  //    if ( !path.endsWith( QLatin1Char( '/' ) ) )
-//  //      path.append( QLatin1Char( '/' ) );
-//  //    path.append( fileName );
-//  //    if ( QFileInfo( path ).isReadable() )
-//  //      return path;
-//  //  }
-
-//  return fileName;
-//}
 
 void container_qt::load_image( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl, bool redraw_on_ready )
 {

@@ -5,6 +5,7 @@ find_package( Qt5 COMPONENTS Test REQUIRED )
 set( test_names
     test_html_content
     test_css_content
+    test_history
 )
 
 foreach( name ${test_names})
