@@ -101,13 +101,18 @@ void QLiteHtmlBrowserImpl::changeEvent( QEvent* e )
 //  }
 //}
 
-void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type )
+void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type, bool addToHistory )
 {
   mUrl                       = UrlType( url, type );
   auto [home_url, home_type] = mHome;
   if ( home_url.isEmpty() )
   {
     mHome = UrlType( url, type );
+  }
+
+  if ( addToHistory )
+  {
+    mHistoryStack.push( { url, type } );
   }
 
   if ( mContainer )
@@ -265,5 +270,29 @@ void QLiteHtmlBrowserImpl::setOpenExternalLinks( bool open )
   if ( mContainer )
   {
     mContainer->setOpenExternalLinks( open );
+  }
+}
+
+QUrl QLiteHtmlBrowserImpl::historyUrl( int ) const
+{
+  // todo implement
+  return {};
+}
+
+void QLiteHtmlBrowserImpl::forward()
+{
+  if ( mHistoryStackIter != mHistoryStack.end() )
+  {
+    ++mHistoryStackIter;
+    setUrl( mHistoryStackIter->url, mHistoryStackIter->urlType, false );
+  }
+}
+
+void QLiteHtmlBrowserImpl::backward()
+{
+  if ( mHistoryStackIter != mHistoryStack.begin() )
+  {
+    --mHistoryStackIter;
+    setUrl( mHistoryStackIter->url, mHistoryStackIter->urlType, false );
   }
 }

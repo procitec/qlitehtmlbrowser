@@ -153,3 +153,48 @@ void QLiteHtmlBrowser::setSearchPaths( const QStringList& paths )
 //    mImpl->setScale( scale );
 //  }
 //}
+
+bool QLiteHtmlBrowser::isBackwardAvailable() const
+{
+  return mImpl->isBackwardAvailable();
+}
+
+bool QLiteHtmlBrowser::isForwardAvailable() const
+{
+  return mImpl->isForwardAvailable();
+}
+
+void QLiteHtmlBrowser::clearHistory()
+{
+  mImpl->clearHistory();
+}
+
+QString QLiteHtmlBrowser::historyTitle( int idx ) const
+{
+  return mImpl->historyTitle( idx );
+}
+
+QUrl QLiteHtmlBrowser::historyUrl( int idx ) const
+{
+  return mImpl->historyUrl( idx );
+}
+
+int QLiteHtmlBrowser::backwardHistoryCount() const
+{
+  return mImpl->backwardHistoryCount();
+}
+
+int QLiteHtmlBrowser::forwardHistoryCount() const
+{
+  return mImpl->forwardHistoryCount();
+}
+
+void QLiteHtmlBrowser::backward()
+{
+  mImpl->backward();
+}
+
+void QLiteHtmlBrowser::forward()
+{
+  mImpl->forward();
+}

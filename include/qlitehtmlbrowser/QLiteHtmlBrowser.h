@@ -102,15 +102,13 @@ public:
   /// set file system paths where relative urls or resources are resolved
   void setSearchPaths( const QStringList& );
 
-  // todo QTextBrowser navigation
-
-  //  bool isBackwardAvailable() const;
-  //  bool isForwardAvailable() const;
-  //  void clearHistory();
-  //  QString historyTitle(int) const;
-  //  QUrl historyUrl(int) const;
-  //  int backwardHistoryCount() const;
-  //  int forwardHistoryCount() const;
+  bool    isBackwardAvailable() const;
+  bool    isForwardAvailable() const;
+  void    clearHistory();
+  QString historyTitle( int ) const;
+  QUrl    historyUrl( int ) const;
+  int     backwardHistoryCount() const;
+  int     forwardHistoryCount() const;
 
 public Q_SLOTS:
   /// set URL to given url. The URL may be an url to local file, qthelp, http etc.
@@ -120,8 +118,8 @@ public Q_SLOTS:
   /// is supported, HTML only is supported.
   virtual void setSource( const QUrl& url, const ResourceType& type = ResourceType::Unknown );
 
-  //  virtual void backward();
-  //  virtual void forward();
+  virtual void backward();
+  virtual void forward();
 
   /// home url is the first url set via setSource for this instance.
   /// If not empty, home() reloads the url.
