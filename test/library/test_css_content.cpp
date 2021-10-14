@@ -296,3 +296,33 @@ void HTMLCssTest::test_tables()
   auto browser = createMainWindow( mBrowserSize );
   browser->setHtml( html );
 }
+
+//<body>
+//  <div style="text-transform:uppercase;">hello world (upper)</div>
+//  <div style="text-transform:lowercase;">happy friday (lower)</div>
+//  <div style="text-transform:capitalize;">
+//    it's a nice day to code (capitalize)
+//  </div>
+//</body>
+
+void HTMLCssTest::test_text_transform_data()
+{
+  QTest::addColumn<QString>( "html" );
+  QTest::newRow( "HELLO WORLD (UPPER)" ) << R"-(<html><body>
+      <div style="text-transform:uppercase;">hello world (upper)</div>
+    </body></html>)-";
+  QTest::newRow( "hello world (lower)" ) << R"-(<html><body>
+      <div style="text-transform:lowercase;">Hello World (LOWER)</div>
+    </body></html>)-";
+  QTest::newRow( "It's A Nice Day To Code 01234 (Capitalize)" ) << R"-(<html><body>
+    <div style="text-transform:capitalize;">it's a nice day to code 01234 (capitalize)</div>
+  </body></html>)-";
+}
+
+void HTMLCssTest::test_text_transform()
+{
+
+  QFETCH( QString, html );
+  auto browser = createMainWindow( mBrowserSize );
+  browser->setHtml( html );
+}

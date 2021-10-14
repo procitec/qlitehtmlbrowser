@@ -30,6 +30,8 @@ private Q_SLOTS:
   void test_lists();
   void test_tables_data();
   void test_tables();
+  void test_text_transform_data();
+  void test_text_transform();
 
 private:
   QLiteHtmlBrowser*            createMainWindow( const QSize& );

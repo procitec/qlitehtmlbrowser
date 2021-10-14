@@ -112,6 +112,12 @@ void HistoryTest::test_history()
   QCOMPARE( browser->backwardHistoryCount(), 2 );
   QCOMPARE( browser->isBackwardAvailable(), true );
   QCOMPARE( browser->isForwardAvailable(), false );
+
+  browser->clearHistory();
+  QCOMPARE( browser->forwardHistoryCount(), 0 );
+  QCOMPARE( browser->backwardHistoryCount(), 0 );
+  QCOMPARE( browser->isBackwardAvailable(), false );
+  QCOMPARE( browser->isForwardAvailable(), false );
 }
 
 // bool    isBackwardAvailable() const;

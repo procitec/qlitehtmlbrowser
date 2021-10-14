@@ -12,6 +12,8 @@
 #include <QtCore/QRegularExpression>
 #include <QtGui/QPalette>
 #include <QtWidgets/QApplication>
+#include <QtCore/QTextBoundaryFinder>
+#include <string>
 
 #include <cmath>
 container_qt::container_qt( QWidget* parent )
@@ -658,7 +660,49 @@ void container_qt::set_cursor( const litehtml::tchar_t* cursor )
   }
   viewport()->setCursor( c );
 }
-void container_qt::transform_text( litehtml::tstring& text, litehtml::text_transform tt ) {}
+void container_qt::transform_text( litehtml::tstring& text, litehtml::text_transform tt )
+{
+  switch ( tt )
+  {
+    case litehtml::text_transform_capitalize:
+    {
+      auto                str = QString::fromStdString( text );
+      QTextBoundaryFinder finder( QTextBoundaryFinder::Word, str );
+      auto                position = finder.toNextBoundary();
+
+      while ( 0 <= position )
+      {
+        if ( finder.boundaryReasons() & QTextBoundaryFinder::EndOfItem )
+        {
+          str.replace( 0, 1, str[0].toUpper() );
+        }
+        else if ( finder.boundaryReasons() & QTextBoundaryFinder::StartOfItem )
+        {
+          str.replace( position, 1, str[position].toUpper() );
+        }
+        position = finder.toNextBoundary();
+      }
+
+      //      QStringList parts = QString::fromStdString( text ).split( QRegularExpression( "\\s+" ), Qt::SkipEmptyParts );
+      //      for ( auto& str : parts )
+      //      {
+      //        str.replace( 0, 1, str[0].toUpper() );
+      //      }
+
+      //      text = parts.join( " " ).toStdString();
+      text = str.toStdString();
+    }
+    break;
+    case litehtml::text_transform_lowercase:
+      text = QString::fromStdString( text ).toLower().toStdString();
+      break;
+    case litehtml::text_transform_uppercase:
+      text = QString::fromStdString( text ).toUpper().toStdString();
+      break;
+    case litehtml::text_transform_none:
+      break;
+  }
+}
 void container_qt::import_css( litehtml::tstring& text, const litehtml::tstring& url, litehtml::tstring& baseurl )
 {
   auto resolved_url = resolveUrl( url.c_str(), baseurl.c_str() );
