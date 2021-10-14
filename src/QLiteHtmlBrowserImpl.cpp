@@ -23,13 +23,7 @@ QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
   setMinimumSize( 200, 200 );
   setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
   mContainer = new container_qt( this );
-  connect(
-    mContainer, &container_qt::anchorClicked, this,
-    [this]( const QUrl& url ) {
-      setUrl( url );
-      emit urlChanged( url );
-    },
-    Qt::QueuedConnection );
+  connect( mContainer, &container_qt::anchorClicked, this, &QLiteHtmlBrowserImpl::onUrlChanged, Qt::QueuedConnection );
 
   connect(
     mContainer, &container_qt::urlChanged, this, [this]( const QUrl& url ) { emit urlChanged( url ); }, Qt::QueuedConnection );
@@ -48,7 +42,28 @@ QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
 
 QLiteHtmlBrowserImpl::~QLiteHtmlBrowserImpl() {}
 
-void QLiteHtmlBrowserImpl::setResourceHandler( const ResourceHandlerType& rh )
+void QLiteHtmlBrowserImpl::onUrlChanged( const QUrl& url )
+{
+  if ( mContainer->openLinks() )
+  {
+    if ( mContainer->openExternalLinks() && mValidSchemes.contains( url.scheme() ) )
+    {
+      setUrl( url );
+      emit urlChanged( url );
+      emit anchorClicked( url );
+    }
+    else
+    {
+      // todo open with QDesktopServices
+    }
+  }
+  else
+  {
+    emit anchorClicked( url );
+  }
+}
+
+void QLiteHtmlBrowserImpl::setResourceHandler( const Browser::ResourceHandlerType& rh )
 {
   mResourceHandler = rh;
   mContainer->setResourceHandler( rh );
@@ -88,7 +103,13 @@ void QLiteHtmlBrowserImpl::changeEvent( QEvent* e )
 
 void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type )
 {
-  mUrl = url;
+  mUrl                       = UrlType( url, type );
+  auto [home_url, home_type] = mHome;
+  if ( home_url.isEmpty() )
+  {
+    mHome = UrlType( url, type );
+  }
+
   if ( mContainer )
   {
     auto pure_url = QUrl( url );
@@ -188,11 +209,6 @@ QByteArray QLiteHtmlBrowserImpl::loadResource( int type, const QUrl& url )
     }
   }
 
-  //  if ( data.isEmpty() )
-  //  {
-  //    data = mResourceHandler( url );
-  //  }
-
   return data;
 }
 
@@ -226,4 +242,28 @@ QString QLiteHtmlBrowserImpl::findFile( const QUrl& name ) const
   //  }
 
   return fileName;
+}
+
+bool QLiteHtmlBrowserImpl::openLinks() const
+{
+  return ( mContainer ) ? mContainer->openLinks() : false;
+}
+
+bool QLiteHtmlBrowserImpl::openExternalLinks() const
+{
+  return ( mContainer ) ? mContainer->openExternalLinks() : false;
+}
+
+void QLiteHtmlBrowserImpl::setOpenLinks( bool open )
+{
+  if ( mContainer )
+    mContainer->setOpenLinks( open );
+}
+
+void QLiteHtmlBrowserImpl::setOpenExternalLinks( bool open )
+{
+  if ( mContainer )
+  {
+    mContainer->setOpenExternalLinks( open );
+  }
 }

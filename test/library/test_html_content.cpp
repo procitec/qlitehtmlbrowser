@@ -158,7 +158,7 @@ void HTMLContentTest::test_img()
 {
   QFETCH( QString, html );
   auto browser = createMainWindow( mBrowserSize );
-  browser->setHtml( html, QUrl::fromLocalFile( QDir::currentPath() ).path() );
+  browser->setHtml( html, QUrl::fromLocalFile( QDir::currentPath() ).path() + "/" );
 }
 
 void HTMLContentTest::test_tables_data()

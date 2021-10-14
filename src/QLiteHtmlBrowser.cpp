@@ -24,14 +24,16 @@ QLiteHtmlBrowser::QLiteHtmlBrowser( QWidget* parent )
   setLayout( layout );
 
   mImpl->show();
-  //  mImpl->
-  connect( mImpl, &QLiteHtmlBrowserImpl::urlChanged, this, &QLiteHtmlBrowser::urlChanged );
   mImpl->setResourceHandler( std::bind( &QLiteHtmlBrowser::loadResource, this, std::placeholders::_1, std::placeholders::_2 ) );
+
+  connect( mImpl, &QLiteHtmlBrowserImpl::urlChanged, this, &QLiteHtmlBrowser::sourceChanged );
+  connect( mImpl, &QLiteHtmlBrowserImpl::anchorClicked, this, &QLiteHtmlBrowser::anchorClicked );
 }
 
 QUrl QLiteHtmlBrowser::source() const
 {
-  return mImpl->url();
+  auto [url, type] = mImpl->url();
+  return url;
 }
 
 // void QLiteHtmlBrowser::changeEvent( QEvent* e )
@@ -81,6 +83,24 @@ void QLiteHtmlBrowser::setHtml( const QString& html, const QString& baseurl )
   mImpl->setHtml( html, baseurl );
 }
 
+void QLiteHtmlBrowser::home()
+{
+  auto [url, type] = mImpl->home();
+  if ( url.isValid() )
+  {
+    mImpl->setUrl( url, type );
+  }
+}
+
+void QLiteHtmlBrowser::reload()
+{
+  auto [url, type] = mImpl->url();
+  if ( url.isValid() )
+  {
+    mImpl->setUrl( url, type );
+  }
+}
+
 void QLiteHtmlBrowser::setScale( double scale )
 {
   mImpl->setScale( scale );
@@ -89,6 +109,36 @@ void QLiteHtmlBrowser::setScale( double scale )
 double QLiteHtmlBrowser::scale() const
 {
   return mImpl->scale();
+}
+
+bool QLiteHtmlBrowser::openLinks() const
+{
+  return mImpl->openLinks();
+}
+
+bool QLiteHtmlBrowser::openExternalLinks() const
+{
+  return mImpl->openExternalLinks();
+}
+
+const QStringList& QLiteHtmlBrowser::searchPaths() const
+{
+  return mImpl->searchPaths();
+}
+
+void QLiteHtmlBrowser::setOpenLinks( bool open )
+{
+  mImpl->setOpenLinks( open );
+}
+
+void QLiteHtmlBrowser::setOpenExternalLinks( bool open )
+{
+  mImpl->setOpenExternalLinks( open );
+}
+
+void QLiteHtmlBrowser::setSearchPaths( const QStringList& paths )
+{
+  mImpl->setSearchPaths( paths );
 }
 
 // void QLiteHtmlBrowser::wheelEvent( QWheelEvent* e )

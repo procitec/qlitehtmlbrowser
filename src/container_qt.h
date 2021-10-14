@@ -1,6 +1,7 @@
 #pragma once
 
 #include "litehtml.h"
+#include "browserdefinitions.h"
 
 #include <QtWidgets/QAbstractScrollArea>
 #include <QtCore/QHash>
@@ -10,16 +11,6 @@ class container_qt : public QAbstractScrollArea, protected litehtml::document_co
 {
   Q_OBJECT
 public:
-  enum class ResourceType : int
-  {
-    Unknown,
-    Html,
-    Image,
-    Css
-  };
-
-  using ResourceHandlerType = std::function<QByteArray( int, const QUrl& )>;
-
   container_qt( QWidget* parent = nullptr );
 
   void   setHtml( const QString& html, const QUrl& source_url = {} );
@@ -28,7 +19,12 @@ public:
   double scale() const { return mScale; }
   void   scrollToAnchor( const QString& anchor );
 
-  void setResourceHandler( const ResourceHandlerType& rh ) { mResourceHandler = rh; };
+  void setResourceHandler( const Browser::ResourceHandlerType& rh ) { mResourceHandler = rh; };
+  bool openLinks() const { return mOpenLinks; }
+  bool openExternalLinks() const { return mOpenExternLinks; }
+
+  void setOpenLinks( bool open ) { mOpenLinks = open; }
+  void setOpenExternalLinks( bool open ) { mOpenExternLinks = open; }
 
 protected:
   void paintEvent( QPaintEvent* ) override;
@@ -90,7 +86,8 @@ private:
   Qt::PenStyle           toPenStyle( const litehtml::border_style& style ) const;
   std::pair<int, int>    findAnchorPos( const QString& anchor );
   litehtml::element::ptr findAnchor( const QString& anchor );
-  QByteArray             loadResource( ResourceType type, const QUrl& url );
+  QByteArray             loadResource( Browser::ResourceType type, const QUrl& url );
+  QUrl                   baseUrl( const QUrl& url );
 
 private:
   std::shared_ptr<litehtml::document> mDocument;
@@ -102,5 +99,7 @@ private:
   double                              mMinScale = 0.1;
   double                              mMaxScale = 4.0;
   QHash<QUrl, QPixmap>                mPixmapCache;
-  ResourceHandlerType                 mResourceHandler;
+  Browser::ResourceHandlerType        mResourceHandler;
+  bool                                mOpenLinks       = true;
+  bool                                mOpenExternLinks = false;
 };

@@ -33,7 +33,7 @@ TestBrowser::TestBrowser()
     if ( mUrl )
       loadHtml( mUrl->text() );
   } );
-  connect( mBrowser, &QLiteHtmlBrowser::urlChanged, mUrl, [this]( const QUrl& url ) {
+  connect( mBrowser, &QLiteHtmlBrowser::sourceChanged, mUrl, [this]( const QUrl& url ) {
     if ( mUrl )
     {
       mUrl->blockSignals( true );

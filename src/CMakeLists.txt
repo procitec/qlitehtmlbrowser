@@ -20,6 +20,7 @@ target_sources(QLiteHtmlBrowser
         QLiteHtmlBrowserImpl.h
         container_qt.cpp
         container_qt.h
+        browserdefinitions.h
         ${mocs}
         ${qrcs}
 )

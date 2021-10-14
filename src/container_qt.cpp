@@ -38,8 +38,14 @@ void container_qt::setHtml( const QString& html, const QUrl& source_url )
   if ( !html.isEmpty() )
   {
     auto pure_url = source_url;
+
+    if ( pure_url.isEmpty() )
+    {
+      pure_url = QUrl::fromLocalFile( QDir::currentPath() ).path() + "/";
+    }
+
     pure_url.setFragment( {} );
-    mBaseUrl   = pure_url.adjusted( QUrl::RemoveFilename );
+    mBaseUrl   = baseUrl( pure_url );
     mSourceUrl = pure_url;
     mDocument  = litehtml::document::createFromUTF8( html.toUtf8(), this, &mContext );
     mDocument->render( this->viewport()->width(), litehtml::render_all );
@@ -51,6 +57,18 @@ void container_qt::setHtml( const QString& html, const QUrl& source_url )
       scrollToAnchor( frag );
     }
   }
+}
+
+QUrl container_qt::baseUrl( const QUrl& url )
+{
+  // determine base for the given url
+  // e.g. for file urls with filename and fragement but also for
+  // pure directory urls
+  // in context of clean urls this is normaly not easy do define, see
+  // https://en.wikipedia.org/wiki/Clean_URL#Slug
+  // we use the RemoveFilename part of QUrl to remove everything right of the last slash
+  auto base = url.adjusted( QUrl::RemoveFilename );
+  return base;
 }
 
 void container_qt::resetScrollBars()
@@ -289,7 +307,7 @@ void container_qt::draw_list_marker( litehtml::uint_ptr hdc, const litehtml::lis
 QPixmap container_qt::load_image_data( const QUrl& url )
 {
   QPixmap pm;
-  pm.loadFromData( loadResource( ResourceType::Image, url ) );
+  pm.loadFromData( loadResource( Browser::ResourceType::Image, url ) );
   return pm;
 }
 
@@ -317,6 +335,8 @@ QUrl container_qt::resolveUrl( const litehtml::tchar_t* src, const litehtml::tch
     QFileInfo fi( _baseurl.toLocalFile() );
     if ( fi.exists() )
     {
+      // due to QUrl documentation, this works only if _url has no scheme!
+      _url.setScheme( QString() );
       resolved_url = QUrl::fromLocalFile( fi.absolutePath() + QDir::separator() ).resolved( _url );
     }
   }
@@ -324,7 +344,7 @@ QUrl container_qt::resolveUrl( const litehtml::tchar_t* src, const litehtml::tch
   return resolved_url;
 }
 
-QByteArray container_qt::loadResource( ResourceType type, const QUrl& url )
+QByteArray container_qt::loadResource( Browser::ResourceType type, const QUrl& url )
 {
   return mResourceHandler( static_cast<int>( type ), url );
 }
@@ -669,7 +689,7 @@ void container_qt::transform_text( litehtml::tstring& text, litehtml::text_trans
 void container_qt::import_css( litehtml::tstring& text, const litehtml::tstring& url, litehtml::tstring& baseurl )
 {
   auto resolved_url = resolveUrl( url.c_str(), baseurl.c_str() );
-  auto content      = loadResource( ResourceType::Css, resolved_url );
+  auto content      = loadResource( Browser::ResourceType::Css, resolved_url );
   if ( !content.isEmpty() )
   {
     text = QString::fromUtf8( content.constData() ).toStdString();
