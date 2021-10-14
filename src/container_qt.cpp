@@ -39,6 +39,7 @@ void container_qt::setCSS( const QString& css )
 
 void container_qt::setHtml( const QString& html, const QUrl& source_url )
 {
+
   if ( !html.isEmpty() )
   {
     auto pure_url = source_url;
@@ -52,7 +53,8 @@ void container_qt::setHtml( const QString& html, const QUrl& source_url )
     mBaseUrl        = baseUrl( pure_url );
     mSourceUrl      = pure_url;
     mDocumentSource = html.toUtf8();
-    mDocument       = litehtml::document::createFromUTF8( mDocumentSource, this, &mContext );
+    mCaption.clear();
+    mDocument = litehtml::document::createFromUTF8( mDocumentSource, this, &mContext );
     mDocument->render( this->viewport()->width(), litehtml::render_all );
     resetScrollBars();
     viewport()->update();
@@ -611,7 +613,10 @@ std::pair<int, int> container_qt::findAnchorPos( const QString& anchor )
   return pos;
 }
 
-void container_qt::set_caption( const litehtml::tchar_t* caption ) {}
+void container_qt::set_caption( const litehtml::tchar_t* caption )
+{
+  // title of the current url
+}
 
 void container_qt::set_base_url( const litehtml::tchar_t* base_url )
 {

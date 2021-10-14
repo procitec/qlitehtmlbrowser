@@ -76,15 +76,17 @@ private:
   {
   public:
     HistoryEntry() = default;
-    HistoryEntry( const QUrl& name, int type )
+    HistoryEntry( const QUrl& name, int type, const QString& title )
     {
-      url     = name;
-      urlType = type;
+      url      = name;
+      urlType  = type;
+      urlTitle = title;
     }
 
-    QUrl url     = {};
-    int  urlType = static_cast<int>( Browser::ResourceType::Unknown );
-    bool operator==( const HistoryEntry& rhs ) { return ( rhs.url == url && rhs.urlType == urlType ); }
+    QUrl    url      = {};
+    int     urlType  = static_cast<int>( Browser::ResourceType::Unknown );
+    QString urlTitle = {};
+    bool    operator==( const HistoryEntry& rhs ) { return ( rhs.url == url && rhs.urlType == urlType && rhs.urlTitle == urlTitle ); }
   };
 
   QString findFile( const QUrl& name ) const;

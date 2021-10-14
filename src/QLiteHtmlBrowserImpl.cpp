@@ -110,8 +110,6 @@ void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type )
     mHome = UrlType( url, type );
   }
 
-  mBWHistStack.push( { url, type } );
-
   if ( mContainer )
   {
     auto pure_url = QUrl( url );
@@ -138,6 +136,8 @@ void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type )
     if ( !html.isEmpty() )
     {
       mContainer->setHtml( html, url );
+      mBWHistStack.push( { url, type, mContainer->caption() } );
+
       update();
     }
   }
@@ -296,7 +296,7 @@ void QLiteHtmlBrowserImpl::backward()
   {
     // this is current site
     auto entry = mBWHistStack.pop();
-    mFWHistStack.push( { entry.url, entry.urlType } );
+    mFWHistStack.push( { entry.url, entry.urlType, entry.urlTitle } );
     entry = mBWHistStack.pop();
     setUrl( entry.url, entry.urlType );
   }

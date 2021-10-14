@@ -24,8 +24,9 @@ public:
   bool openLinks() const { return mOpenLinks; }
   bool openExternalLinks() const { return mOpenExternLinks; }
 
-  void setOpenLinks( bool open ) { mOpenLinks = open; }
-  void setOpenExternalLinks( bool open ) { mOpenExternLinks = open; }
+  void           setOpenLinks( bool open ) { mOpenLinks = open; }
+  void           setOpenExternalLinks( bool open ) { mOpenExternLinks = open; }
+  const QString& caption() const { return mCaption; }
 
 protected:
   void paintEvent( QPaintEvent* ) override;
@@ -105,4 +106,5 @@ private:
   bool                                mOpenLinks       = true;
   bool                                mOpenExternLinks = false;
   QByteArray                          mFontInfo        = {};
+  QString                             mCaption         = {};
 };
