@@ -615,7 +615,7 @@ std::pair<int, int> container_qt::findAnchorPos( const QString& anchor )
 
 void container_qt::set_caption( const litehtml::tchar_t* caption )
 {
-  // title of the current url
+  mCaption = QString::fromStdString( caption );
 }
 
 void container_qt::set_base_url( const litehtml::tchar_t* base_url )

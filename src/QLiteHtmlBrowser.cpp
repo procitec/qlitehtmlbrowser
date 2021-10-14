@@ -199,3 +199,8 @@ void QLiteHtmlBrowser::forward()
 {
   mImpl->forward();
 }
+
+const QString& QLiteHtmlBrowser::caption() const
+{
+  return mImpl->caption();
+}

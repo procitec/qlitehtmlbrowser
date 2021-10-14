@@ -70,48 +70,59 @@ void HistoryTest::test_history()
   QCOMPARE( browser->backwardHistoryCount(), 0 );
   QCOMPARE( browser->isBackwardAvailable(), false );
   QCOMPARE( browser->isForwardAvailable(), false );
+  QCOMPARE( browser->caption(), QLatin1String( "Url 1" ) );
 
   browser->setSource( QUrl::fromLocalFile( base + "/url2.htm" ) );
   QCOMPARE( browser->forwardHistoryCount(), 0 );
   QCOMPARE( browser->backwardHistoryCount(), 1 );
   QCOMPARE( browser->isBackwardAvailable(), true );
   QCOMPARE( browser->isForwardAvailable(), false );
+  QCOMPARE( browser->caption(), QLatin1String( "Url 2" ) );
 
   browser->setSource( QUrl::fromLocalFile( base + "/url3.htm" ) );
   QCOMPARE( browser->forwardHistoryCount(), 0 );
   QCOMPARE( browser->backwardHistoryCount(), 2 );
   QCOMPARE( browser->isBackwardAvailable(), true );
   QCOMPARE( browser->isForwardAvailable(), false );
+  QCOMPARE( browser->caption(), QLatin1String( "Url 3" ) );
 
   browser->reload();
   QCOMPARE( browser->forwardHistoryCount(), 0 );
   QCOMPARE( browser->backwardHistoryCount(), 2 );
   QCOMPARE( browser->isBackwardAvailable(), true );
   QCOMPARE( browser->isForwardAvailable(), false );
+  QCOMPARE( browser->caption(), QLatin1String( "Url 3" ) );
 
   browser->backward(); // url2
   QCOMPARE( browser->forwardHistoryCount(), 1 );
   QCOMPARE( browser->backwardHistoryCount(), 1 );
   QCOMPARE( browser->isBackwardAvailable(), true );
   QCOMPARE( browser->isForwardAvailable(), true );
+  QCOMPARE( browser->caption(), QLatin1String( "Url 2" ) );
 
   browser->backward(); // url1
   QCOMPARE( browser->forwardHistoryCount(), 2 );
   QCOMPARE( browser->backwardHistoryCount(), 0 );
   QCOMPARE( browser->isBackwardAvailable(), false );
   QCOMPARE( browser->isForwardAvailable(), true );
+  QCOMPARE( browser->caption(), QLatin1String( "Url 1" ) );
 
   browser->forward();
   QCOMPARE( browser->forwardHistoryCount(), 1 );
   QCOMPARE( browser->backwardHistoryCount(), 1 );
   QCOMPARE( browser->isBackwardAvailable(), true );
   QCOMPARE( browser->isForwardAvailable(), true );
+  QCOMPARE( browser->caption(), QLatin1String( "Url 2" ) );
 
   browser->forward();
   QCOMPARE( browser->forwardHistoryCount(), 0 );
   QCOMPARE( browser->backwardHistoryCount(), 2 );
   QCOMPARE( browser->isBackwardAvailable(), true );
   QCOMPARE( browser->isForwardAvailable(), false );
+  QCOMPARE( browser->caption(), QLatin1String( "Url 3" ) );
+
+  browser->home();
+  QCOMPARE( browser->caption(), QLatin1String( "Url 1" ) );
 
   browser->clearHistory();
   QCOMPARE( browser->forwardHistoryCount(), 0 );

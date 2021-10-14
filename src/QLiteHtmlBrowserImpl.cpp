@@ -309,3 +309,8 @@ void QLiteHtmlBrowserImpl::reload()
     setUrl( entry.url, entry.urlType );
   }
 }
+
+const QString& QLiteHtmlBrowserImpl::caption() const
+{
+  return mContainer->caption();
+}

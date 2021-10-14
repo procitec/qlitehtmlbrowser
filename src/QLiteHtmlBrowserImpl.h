@@ -62,6 +62,8 @@ public:
   int  backwardHistoryCount() const { return ( 1 < mBWHistStack.count() ) ? mBWHistStack.count() - 1 : 0; }
   int  forwardHistoryCount() const { return ( 0 < mFWHistStack.count() ) ? mFWHistStack.count() : 0; }
 
+  const QString& caption() const;
+
 protected:
   void wheelEvent( QWheelEvent* ) override;
   void changeEvent( QEvent* ) override;

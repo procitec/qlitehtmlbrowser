@@ -113,6 +113,9 @@ public:
   int     backwardHistoryCount() const;
   int     forwardHistoryCount() const;
 
+  /// return title for url if available, else returns empty string
+  const QString& caption() const;
+
 public Q_SLOTS:
   /// set URL to given url. The URL may be an url to local file, qthelp, http etc.
   /// The URL could contain an anchor element. Currently parameters to URL like

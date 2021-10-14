@@ -79,6 +79,8 @@ void TestBrowser::loadHtml( const QString& html_file )
     if ( mBrowser )
     {
       mBrowser->setSource( url );
+      setWindowTitle( QString( "%1 <%2>" ).arg( qApp->applicationDisplayName(), mBrowser->caption() ) );
+      ;
     }
   }
 }
