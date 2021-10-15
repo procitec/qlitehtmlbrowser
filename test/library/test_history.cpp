@@ -107,6 +107,14 @@ void HistoryTest::test_history()
   QCOMPARE( browser->isForwardAvailable(), true );
   QCOMPARE( browser->caption(), QLatin1String( "Url 1" ) );
 
+  // this should not be possible!
+  browser->backward(); // url1
+  QCOMPARE( browser->forwardHistoryCount(), 2 );
+  QCOMPARE( browser->backwardHistoryCount(), 0 );
+  QCOMPARE( browser->isBackwardAvailable(), false );
+  QCOMPARE( browser->isForwardAvailable(), true );
+  QCOMPARE( browser->caption(), QLatin1String( "Url 1" ) );
+
   browser->forward();
   QCOMPARE( browser->forwardHistoryCount(), 1 );
   QCOMPARE( browser->backwardHistoryCount(), 1 );
@@ -121,8 +129,20 @@ void HistoryTest::test_history()
   QCOMPARE( browser->isForwardAvailable(), false );
   QCOMPARE( browser->caption(), QLatin1String( "Url 3" ) );
 
+  // this should not be possible
+  browser->forward();
+  QCOMPARE( browser->forwardHistoryCount(), 0 );
+  QCOMPARE( browser->backwardHistoryCount(), 2 );
+  QCOMPARE( browser->isBackwardAvailable(), true );
+  QCOMPARE( browser->isForwardAvailable(), false );
+  QCOMPARE( browser->caption(), QLatin1String( "Url 3" ) );
+
   browser->home();
   QCOMPARE( browser->caption(), QLatin1String( "Url 1" ) );
+  QCOMPARE( browser->forwardHistoryCount(), 0 );
+  QCOMPARE( browser->backwardHistoryCount(), 3 ); // increased due to home() call, this affects history
+  QCOMPARE( browser->isBackwardAvailable(), true );
+  QCOMPARE( browser->isForwardAvailable(), false );
 
   browser->clearHistory();
   QCOMPARE( browser->forwardHistoryCount(), 0 );

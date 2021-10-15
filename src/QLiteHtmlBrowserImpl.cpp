@@ -136,7 +136,18 @@ void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type )
     if ( !html.isEmpty() )
     {
       mContainer->setHtml( html, url );
-      mBWHistStack.push( { url, type, mContainer->caption() } );
+
+      auto hist_url = QUrl();
+
+      if ( !mBWHistStack.isEmpty() )
+      {
+        hist_url = mBWHistStack.top().url;
+      }
+
+      if ( hist_url != url )
+      {
+        mBWHistStack.push( { url, type, mContainer->caption() } );
+      }
 
       update();
     }
