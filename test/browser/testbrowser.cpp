@@ -59,6 +59,14 @@ TestBrowser::~TestBrowser()
   mHelpEngine = nullptr;
 }
 
+void TestBrowser::setSearchPaths( const QStringList& paths )
+{
+  if ( mBrowser )
+  {
+    mBrowser->setSearchPaths( paths );
+  }
+}
+
 void TestBrowser::loadHtml( const QString& html_file )
 {
   if ( !html_file.isEmpty() )

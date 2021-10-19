@@ -27,6 +27,8 @@ public:
     }
   }
 
+  void setSearchPaths( const QStringList& );
+
 protected:
   void openHtml();
   void openHelp();

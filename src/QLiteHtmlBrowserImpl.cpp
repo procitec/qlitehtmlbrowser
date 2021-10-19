@@ -8,7 +8,7 @@
 #include <QtGui/QPalette>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QStyle>
-
+#include <QtGui/QDesktopServices>
 #include <functional>
 
 extern const litehtml::tchar_t master_css[] = {
@@ -23,10 +23,10 @@ QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
   setMinimumSize( 200, 200 );
   setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
   mContainer = new container_qt( this );
-  connect( mContainer, &container_qt::anchorClicked, this, &QLiteHtmlBrowserImpl::onUrlChanged, Qt::QueuedConnection );
+  connect( mContainer, &container_qt::anchorClicked, this, &QLiteHtmlBrowserImpl::onAnchorClicked, Qt::QueuedConnection );
 
-  connect(
-    mContainer, &container_qt::urlChanged, this, [this]( const QUrl& url ) { emit urlChanged( url ); }, Qt::QueuedConnection );
+  connect( mContainer, &container_qt::urlChanged, this, &QLiteHtmlBrowserImpl::urlChanged, Qt::QueuedConnection );
+  connect( mContainer, &container_qt::anchorClickedInfo, this, &QLiteHtmlBrowserImpl::anchorClicked, Qt::QueuedConnection );
 
   mContainer->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
   mContainer->show();
@@ -42,19 +42,29 @@ QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
 
 QLiteHtmlBrowserImpl::~QLiteHtmlBrowserImpl() {}
 
-void QLiteHtmlBrowserImpl::onUrlChanged( const QUrl& url )
+void QLiteHtmlBrowserImpl::onAnchorClicked( const QUrl& url )
 {
   if ( mContainer->openLinks() )
   {
-    if ( mContainer->openExternalLinks() && mValidSchemes.contains( url.scheme() ) )
+    if ( mContainer->openExternalLinks() )
     {
-      setUrl( url );
-      emit urlChanged( url );
-      emit anchorClicked( url );
+      if ( mValidSchemes.contains( url.scheme() ) )
+      {
+#ifndef QT_NO_DESKTOPSERVICES
+        // todo open with QDesktopServices
+        QDesktopServices::openUrl( url );
+#endif
+      }
+      else
+      {
+        emit anchorClicked( url );
+      }
     }
     else
     {
-      // todo open with QDesktopServices
+      setUrl( url );
+      emit anchorClicked( url );
+      emit urlChanged( url );
     }
   }
   else
@@ -67,6 +77,12 @@ void QLiteHtmlBrowserImpl::setResourceHandler( const Browser::ResourceHandlerTyp
 {
   mResourceHandler = rh;
   mContainer->setResourceHandler( rh );
+}
+
+void QLiteHtmlBrowserImpl::setUrlResolveHandler( const Browser::UrlResolveHandlerType& rh )
+{
+  mUrlResolveHandler = rh;
+  mContainer->setUrlResolveHandler( rh );
 }
 
 void QLiteHtmlBrowserImpl::changeEvent( QEvent* e )
@@ -135,6 +151,7 @@ void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type )
 
     if ( !html.isEmpty() )
     {
+      parseUrl( url );
       mContainer->setHtml( html, url );
 
       auto hist_url = QUrl();
@@ -154,12 +171,37 @@ void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type )
   }
 }
 
+QUrl QLiteHtmlBrowserImpl::baseUrl( const QUrl& url ) const
+{
+  // determine base for the given url
+  // e.g. for file urls with filename and fragement but also for
+  // pure directory urls
+  // in context of clean urls this is normaly not easy do define, see
+  // https://en.wikipedia.org/wiki/Clean_URL#Slug
+  // we use the RemoveFilename part of QUrl to remove everything right of the last slash
+  auto base = url.adjusted( QUrl::RemoveFilename );
+  return base;
+}
+
 void QLiteHtmlBrowserImpl::setHtml( const QString& html, const QUrl& source_url )
 {
   if ( mContainer )
   {
+    parseUrl( source_url );
     mContainer->setHtml( html, source_url );
   }
+}
+
+void QLiteHtmlBrowserImpl::parseUrl( const QUrl& url )
+{
+  auto _url = url;
+  if ( _url.isEmpty() )
+  {
+    _url = QUrl::fromLocalFile( QDir::currentPath() ).path() + "/";
+  }
+
+  _url.setFragment( {} );
+  mBaseUrl = baseUrl( _url );
 }
 
 QString QLiteHtmlBrowserImpl::html() const
@@ -230,6 +272,66 @@ QByteArray QLiteHtmlBrowserImpl::loadResource( int type, const QUrl& url )
   return data;
 }
 
+QUrl QLiteHtmlBrowserImpl::resolveUrl( const QString& url )
+{
+
+  QUrl resolved;
+
+  /// used to resolve a given url. The base implementation tries to load relatives url
+  /// 2. From base_url of given url in setSource() or setHtml methods
+  /// 3. From current directory
+  /// 4. From given search paths via setSearchPaths()
+
+  //  else
+  //  {
+  //    // todo: let resourceHandler callback do this, he has search paths defined!
+
+  auto _url = QUrl( url );
+  // due to QUrl documentation, this works only if _url has no scheme!
+  _url.setScheme( QString() );
+
+  if ( !mBaseUrl.isEmpty() )
+  {
+    resolved = QUrl( mBaseUrl ).resolved( _url );
+  }
+  if ( !resolved.isRelative() )
+  {
+    return resolved;
+  }
+
+  else if ( QFileInfo( resolved.toLocalFile() ).isReadable() )
+  {
+    return QUrl::fromLocalFile( resolved.toLocalFile() );
+  }
+
+  resolved = QUrl::fromLocalFile( QDir::currentPath() + QDir::separator() ).resolved( _url );
+
+  if ( QFileInfo( resolved.toLocalFile() ).isReadable() )
+  {
+    return resolved;
+  }
+
+  resolved.clear();
+
+  for ( auto path : searchPaths() )
+  {
+    if ( !path.endsWith( QLatin1Char( '/' ) ) )
+      path.append( QLatin1Char( '/' ) );
+
+    QFileInfo fi( path );
+    if ( fi.exists() )
+    {
+      resolved = QUrl::fromLocalFile( fi.absolutePath() + QDir::separator() ).resolved( _url );
+
+      if ( QFileInfo( resolved.toLocalFile() ).isReadable() )
+      {
+        break;
+      }
+    }
+  }
+  return resolved;
+}
+
 QString QLiteHtmlBrowserImpl::findFile( const QUrl& name ) const
 {
   QString fileName;
@@ -245,19 +347,22 @@ QString QLiteHtmlBrowserImpl::findFile( const QUrl& name ) const
   if ( fileName.isEmpty() )
     return fileName;
 
-  if ( QFileInfo( fileName ).isAbsolute() )
+  if ( QFileInfo( fileName ).isReadable() )
     return fileName;
 
-  // TODO search paths relative to baseurl or document source
+  fileName.clear();
 
-  //  for ( QString path : qAsConst( searchPaths ) )
-  //  {
-  //    if ( !path.endsWith( QLatin1Char( '/' ) ) )
-  //      path.append( QLatin1Char( '/' ) );
-  //    path.append( fileName );
-  //    if ( QFileInfo( path ).isReadable() )
-  //      return path;
-  //  }
+  for ( auto path : searchPaths() )
+  {
+    if ( !path.endsWith( QLatin1Char( '/' ) ) )
+      path.append( QLatin1Char( '/' ) );
+    path.append( fileName );
+    if ( QFileInfo( path ).isReadable() )
+    {
+      fileName = path;
+      break;
+    }
+  }
 
   return fileName;
 }
@@ -288,7 +393,8 @@ void QLiteHtmlBrowserImpl::setOpenExternalLinks( bool open )
 
 QUrl QLiteHtmlBrowserImpl::historyUrl( int ) const
 {
-  // todo implement
+  // todo: implementation
+  qWarning() << "not implemented yet";
   return {};
 }
 

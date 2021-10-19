@@ -19,6 +19,7 @@ QLiteHtmlBrowser* HTMLContentTest::createMainWindow( const QSize& size )
   mWnd         = std::make_unique<QMainWindow>();
   auto browser = new QLiteHtmlBrowser( nullptr );
   mWnd->setCentralWidget( browser );
+  browser->setSearchPaths( searchPaths() );
   browser->setMinimumSize( size );
   browser->update();
   browser->show();
@@ -135,20 +136,21 @@ void HTMLContentTest::test_lists()
 void HTMLContentTest::test_img_data()
 {
   QTest::addColumn<QString>( "html" );
-  QTest::newRow( "invalid image" ) << R"-(
-  <!DOCTYPE html>
-  <html>
-  <body>
-  <img src="does_not_exist.png"/>
-  </body>
-  </html>
-  )-";
 
   QTest::newRow( "Simple local image <execute in SOURCE_DIR required>" ) << R"-(
   <!DOCTYPE html>
   <html>
   <body>
   <img src="images/16x16/arrow_up_green.png"/>
+  </body>
+  </html>
+  )-";
+
+  QTest::newRow( "invalid image" ) << R"-(
+  <!DOCTYPE html>
+  <html>
+  <body>
+  <img src="does_not_exist.png"/>
   </body>
   </html>
   )-";

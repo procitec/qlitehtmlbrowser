@@ -44,13 +44,7 @@ void container_qt::setHtml( const QString& html, const QUrl& source_url )
   {
     auto pure_url = source_url;
 
-    if ( pure_url.isEmpty() )
-    {
-      pure_url = QUrl::fromLocalFile( QDir::currentPath() ).path() + "/";
-    }
-
     pure_url.setFragment( {} );
-    mBaseUrl        = baseUrl( pure_url );
     mSourceUrl      = pure_url;
     mDocumentSource = html.toUtf8();
     mCaption.clear();
@@ -64,18 +58,6 @@ void container_qt::setHtml( const QString& html, const QUrl& source_url )
       scrollToAnchor( frag );
     }
   }
-}
-
-QUrl container_qt::baseUrl( const QUrl& url )
-{
-  // determine base for the given url
-  // e.g. for file urls with filename and fragement but also for
-  // pure directory urls
-  // in context of clean urls this is normaly not easy do define, see
-  // https://en.wikipedia.org/wiki/Clean_URL#Slug
-  // we use the RemoveFilename part of QUrl to remove everything right of the last slash
-  auto base = url.adjusted( QUrl::RemoveFilename );
-  return base;
 }
 
 void container_qt::resetScrollBars()
@@ -335,19 +317,10 @@ QUrl container_qt::resolveUrl( const litehtml::tchar_t* src, const litehtml::tch
   {
     resolved_url = QUrl( _baseurl.toString() + ( _baseurl.path().endsWith( "/" ) ? "" : "/" ) + _url.toString() );
   }
-  else
-  {
 
-    // this is our last resort when current url and new url are both relative
-    // we try to resolve against the current working directory in the local
-    // file system.
-    QFileInfo fi( _baseurl.toLocalFile() );
-    if ( fi.exists() )
-    {
-      // due to QUrl documentation, this works only if _url has no scheme!
-      _url.setScheme( QString() );
-      resolved_url = QUrl::fromLocalFile( fi.absolutePath() + QDir::separator() ).resolved( _url );
-    }
+  if ( resolved_url.isRelative() )
+  {
+    resolved_url = mUrlResolverHandler( _url.toString() );
   }
 
   return resolved_url;
@@ -639,9 +612,12 @@ void container_qt::on_anchor_click( const litehtml::tchar_t* url, const litehtml
       {
         auto anchor_url = mSourceUrl;
         anchor_url.setFragment( frag );
-        emit urlChanged( anchor_url );
+        ( mOpenLinks ) ? emit urlChanged( anchor_url ) : emit anchorClickedInfo( anchor_url );
       }
-      scrollToAnchor( frag );
+      if ( mOpenLinks )
+      {
+        scrollToAnchor( frag );
+      }
     }
     else
     {

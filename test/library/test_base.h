@@ -20,15 +20,26 @@ public:
   virtual ~TestBase() {}
 
   //  QArgsToStdArgs& args() { return mArgs; };
-  QStringList& args() { return mArgs; };
+  QStringList&       args() { return mArgs; }
+  const QStringList& searchPaths() const { return mSearchPaths; }
 
 protected:
   void parseArgs( const QStringList& args )
   {
-    auto ag = args;
-    if ( ag.contains( "--interactive" ) )
+    QStringList ag;
+    for ( auto idx = 0; idx < args.count(); idx++ )
     {
-      ag.removeAll( "--interactive" );
+      if ( args[idx].startsWith( QLatin1String( "--interactive" ) ) )
+      {
+      }
+      else if ( args[idx].startsWith( QLatin1String( "--searchpath=" ) ) )
+      {
+        mSearchPaths += args[idx].mid( QStringLiteral( "--searchpath=" ).length() );
+      }
+      else
+      {
+        ag.append( args[idx] );
+      }
     }
     mArgs = ag;
   }
@@ -48,7 +59,7 @@ protected:
   }
 
 private:
-  // QArgsToStdArgs mArgs;
   QStringList mArgs        = {};
+  QStringList mSearchPaths = {};
   bool        mInteractive = true;
 };

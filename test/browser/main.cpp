@@ -19,13 +19,19 @@ int main( int argc, char** argv )
   QCommandLineOption dirOption( QStringList() << "d"
                                               << "dir",
                                 "Set directory to load files from to <directory> on startup.", "dir" );
+
+  QCommandLineOption pathOption( QStringList() << "s"
+                                               << "searchpath",
+                                 "Add <directory> to list of search paths.", "searchpath" );
   parser.addOption( fileOption );
   parser.addOption( dirOption );
+  parser.addOption( pathOption );
 
   parser.process( app );
 
-  QString html_file = parser.value( fileOption );
-  QString html_dir  = parser.value( dirOption );
+  QString     html_file    = parser.value( fileOption );
+  QString     html_dir     = parser.value( dirOption );
+  QStringList search_paths = parser.values( pathOption );
 
   TestBrowser mWnd;
   mWnd.show();
@@ -38,6 +44,8 @@ int main( int argc, char** argv )
   {
     mWnd.setLastDirectory( html_dir );
   }
+
+  mWnd.setSearchPaths( search_paths );
   auto ret = app.exec();
 
   return ret;

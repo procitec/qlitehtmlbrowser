@@ -13,7 +13,6 @@ qt5_wrap_cpp ( mocs
 target_sources(QLiteHtmlBrowser
     PUBLIC
        ${PROJECT_SOURCE_DIR}/include/qlitehtmlbrowser/QLiteHtmlBrowser.h
-
     PRIVATE
         QLiteHtmlBrowser.cpp
         QLiteHtmlBrowserImpl.cpp

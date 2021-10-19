@@ -31,7 +31,9 @@ public:
   const UrlType& url() const { return mUrl; }
   void           loadStyleSheet();
   void           setResourceHandler( const Browser::ResourceHandlerType& rh );
+  void           setUrlResolveHandler( const Browser::UrlResolveHandlerType& rh );
   QByteArray     loadResource( int type, const QUrl& url );
+  QUrl           resolveUrl( const QString& );
   const UrlType& home() const { return mHome; }
 
   bool openLinks() const;
@@ -92,19 +94,22 @@ private:
   };
 
   QString findFile( const QUrl& name ) const;
-  void    onUrlChanged( const QUrl& );
+  void    onAnchorClicked( const QUrl& );
+  QUrl    baseUrl( const QUrl& url ) const;
+  void    parseUrl( const QUrl& url );
 
   Q_DISABLE_COPY( QLiteHtmlBrowserImpl );
   Q_DISABLE_MOVE( QLiteHtmlBrowserImpl );
 
-  container_qt*                mContainer = nullptr;
-  QUrl                         mSource    = {};
-  QString                      mCSS       = {};
-  UrlType                      mUrl       = {};
-  Browser::ResourceHandlerType mResourceHandler;
-  QStack<HistoryEntry>         mBWHistStack  = {};
-  QStack<HistoryEntry>         mFWHistStack  = {};
-  UrlType                      mHome         = {};
-  QStringList                  mSearchPaths  = {};
-  QStringList                  mValidSchemes = { "file", "qrc", "qthelp" };
+  container_qt*                  mContainer = nullptr;
+  QUrl                           mBaseUrl   = {};
+  QString                        mCSS       = {};
+  UrlType                        mUrl       = {};
+  Browser::ResourceHandlerType   mResourceHandler;
+  Browser::UrlResolveHandlerType mUrlResolveHandler;
+  QStack<HistoryEntry>           mBWHistStack  = {};
+  QStack<HistoryEntry>           mFWHistStack  = {};
+  UrlType                        mHome         = {};
+  QStringList                    mSearchPaths  = {};
+  QStringList                    mValidSchemes = { "file", "qrc", "qthelp" };
 };

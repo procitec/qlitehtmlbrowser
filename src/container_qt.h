@@ -21,6 +21,7 @@ public:
   void    scrollToAnchor( const QString& anchor );
 
   void setResourceHandler( const Browser::ResourceHandlerType& rh ) { mResourceHandler = rh; };
+  void setUrlResolveHandler( const Browser::UrlResolveHandlerType& rh ) { mUrlResolverHandler = rh; }
   bool openLinks() const { return mOpenLinks; }
   bool openExternalLinks() const { return mOpenExternLinks; }
 
@@ -38,6 +39,7 @@ protected:
 
 Q_SIGNALS:
   void anchorClicked( const QUrl& );
+  void anchorClickedInfo( const QUrl& );
   void urlChanged( const QUrl& );
 
 protected:
@@ -89,7 +91,6 @@ private:
   std::pair<int, int>    findAnchorPos( const QString& anchor );
   litehtml::element::ptr findAnchor( const QString& anchor );
   QByteArray             loadResource( Browser::ResourceType type, const QUrl& url );
-  QUrl                   baseUrl( const QUrl& url );
 
 private:
   std::shared_ptr<litehtml::document> mDocument;
@@ -97,14 +98,15 @@ private:
   litehtml::context                   mContext;
   QUrl                                mBaseUrl;
   QUrl                                mSourceUrl;
-  int                                 mFontSize        = 12;
-  double                              mScale           = 1.0;
-  double                              mMinScale        = 0.1;
-  double                              mMaxScale        = 4.0;
-  QHash<QUrl, QPixmap>                mPixmapCache     = {};
-  Browser::ResourceHandlerType        mResourceHandler = {};
-  bool                                mOpenLinks       = true;
-  bool                                mOpenExternLinks = false;
-  QByteArray                          mFontInfo        = {};
-  QString                             mCaption         = {};
+  int                                 mFontSize           = 12;
+  double                              mScale              = 1.0;
+  double                              mMinScale           = 0.1;
+  double                              mMaxScale           = 4.0;
+  QHash<QUrl, QPixmap>                mPixmapCache        = {};
+  Browser::ResourceHandlerType        mResourceHandler    = {};
+  bool                                mOpenLinks          = true;
+  bool                                mOpenExternLinks    = false;
+  QByteArray                          mFontInfo           = {};
+  QString                             mCaption            = {};
+  Browser::UrlResolveHandlerType      mUrlResolverHandler = {};
 };

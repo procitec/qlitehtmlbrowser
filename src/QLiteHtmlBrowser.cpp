@@ -25,6 +25,7 @@ QLiteHtmlBrowser::QLiteHtmlBrowser( QWidget* parent )
 
   mImpl->show();
   mImpl->setResourceHandler( std::bind( &QLiteHtmlBrowser::loadResource, this, std::placeholders::_1, std::placeholders::_2 ) );
+  mImpl->setUrlResolveHandler( std::bind( &QLiteHtmlBrowser::resolveUrl, this, std::placeholders::_1 ) );
 
   connect( mImpl, &QLiteHtmlBrowserImpl::urlChanged, this, &QLiteHtmlBrowser::sourceChanged );
   connect( mImpl, &QLiteHtmlBrowserImpl::anchorClicked, this, &QLiteHtmlBrowser::anchorClicked );
@@ -71,6 +72,11 @@ QUrl QLiteHtmlBrowser::source() const
 QByteArray QLiteHtmlBrowser::loadResource( int type, const QUrl& url )
 {
   return mImpl->loadResource( type, url );
+}
+
+QUrl QLiteHtmlBrowser::resolveUrl( const QString& url )
+{
+  return mImpl->resolveUrl( url );
 }
 
 void QLiteHtmlBrowser::setSource( const QUrl& name, const ResourceType& type )

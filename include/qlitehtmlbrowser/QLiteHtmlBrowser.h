@@ -82,6 +82,13 @@ public:
   /// urls via QHelpEngine or http urls with QNetworkRequest
   virtual QByteArray loadResource( int, const QUrl& );
 
+  /// used to resolve a given url. The base implementation tries to load relatives url
+  /// 1. From base_url given in html element or base tag
+  /// 2. From base_url of given url in setSource() or setHtml methods
+  /// 3. From current directory
+  /// 4. From given search paths via setSearchPaths()
+  virtual QUrl resolveUrl( const QString& url );
+
   /// returns true if link navigation is enabled ( clicked links will be opened )
   /// anchorClicked is emitted in any case, sourceChanged is emitted only if enabled.
   /// Default is enabled.
