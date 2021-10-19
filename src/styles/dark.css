@@ -1,0 +1,6 @@
+html, body {
+    background-color: @QPalette::Window@;
+    color: @QPalette::Text@;
+}
+/*********** TODO:// add further QPalette stuff like QPalette::Link, QPalette::LinkVisited, QPalette::Highlight, QPalette::HighlightedText ************/
+
