@@ -1,0 +1,8 @@
+QWidget {
+    background-color: #19232D;
+    border: 0px solid #32414B;
+    padding: 0px;
+    color: #F0F0F0;
+    selection-background-color: #1464A0;
+    selection-color: #F0F0F0;
+}

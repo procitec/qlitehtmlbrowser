@@ -1,0 +1,1 @@
+execute_process( COMMAND ${CMAKE_COMMAND} -D "CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" -D "CMAKE_INSTALL_COMPONENT=QLiteHtmlBrowser" -P "${CMAKE_BINARY_DIR}/cmake_install.cmake" )

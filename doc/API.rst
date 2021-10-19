@@ -1,0 +1,5 @@
+===
+API
+===
+.. doxygenclass:: QLiteHtmlBrowser
+    :members:
