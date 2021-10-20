@@ -547,8 +547,8 @@ void container_qt::draw_borders( litehtml::uint_ptr hdc, const litehtml::borders
 void container_qt::scrollToAnchor( const QString& anchor )
 {
   auto [x, y] = findAnchorPos( anchor );
-  horizontalScrollBar()->setValue( x );
-  verticalScrollBar()->setValue( y );
+  horizontalScrollBar()->setValue( inv_scaled( x ) );
+  verticalScrollBar()->setValue( inv_scaled( y ) );
 }
 
 litehtml::element::ptr container_qt::findAnchor( const QString& anchor )
