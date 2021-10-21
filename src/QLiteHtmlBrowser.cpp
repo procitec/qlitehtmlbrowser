@@ -210,3 +210,8 @@ const QString& QLiteHtmlBrowser::caption() const
 {
   return mImpl->caption();
 }
+
+// void QLiteHtmlBrowser::initResources()
+//{
+//  Q_INIT_RESOURCE( QLiteHtmlBrowser );
+//}

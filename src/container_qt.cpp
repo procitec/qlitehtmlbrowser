@@ -28,7 +28,9 @@ container_qt::container_qt( QWidget* parent )
   //  layout->addWidget( new QPushButton( "text" ) );
   //  setLayout( layout );
   setMouseTracking( true );
+#if ( QT_VERSION >= QT_VERSION_CHECK( 5, 11, 0 ) )
   connect( qApp, &QApplication::fontChanged, this, [this]() { mFontInfo = this->fontInfo().family().toLocal8Bit(); } );
+#endif
 }
 
 void container_qt::setCSS( const QString& css )
@@ -127,8 +129,14 @@ litehtml::uint_ptr container_qt::create_font(
     familyNames.append( QString::fromStdString( f ).trimmed().remove( QRegularExpression( R"-('")-" ) ) );
   }
 
+#if ( QT_VERSION >= QT_VERSION_CHECK( 5, 11, 0 ) )
   font->setFamilies( familyNames );
-  // font->setFamily( QString::fromStdString( fonts[0] ) );
+#else
+  if ( !familyNames.isEmpty() )
+  {
+    font->setFamily( familyNames.first() );
+  }
+#endif
   font->setFixedPitch( true );
   font->setPixelSize( size );
 
@@ -180,7 +188,11 @@ int container_qt::text_width( const litehtml::tchar_t* text, litehtml::uint_ptr 
     auto* font = reinterpret_cast<QFont*>( hFont );
 
     QFontMetrics fm( *font );
+#if ( QT_VERSION >= QT_VERSION_CHECK( 5, 11, 0 ) )
     text_width = fm.horizontalAdvance( QString::fromUtf8( text ) );
+#else
+    text_width = fm.width( QString::fromUtf8( text ) );
+#endif
   }
   return text_width;
 }

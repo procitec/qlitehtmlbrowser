@@ -7,7 +7,6 @@
 int main( int argc, char** argv )
 {
   QApplication app( argc, argv );
-  Q_INIT_RESOURCE( QLiteHtmlBrowser );
 
   QCommandLineParser parser;
   parser.setApplicationDescription( "TestBrowser for the qlitehtml browser widget" );

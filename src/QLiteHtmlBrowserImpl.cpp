@@ -11,12 +11,6 @@
 #include <QtGui/QDesktopServices>
 #include <functional>
 
-extern const litehtml::tchar_t master_css[] = {
-#include "master.css.inc"
-};
-
-QByteArray master_css_x = { master_css };
-
 QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
   : QWidget( parent )
 {
@@ -35,9 +29,20 @@ QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
   layout->addWidget( mContainer );
 
   setLayout( layout );
-
-  mCSS = QString::fromUtf8( master_css_x );
+  mCSS = readResourceCss( QString( ":/css/master.css" ) );
   loadStyleSheet();
+}
+
+QString QLiteHtmlBrowserImpl::readResourceCss( const QString& resource ) const
+{
+  QString css;
+  QFile   f( resource );
+  if ( f.open( QIODevice::ReadOnly ) )
+  {
+    css = QString::fromUtf8( f.readAll() );
+    f.close();
+  }
+  return css;
 }
 
 QLiteHtmlBrowserImpl::~QLiteHtmlBrowserImpl() {}
@@ -94,17 +99,12 @@ void QLiteHtmlBrowserImpl::changeEvent( QEvent* e )
     bool dark_mode = ( lightness > 0.5 ) ? false : true;
     if ( dark_mode )
     {
-      mCSS = QString::fromUtf8( master_css_x );
-      QFile dark_css( ":/styles/dark.css" );
-      dark_css.open( QIODevice::ReadOnly );
-      if ( dark_css.isOpen() )
-      {
-        auto css = QString::fromUtf8( dark_css.readAll() );
-        css.replace( "@QPalette::Window@", palette().color( QPalette::Window ).name() );
-        css.replace( "@QPalette::Text@", palette().color( QPalette::Text ).name() );
-        mCSS += css;
-        loadStyleSheet();
-      }
+      mCSS     = readResourceCss( QString( ":/css/master.css" ) );
+      auto css = readResourceCss( ":/styles/dark.css" );
+      css.replace( "@QPalette::Window@", palette().color( QPalette::Window ).name() );
+      css.replace( "@QPalette::Text@", palette().color( QPalette::Text ).name() );
+      mCSS += css;
+      loadStyleSheet();
     }
   }
 }

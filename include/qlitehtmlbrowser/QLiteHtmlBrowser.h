@@ -12,7 +12,7 @@ class QLiteHtmlBrowserImpl;
 /// inside other QWidgets / QMainWindow to show HTML/URL
 /// content
 
-class QLiteHtmlBrowser : public QWidget
+class Q_WIDGETS_EXPORT QLiteHtmlBrowser : public QWidget
 {
   Q_OBJECT
 

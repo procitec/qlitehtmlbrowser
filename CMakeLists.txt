@@ -22,17 +22,17 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
         set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
         set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
     endif()
+
+    set( AUTOMOC OFF)
+    set( AUTOUIC OFF)
+    set( AUTORCC OFF)
 endif()
 
 
 project( QLiteHtmlBrowser VERSION 1.0.0)
 
-set( AUTOMOC OFF)
-set( AUTOUIC OFF)
-set( AUTORCC OFF)
-
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
-    find_package( Qt5 COMPONENTS Widgets Gui Core Test REQUIRED)
+    find_package(Qt5 COMPONENTS Widgets Gui Core Test REQUIRED)
     find_package(Doxygen REQUIRED)
 
     include( CTest )
@@ -43,10 +43,9 @@ add_subdirectory( foreign )
 add_subdirectory( include )
 add_subdirectory( src )
 add_subdirectory( dist )
-add_subdirectory( test )
 
+if (BUILD_TESTING)
+    add_subdirectory( test )
+endif()
 
-add_custom_target(install-qlitehtmlbrowser
-                COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX="" -DCMAKE_INSTALL_COMPONENT=QLiteHtmlBrowser -P ${CMAKE_BINARY_DIR}/cmake_install.cmake
-)
 

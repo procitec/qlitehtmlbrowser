@@ -97,9 +97,12 @@ private:
   void    onAnchorClicked( const QUrl& );
   QUrl    baseUrl( const QUrl& url ) const;
   void    parseUrl( const QUrl& url );
+  QString readResourceCss( const QString& ) const;
 
   Q_DISABLE_COPY( QLiteHtmlBrowserImpl );
+#if ( QT_VERSION >= QT_VERSION_CHECK( 5, 13, 0 ) )
   Q_DISABLE_MOVE( QLiteHtmlBrowserImpl );
+#endif
 
   container_qt*                  mContainer = nullptr;
   QUrl                           mBaseUrl   = {};

@@ -1,2 +1,4 @@
-add_subdirectory( litehtml )
+add_subdirectory( litehtml EXCLUDE_FROM_ALL )
+
+
 
