@@ -24,7 +24,7 @@ target_sources(QLiteHtmlBrowser
         ${qrcs}
 )
 
-target_include_directories( QLiteHtmlBrowser PRIVATE ${PROJECT_SOURCE_DIR}/include )
+target_include_directories( QLiteHtmlBrowser PUBLIC ${PROJECT_SOURCE_DIR}/include )
 target_link_libraries(QLiteHtmlBrowser PUBLIC PRIVATE litehtml Qt5::Widgets)
 set_target_properties(QLiteHtmlBrowser PROPERTIES VERSION ${QLiteHtmlBrowser_VERSION})
 set_property(TARGET QLiteHtmlBrowser PROPERTY CXX_STANDARD 17)
