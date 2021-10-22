@@ -49,3 +49,9 @@ if (BUILD_TESTING)
 endif()
 
 
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
+    if( EXISTS "${CMAKE_SOURCE_DIR}/CPackSettings.cmake")
+        include (CPackSettings.cmake)
+    endif()
+endif()
+
