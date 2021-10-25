@@ -7,7 +7,7 @@
 #include <QtCore/QHash>
 #include <QtCore/QUrl>
 
-class Q_WIDGETS_EXPORT container_qt : public QAbstractScrollArea, protected litehtml::document_container
+class container_qt : public QAbstractScrollArea, protected litehtml::document_container
 {
   Q_OBJECT
 public:
