@@ -86,6 +86,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: recursive
 
 #    - name: Download Ninja and CMake
 #      shell: cmake -P {0}
@@ -226,9 +228,10 @@ jobs:
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: |
-        set( $ENV{QT_QPA_PLATFORM} "offscreen")
-        ctest -C ${{env.BUILD_TYPE}}
-
+        ctest -C ${{env.BUILD_TYPE}} -E NOT_BUILT
+      env:
+        QT_QPA_PLATFORM: offscreen
+        
     - name: Deploy
       working-directory: ${{github.workspace}}/build
       # Execute tests defined by the CMake configuration.  
@@ -239,9 +242,9 @@ jobs:
     - uses: actions/upload-artifact@v2
       id: upload_artifact
       with:
-        name: ${{ env.PLUGIN_NAME}}-${{env.PLUGIN_VERSION}}-source.tar.gz
+        name: ${{ env.PLUGIN_NAME}}-source.tar.gz
         path: |
-            ./${{ env.PLUGIN_NAME }}-${{ env.PLUGIN_VERSION}}-source.tar.gz
+            ${{github.workspace}}/build/${{ env.PLUGIN_NAME }}-*-source.tar.gz
 
 #  release_info:
 #      runs-on: ubuntu-latest
@@ -293,6 +296,4 @@ jobs:
          draft: true
          prerelease: false
          files: |
-
-#           download/-*/qtcreator-sphinx-plugin-*.7z
-#           download/RELEASEINFO.md/RELEASEINFO.md
+           download/-*/${{ env.PLUGIN_NAME}}-source.tar.gz
