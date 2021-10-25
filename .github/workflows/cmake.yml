@@ -130,21 +130,21 @@ jobs:
 #          )
 #        endif()
 
-#    - name: Install system libs
-#      shell: cmake -P {0}
-#      run: |
-#        if ("${{ runner.os }}" STREQUAL "Linux")
-#          execute_process(
-#            COMMAND sudo apt update
-#          )
-#          execute_process(
-#            COMMAND sudo apt install libgl1-mesa-dev
-#            RESULT_VARIABLE result
-#          )
-#          if (NOT result EQUAL 0)
-#            message(FATAL_ERROR "Failed to install dependencies")
-#          endif()
-#        endif()
+    - name: Install system libs
+      shell: cmake -P {0}
+      run: |
+        if ("${{ runner.os }}" STREQUAL "Linux")
+          execute_process(
+            COMMAND sudo apt update
+          )
+          execute_process(
+            COMMAND sudo apt install libgl1-mesa-dev
+            RESULT_VARIABLE result
+          )
+          if (NOT result EQUAL 0)
+            message(FATAL_ERROR "Failed to install dependencies")
+          endif()
+        endif()
 
     - name: Download Qt
       id: qt
@@ -190,7 +190,8 @@ jobs:
           execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ../${archive} WORKING_DIRECTORY qt5)
         endfunction()
 
-        foreach(package qtbase qtdeclarative qttools qtsvg qtxmlpatterns )
+        # qtdeclarative qttools qtsvg qtxmlpatterns        
+        foreach(package qtbase )
           downloadAndExtract(
             "${qt_base_url}/qt.qt5.${qt_version_dotless}.${qt_package_arch_suffix}/${qt_package_version}${package}${qt_package_suffix}.7z"
             ${package}.7z
