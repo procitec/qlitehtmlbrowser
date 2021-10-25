@@ -79,7 +79,12 @@ QUrl QLiteHtmlBrowser::resolveUrl( const QString& url )
   return mImpl->resolveUrl( url );
 }
 
-void QLiteHtmlBrowser::setSource( const QUrl& name, const ResourceType& type )
+void QLiteHtmlBrowser::setSource( const QUrl& name )
+{
+  setSource( name, ResourceType::Unknown );
+}
+
+void QLiteHtmlBrowser::setSource( const QUrl& name, ResourceType type )
 {
   mImpl->setUrl( name, static_cast<int>( type ) );
 }

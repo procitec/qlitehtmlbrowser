@@ -16,7 +16,7 @@ class Q_WIDGETS_EXPORT QLiteHtmlBrowser : public QWidget
 {
   Q_OBJECT
 
-  /// propery to access the url that is currently shown in the browser
+  /// property to access the url that is currently shown in the browser
   Q_PROPERTY( QUrl source READ source WRITE setSource )
 
   // todo QTextBrowser
@@ -38,7 +38,7 @@ class Q_WIDGETS_EXPORT QLiteHtmlBrowser : public QWidget
   Q_PROPERTY( QStringList searchPaths READ searchPaths WRITE setSearchPaths )
 
 public:
-  /// identifier for the type of resouce that should get loaded as hint
+  /// identifier for the type of resource that should get loaded as hint
   /// for the implementation where to look for the resource
   /// In case of Unknown the resource should be loaded due to url scheme
   /// or url path properly
@@ -78,7 +78,7 @@ public:
 
   /// Used to load binary resources from given url. If your implementation needs
   /// to handle resources that are not located in the current filesystem, you
-  /// have to reimplement this method to handle resource loading e.g. of qthelp
+  /// have to re-implement this method to handle resource loading e.g. of QtHelp
   /// urls via QHelpEngine or http urls with QNetworkRequest
   virtual QByteArray loadResource( int, const QUrl& );
 
@@ -97,7 +97,7 @@ public:
   /// set flag to false to disable link navigation
   void setOpenLinks( bool );
 
-  /// returns true if links without support schemes (i.e. no file, qrc, qthelp scheme)
+  /// returns true if links without support schemes (i.e. no file, qrc, QtHelp scheme)
   /// should be loaded via external program from QDesktopServices
   bool openExternalLinks() const;
 
@@ -124,12 +124,13 @@ public:
   const QString& caption() const;
 
 public Q_SLOTS:
-  /// set URL to given url. The URL may be an url to local file, qthelp, http etc.
+  /// set URL to given url. The URL may be an url to local file, QtHelp, http etc.
   /// The URL could contain an anchor element. Currently parameters to URL like
   /// '?name=value are not explicitly supported.
   /// Unlike QTextBrowser no automatic detection for different types (markdown, css)
   /// is supported, HTML only is supported.
-  virtual void setSource( const QUrl& url, const ResourceType& type = ResourceType::Unknown );
+  virtual void setSource( const QUrl& name );
+  void setSource( const QUrl& url, ResourceType type );
 
   virtual void backward();
   virtual void forward();
@@ -147,7 +148,7 @@ Q_SIGNALS:
   //  void forwardAvailable(bool);
   //  void historyChanged();
 
-  /// emited when the url changed due to user interaction, e.g. link activation, @see setOpenLinks
+  /// emitted when the url changed due to user interaction, e.g. link activation, @see setOpenLinks
   void sourceChanged( const QUrl& );
 
   /// send when an anchor is clicked in the document, even if link is not activated, @see setOpenLinks
