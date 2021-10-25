@@ -129,7 +129,8 @@ public Q_SLOTS:
   /// '?name=value are not explicitly supported.
   /// Unlike QTextBrowser no automatic detection for different types (markdown, css)
   /// is supported, HTML only is supported.
-  virtual void setSource( const QUrl& url, const ResourceType& type = ResourceType::Unknown );
+  virtual void setSource( const QUrl& name );
+  void setSource( const QUrl& url, ResourceType type );
 
   virtual void backward();
   virtual void forward();
