@@ -14,7 +14,7 @@ class container_qt;
 /// inside other QWidgets / QMainWindow to show HTML/URL
 /// content
 
-class QLiteHtmlBrowserImpl : public QWidget
+class Q_WIDGETS_EXPORT QLiteHtmlBrowserImpl : public QWidget
 {
   Q_OBJECT
 public:
