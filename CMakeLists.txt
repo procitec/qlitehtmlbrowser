@@ -1,4 +1,3 @@
-
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
     cmake_minimum_required( VERSION 3.18 )
 
@@ -33,8 +32,6 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
     find_package(Qt5 COMPONENTS Widgets Gui Core Test REQUIRED)
     if( WITH_DOCS )
         find_package(Doxygen REQUIRED)
-    else()
-        find_package(Doxygen QUIET)
     endif()
 
     include( CTest )
