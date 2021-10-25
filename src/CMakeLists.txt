@@ -10,9 +10,12 @@ qt5_wrap_cpp ( mocs
     QLiteHtmlBrowserImpl.h
     )
 
+set( PUBLIC_HEADERS
+    ${PROJECT_SOURCE_DIR}/include/qlitehtmlbrowser/QLiteHtmlBrowser
+    ${PROJECT_SOURCE_DIR}/include/qlitehtmlbrowser/QLiteHtmlBrowser.h
+)
+
 target_sources(QLiteHtmlBrowser
-    PUBLIC
-       ${PROJECT_SOURCE_DIR}/include/qlitehtmlbrowser/QLiteHtmlBrowser.h
     PRIVATE
         QLiteHtmlBrowser.cpp
         QLiteHtmlBrowserImpl.cpp
@@ -24,9 +27,19 @@ target_sources(QLiteHtmlBrowser
         ${qrcs}
 )
 
-target_include_directories( QLiteHtmlBrowser PUBLIC ${PROJECT_SOURCE_DIR}/include )
+target_include_directories( QLiteHtmlBrowser
+    PUBLIC #${PROJECT_SOURCE_DIR}/include
+    # where top-level project will look for the library's public headers
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    # where external projects will look for the library's public headers
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+PRIVATE
+    "${PROJECT_SOURCE_DIR}/include"
+)
+
 target_link_libraries(QLiteHtmlBrowser PUBLIC PRIVATE litehtml Qt::Widgets)
 set_target_properties(QLiteHtmlBrowser PROPERTIES VERSION ${QLiteHtmlBrowser_VERSION})
+set_target_properties(QLiteHtmlBrowser PROPERTIES PUBLIC_HEADER "${PUBLIC_HEADERS}")
 set_property(TARGET QLiteHtmlBrowser PROPERTY CXX_STANDARD 17)
 
 if( WITH_DOCS AND DOXYGEN_FOUND)
@@ -41,5 +54,9 @@ if( WITH_DOCS AND DOXYGEN_FOUND)
     )
 endif()
 
-install( TARGETS QLiteHtmlBrowser DESTINATION lib COMPONENT QLiteHtmlBrowser )
+install( TARGETS QLiteHtmlBrowser EXPORT QLiteHtmlBrowserTargets DESTINATION lib COMPONENT QLiteHtmlBrowser
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qlitehtmlbrowser
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # include
+    )
+
 

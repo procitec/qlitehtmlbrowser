@@ -10,15 +10,9 @@ check_required_components(QLiteHtmlBrowser)
 include(CMakeFindDependencyMacro)
 
 if(NOT TARGET QLiteHtmlBrowser::QLiteHtmlBrowser )
-    add_library(QLiteHtmlBrowser::QLiteHtmlBrowser SHARED IMPORTED)
+    include(${CMAKE_CURRENT_LIST_DIR}/QLiteHtmlBrowserTargets.cmake)
 
 endif()
-
-set_property(TARGET QLiteHtmlBrowser::QLiteHtmlBrowser PROPERTY
-  INTERFACE_INCLUDE_DIRECTORIES ${QLITEHTMLBROWSER_INCLUDE_DIR})
-
-set_property(TARGET QLiteHtmlBrowser::QLiteHtmlBrowser PROPERTY
-  IMPORTED_LOCATION ${QLITEHTMLBROWSER_LIBRARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}QLiteHtmlBrowser${CMAKE_SHARED_LIBRARY_SUFFIX})
 
 find_dependency( Qt5 @QT_VERSION@ COMPONENTS Widgets Gui Core REQUIRED)
 

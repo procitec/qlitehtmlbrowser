@@ -20,4 +20,9 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/QLiteHtmlBrowserConfig.cmake
         DESTINATION ${LIBRARY_INSTALL_DIR}/cmake/QLiteHtmlBrowser COMPONENT QLiteHtmlBrowser)
 
 
-
+install(EXPORT "QLiteHtmlBrowserTargets"
+    FILE "QLiteHtmlBrowserTargets.cmake"
+    NAMESPACE QLiteHtmlBrowser::
+    DESTINATION ${LIBRARY_INSTALL_DIR}/cmake/QLiteHtmlBrowser
+    COMPONENT QLiteHtmlBrowser
+)
