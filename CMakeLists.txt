@@ -52,6 +52,7 @@ endif()
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
     if( EXISTS "${CMAKE_SOURCE_DIR}/CPackSettings.cmake")
         include (CPackSettings.cmake)
+        add_custom_target(dist-source COMMAND cpack --config ${CMAKE_BINARY_DIR}/CPackSourceConfig.cmake  )
     endif()
 endif()
 
