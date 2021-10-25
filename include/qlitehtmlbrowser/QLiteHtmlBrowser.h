@@ -4,6 +4,14 @@
 #include <QtCore/QUrl>
 #include <QtCore/QByteArray>
 
+#include <qglobal.h>
+
+#if defined( QLITEHTMLBROWSER_LIBRARY )
+#define QLITEHTMLBROWSER_EXPORT Q_DECL_EXPORT
+#else
+#define QLITEHTMLBROWSER_EXPORT Q_DECL_IMPORT
+#endif
+
 class QLiteHtmlBrowserImpl;
 ///
 /// \brief The QLiteHtmlBrowser class
@@ -12,7 +20,7 @@ class QLiteHtmlBrowserImpl;
 /// inside other QWidgets / QMainWindow to show HTML/URL
 /// content
 
-class Q_WIDGETS_EXPORT QLiteHtmlBrowser : public QWidget
+class QLITEHTMLBROWSER_EXPORT QLiteHtmlBrowser : public QWidget
 {
   Q_OBJECT
 
@@ -130,7 +138,7 @@ public Q_SLOTS:
   /// Unlike QTextBrowser no automatic detection for different types (markdown, css)
   /// is supported, HTML only is supported.
   virtual void setSource( const QUrl& name );
-  void setSource( const QUrl& url, ResourceType type );
+  void         setSource( const QUrl& url, ResourceType type );
 
   virtual void backward();
   virtual void forward();

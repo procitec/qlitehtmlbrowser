@@ -1,6 +1,6 @@
 add_library( QLiteHtmlBrowser SHARED "")
 
-add_definitions(-DQT_BUILD_WIDGETS_LIB)
+add_definitions(-DQLITEHTMLBROWSER_LIBRARY)
 
 qt5_add_resources( qrcs
     QLiteHtmlBrowser.qrc
