@@ -19,7 +19,7 @@ endif()
 foreach( buildtype "Release" "Debug")
 
   execute_process( COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_INSTALL_PREFIX}/library-dist-test-build-${buildtype} )
-  execute_process( COMMAND ${CMAKE_COMMAND} -E env Qt5_DIR=${QT5_INSTALL_DIR} QLiteHtmlBrowser_DIR=${CMAKE_INSTALL_PREFIX} ${CMAKE_COMMAND} -G Ninja -DCMAKE_BUILD_TYPE=${buildtype}  ${CMAKE_INSTALL_PREFIX}/library-dist-test-src
+  execute_process( COMMAND ${CMAKE_COMMAND} -E env Qt5_DIR=${QT_INSTALL_DIR} QLiteHtmlBrowser_DIR=${CMAKE_INSTALL_PREFIX} ${CMAKE_COMMAND} -G Ninja -DCMAKE_BUILD_TYPE=${buildtype}  ${CMAKE_INSTALL_PREFIX}/library-dist-test-src
                    RESULT_VARIABLE BUILD_STATUS
                    WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/library-dist-test-build-${buildtype}
 

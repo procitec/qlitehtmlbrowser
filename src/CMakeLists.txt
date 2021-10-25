@@ -25,11 +25,11 @@ target_sources(QLiteHtmlBrowser
 )
 
 target_include_directories( QLiteHtmlBrowser PUBLIC ${PROJECT_SOURCE_DIR}/include )
-target_link_libraries(QLiteHtmlBrowser PUBLIC PRIVATE litehtml Qt5::Widgets)
+target_link_libraries(QLiteHtmlBrowser PUBLIC PRIVATE litehtml Qt::Widgets)
 set_target_properties(QLiteHtmlBrowser PROPERTIES VERSION ${QLiteHtmlBrowser_VERSION})
 set_property(TARGET QLiteHtmlBrowser PROPERTY CXX_STANDARD 17)
 
-if( DOXYGEN_FOUND)
+if( WITH_DOCS AND DOXYGEN_FOUND)
     set(DOXYGEN_GENERATE_HTML NO)
     set(DOXYGEN_GENERATE_XML YES )
     set( DOXYGEN_OUTPUT_DIRECTORY "${QLiteHtmlBrowser_SOURCE_DIR}/doc/_build" )

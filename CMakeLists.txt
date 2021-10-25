@@ -1,6 +1,6 @@
 
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
-    cmake_minimum_required( VERSION 3.2 )
+    cmake_minimum_required( VERSION 3.18 )
 
     if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "In-source builds are not allowed.")
@@ -13,15 +13,13 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
     set( CMAKE_INSTALL_PREFIX "" )
 
     option( WITH_ASAN "Build with sanitizer" OFF)
+    option( WTIH_DOCS "Build documentation of the library" OFF)
 
     if( NOT MSVC AND WITH_ASAN)
         set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address,undefined")
     endif()
 
-    if( UNIX )
-        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-        set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
-    endif()
+    set( CMAKE_POSITION_INDEPENDENT_CODE TRUE )
 
     set( AUTOMOC OFF)
     set( AUTOUIC OFF)
@@ -33,7 +31,11 @@ project( QLiteHtmlBrowser VERSION 1.0.0)
 
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
     find_package(Qt5 COMPONENTS Widgets Gui Core Test REQUIRED)
-    find_package(Doxygen REQUIRED)
+    if( WITH_DOCS )
+        find_package(Doxygen REQUIRED)
+    else()
+        find_package(Doxygen QUIET)
+    endif()
 
     include( CTest )
     enable_testing()

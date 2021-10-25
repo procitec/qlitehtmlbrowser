@@ -31,4 +31,4 @@ target_sources( distbrowser
       ${distbrowser_mocs}
     )
 
-target_link_libraries( distbrowser PRIVATE QLiteHtmlBrowser Qt5::Widgets Qt5::Gui Qt5::Core )
+target_link_libraries( distbrowser PRIVATE QLiteHtmlBrowser::QLiteHtmlBrowser Qt::Widgets Qt::Gui Qt::Core )
