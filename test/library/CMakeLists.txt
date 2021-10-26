@@ -8,6 +8,13 @@ set( test_names
     test_history
 )
 
+set( runpath "$<TARGET_FILE_DIR:QLiteHtmlBrowser>;$<TARGET_FILE_DIR:Qt5::Widgets>")
+if(WIN32)
+  string(REPLACE ";" "\\\;" runpath "${runpath}")
+endif()
+
+list(APPEND environment "$<IF:$<PLATFORM_ID:Windows>,PATH,LD_LIBRARY_PATH>=$<SHELL_PATH:${runpath}>")
+
 foreach( name ${test_names})
 
     add_executable( ${name} )
@@ -27,16 +34,10 @@ foreach( name ${test_names})
 
     target_include_directories( ${name} PRIVATE ${QLiteHtmlBrowser_SOURCE_DIR}/include )
 
-    target_link_libraries(${name} PRIVATE QLiteHtmlBrowser Qt5::Widgets Qt5::Gui Qt5::Test )
+    target_link_libraries(${name} PRIVATE QLiteHtmlBrowser Qt::Widgets Qt::Gui Qt::Test )
 
     add_test( NAME ${name} COMMAND ${name} --searchpath=${CMAKE_CURRENT_SOURCE_DIR})
 
-    set( runpath $<TARGET_FILE_DIR:QLiteHtmlBrowser>)
-    if(WIN32)
-      string(REPLACE ";" "\\\;" runpath "${runpath}")
-    endif()
-
-    list(APPEND environment "$<IF:$<PLATFORM_ID:Windows>,PATH,LD_LIBRARY_PATH>=$<SHELL_PATH:${runpath}>")
     set_tests_properties(${name} PROPERTIES
         ENVIRONMENT "${environment}"
     )
