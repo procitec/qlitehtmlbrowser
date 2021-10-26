@@ -286,4 +286,4 @@ jobs:
           prerelease: true
           title: "Development Build"
           files: |
-              download/-*/${{ env.PLUGIN_NAME}}-*-source.*
+              download/${{ env.PLUGIN_NAME}}-source-*/${{ env.PLUGIN_NAME}}-*-source.*
