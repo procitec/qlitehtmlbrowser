@@ -173,8 +173,8 @@ jobs:
         message("Downloading Qt to ${qt_dir}")
         function(downloadAndExtract url archive)
           message("Downloading ${url}")
-          file(DOWNLOAD "${url}" ./${archive} SHOW_PROGRESS)
-          execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ../${archive} WORKING_DIRECTORY build-qt5)
+          file(DOWNLOAD "${url}" ./build-qt5/${archive} SHOW_PROGRESS)
+          execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ${archive} WORKING_DIRECTORY build-qt5)
         endfunction()
 
         # qtdeclarative qttools qtsvg qtxmlpatterns
