@@ -47,17 +47,16 @@ on:
 #    push:
 #        branches:
 #            - master
+
     push:
         tags:
             - "v*"
 
 env:
-  PLUGIN_NAME: qlitehtmlbrowser
-  QT_VERSION: 5.15.2
-  BUILD_TYPE: Release
-#  NINJA_VERSION: 1.10.1
-
-
+    PLUGIN_NAME: qlitehtmlbrowser
+    QT_VERSION: 5.15.2
+    BUILD_TYPE: Release
+    #NINJA_VERSION: 1.10.1
 
 jobs:
 
@@ -73,11 +72,11 @@ jobs:
         steps:
             - uses: actions/checkout@v2
             - name: Run clang-format style check for C/C++ programs.
-                uses: jidicula/clang-format-action@v4.2.0
-                with:
-                    clang-format-version: '12'
-                    check-path: ${{ matrix.path }}
-                    #        fallback-style: 'LLVM'
+              uses: jidicula/clang-format-action@v4.2.0
+              with:
+                  clang-format-version: '12'
+                  check-path: ${{ matrix.path }}
+                  #        fallback-style: 'LLVM'
 
     build:
         needs: formatting-check
@@ -88,22 +87,22 @@ jobs:
         strategy:
             matrix:
                 config:
-                - {
-                    name: "Windows Latest MSVC", artifact: "Windows",
-                    os: windows-latest,
-                    cc: "cl", cxx: "cl",
-                    environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat",
-                  }
-                - {
-                    name: "Ubuntu Latest GCC", artifact: "Linux",
-                    os: ubuntu-latest,
-                    cc: "gcc", cxx: "g++"
-                  }
-                - {
-                    name: "macOS Latest Clang", artifact: "macOS",
-                    os: macos-latest,
-                    cc: "clang", cxx: "clang++"
-                  }
+                    - {
+                        name: "Windows Latest MSVC", artifact: "Windows",
+                        os: windows-latest,
+                        cc: "cl", cxx: "cl",
+                        environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat",
+                    }
+                    - {
+                        name: "Ubuntu Latest GCC", artifact: "Linux",
+                        os: ubuntu-latest,
+                        cc: "gcc", cxx: "g++"
+                    }
+                    - {
+                        name: "macOS Latest Clang", artifact: "macOS",
+                        os: macos-latest,
+                        cc: "clang", cxx: "clang++"
+                    }
 
             steps:
                 - uses: actions/checkout@v2
@@ -195,7 +194,7 @@ jobs:
                     cmake --version
                     cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
                   env:
-                    Qt5_DIR: ${{ steps.qt.outputs.qt_dir}}
+                      Qt5_DIR: ${{ steps.qt.outputs.qt_dir}}
 
                 - name: Build
                   # Build your program with the given configuration
@@ -216,8 +215,8 @@ jobs:
                       message(FATAL_ERROR "running tests failed")
                     endif()
                   env:
-                    QT_QPA_PLATFORM: offscreen
-                    Qt5_DIR: ${{ steps.qt.outputs.qt_dir}}
+                      QT_QPA_PLATFORM: offscreen
+                      Qt5_DIR: ${{ steps.qt.outputs.qt_dir}}
 
                 - name: Deploy
                   # Execute tests defined by the CMake configuration.
@@ -228,30 +227,30 @@ jobs:
                 - uses: actions/upload-artifact@v2
                   id: upload_artifact
                   with:
-                    name: ${{ env.PLUGIN_NAME}}-source-${{ matrix.config.artifact }}
-                    path: |
-                        ${{github.workspace}}/build/${{ env.PLUGIN_NAME }}-*-source.*
+                      name: ${{ env.PLUGIN_NAME}}-source-${{ matrix.config.artifact }}
+                      path: |
+                          ${{github.workspace}}/build/${{ env.PLUGIN_NAME }}-*-source.*
 
     release:
         runs-on: ubuntu-latest
         needs: build
 
         steps:
-        - name: Download artifact
-          uses: actions/download-artifact@v2
-          id: download
-          with:
-            path: download
+            - name: Download artifact
+              uses: actions/download-artifact@v2
+              id: download
+              with:
+                  path: download
 
-        - name: Display structure of downloaded files
-          run: ls -R
-          working-directory: download
+            - name: Display structure of downloaded files
+              run: ls -R
+              working-directory: download
 
-        - uses: "marvinpinto/action-automatic-releases@latest"
-          with:
-              repo_token: "${{ secrets.GITHUB_TOKEN }}"
-              automatic_release_tag: "latest"
-              prerelease: true
-              title: "Development Build"
-              files: |
-                  download/${{ env.PLUGIN_NAME}}-source-*/${{ env.PLUGIN_NAME}}-*-source.*
+            - uses: "marvinpinto/action-automatic-releases@latest"
+              with:
+                  repo_token: "${{ secrets.GITHUB_TOKEN }}"
+                  automatic_release_tag: "latest"
+                  prerelease: true
+                  title: "Development Build"
+                  files: |
+                      download/${{ env.PLUGIN_NAME}}-source-*/${{ env.PLUGIN_NAME}}-*-source.*
