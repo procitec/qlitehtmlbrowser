@@ -15,6 +15,6 @@ jobs:
     - name: Run clang-format style check for C/C++ programs.
       uses: jidicula/clang-format-action@v4.2.0
       with:
-        clang-format-version: '10'
+        clang-format-version: '12'
         check-path: ${{ matrix.path }}
 #        fallback-style: 'LLVM'
