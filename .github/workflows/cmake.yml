@@ -264,7 +264,6 @@ jobs:
 #                ./RELEASEINFO.md
 
   release:
-    if: contains(github.ref, 'tags/v')
     runs-on: ubuntu-latest
     needs: build
 
@@ -279,14 +278,12 @@ jobs:
       run: ls -R
       working-directory: download
 
-    - name: Create Release
-      id: create_release
-      uses: softprops/action-gh-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - uses: "marvinpinto/action-automatic-releases@latest"
       with:
-#         body_path: download/RELEASEINFO.md/RELEASEINFO.md
-         draft: true
-         prerelease: false
-         files: |
-           download/-*/${{ env.PLUGIN_NAME}}-*-source.*
+      repo_token: "${{ secrets.GITHUB_TOKEN }}"
+      automatic_release_tag: "latest"
+      prerelease: true
+      title: "Development Build"
+      files: |
+          download/-*/${{ env.PLUGIN_NAME}}-*-source.*
