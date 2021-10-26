@@ -220,7 +220,7 @@ jobs:
         )
 
         if (NOT result EQUAL 0)
-          #message(FATAL_ERROR "running tests failed")
+          message(FATAL_ERROR "running tests failed")
         endif()
       env:
         QT_QPA_PLATFORM: offscreen
