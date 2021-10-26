@@ -55,7 +55,7 @@ env:
   PLUGIN_NAME: qlitehtmlbrowser
   QT_VERSION: 5.15.2
   BUILD_TYPE: Release
-  NINJA_VERSION: 1.10.1
+#  NINJA_VERSION: 1.10.1
 
 jobs:
   build:
@@ -88,34 +88,34 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Download Ninja and CMake
-      shell: cmake -P {0}
-      run: |
-        set(ninja_version "$ENV{NINJA_VERSION}")
-
-        if ("${{ runner.os }}" STREQUAL "Windows")
-          set(ninja_suffix "win.zip")
-        elseif ("${{ runner.os }}" STREQUAL "Linux")
-          set(ninja_suffix "linux.zip")
-        elseif ("${{ runner.os }}" STREQUAL "macOS")
-          set(ninja_suffix "mac.zip")
-        endif()
-
-        set(ninja_url "https://github.com/ninja-build/ninja/releases/download/v${ninja_version}/ninja-${ninja_suffix}")
-        file(DOWNLOAD "${ninja_url}" ./ninja.zip SHOW_PROGRESS)
-        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./ninja.zip)
-
-        set(path_separator ":")
-        if ("${{ runner.os }}" STREQUAL "Windows")
-          set(path_separator ";")
-        endif()
-        file(APPEND "$ENV{GITHUB_PATH}" "$ENV{GITHUB_WORKSPACE}")
-
-        if (NOT "${{ runner.os }}" STREQUAL "Windows")
-          execute_process(
-            COMMAND chmod +x ninja
-          )
-        endif()
+#    - name: Download Ninja and CMake
+#      shell: cmake -P {0}
+#      run: |
+#        set(ninja_version "$ENV{NINJA_VERSION}")
+#
+#        if ("${{ runner.os }}" STREQUAL "Windows")
+#          set(ninja_suffix "win.zip")
+#        elseif ("${{ runner.os }}" STREQUAL "Linux")
+#          set(ninja_suffix "linux.zip")
+#        elseif ("${{ runner.os }}" STREQUAL "macOS")
+#          set(ninja_suffix "mac.zip")
+#        endif()
+#
+#        set(ninja_url "https://github.com/ninja-build/ninja/releases/download/v${ninja_version}/ninja-${ninja_suffix}")
+#        file(DOWNLOAD "${ninja_url}" ./ninja.zip SHOW_PROGRESS)
+#        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./ninja.zip)
+#
+#        set(path_separator ":")
+#        if ("${{ runner.os }}" STREQUAL "Windows")
+#          set(path_separator ";")
+#        endif()
+#        file(APPEND "$ENV{GITHUB_PATH}" "$ENV{GITHUB_WORKSPACE}")
+#
+#        if (NOT "${{ runner.os }}" STREQUAL "Windows")
+#          execute_process(
+#            COMMAND chmod +x ninja
+#          )
+#        endif()
 
     - name: Install system libs
       shell: cmake -P {0}
@@ -164,17 +164,17 @@ jobs:
         string(REGEX MATCH "<Name>qt.qt5.*<Version>([0-9+-.]+)</Version>" updates_xml_output "${updates_xml}")
         set(qt_package_version ${CMAKE_MATCH_1})
 
-        file(MAKE_DIRECTORY qt5)
+        file(MAKE_DIRECTORY build-qt5)
 
         # Save the path for other steps
-        file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/qt5/${qt_dir_prefix}" qt_dir)
+        file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/build-qt5/${qt_dir_prefix}" qt_dir)
         message("::set-output name=qt_dir::${qt_dir}")
 
         message("Downloading Qt to ${qt_dir}")
         function(downloadAndExtract url archive)
           message("Downloading ${url}")
           file(DOWNLOAD "${url}" ./${archive} SHOW_PROGRESS)
-          execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ../${archive} WORKING_DIRECTORY qt5)
+          execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ../${archive} WORKING_DIRECTORY build-qt5)
         endfunction()
 
         # qtdeclarative qttools qtsvg qtxmlpatterns
@@ -213,16 +213,13 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       shell: cmake -P {0}
       run: |
-        execute_process(COMMAND ctest -C ${{env.BUILD_TYPE}} -E NOT_BUILT --output-on-failure
+        execute_process(COMMAND ctest -C ${{env.BUILD_TYPE}} -E NOT_BUILT --verbose
                         WORKING_DIRECTORY build
                         RESULT_VARIABLE result
-                        OUTPUT_VARIABLE output
-                        ERROR_VARIABLE output
                         COMMAND_ECHO STDOUT
         )
 
         if (NOT result EQUAL 0)
-          message("output from running tests: ${output}")
           #message(FATAL_ERROR "running tests failed")
         endif()
       env:

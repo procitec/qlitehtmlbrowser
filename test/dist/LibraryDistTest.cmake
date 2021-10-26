@@ -31,7 +31,7 @@ foreach( buildtype "Release" "Debug")
   endif()
 
 
-  execute_process( COMMAND ${CMAKE_COMMAND} --build . --config ${buildtype} --target all
+  execute_process( COMMAND ${CMAKE_COMMAND} --build . --config ${buildtype}
                    RESULT_VARIABLE CPACK_STATUS
                    WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/library-dist-test-build-${buildtype}
   )
