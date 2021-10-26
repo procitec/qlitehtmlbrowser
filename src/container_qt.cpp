@@ -824,8 +824,8 @@ void container_qt::mouseMoveEvent( QMouseEvent* e )
 
   if ( e && mDocument )
   {
-    auto                       client_pos = scrollBarPos();
-    auto                       mouse_pos  = mapFromGlobal( e->globalPos() );
+    auto                       client_pos = scaled( scrollBarPos() );
+    auto                       mouse_pos  = scaled( mapFromGlobal( e->globalPos() ) );
     litehtml::position::vector redraw_boxes;
     if ( mDocument->on_mouse_over( mouse_pos.x() + client_pos.x(), mouse_pos.y() + client_pos.y(), client_pos.x(), client_pos.y(), redraw_boxes ) )
     {
@@ -840,8 +840,8 @@ void container_qt::mouseReleaseEvent( QMouseEvent* e )
   {
     if ( Qt::LeftButton == e->button() )
     {
-      auto                       client_pos = scrollBarPos();
-      auto                       mouse_pos  = mapFromGlobal( e->globalPos() );
+      auto                       client_pos = scaled( scrollBarPos() );
+      auto                       mouse_pos  = scaled( mapFromGlobal( e->globalPos() ) );
       litehtml::position::vector redraw_boxes;
       if ( mDocument->on_lbutton_up( mouse_pos.x() + client_pos.x(), mouse_pos.y() + client_pos.y(), client_pos.x(), client_pos.y(), redraw_boxes ) )
       {
@@ -856,8 +856,8 @@ void container_qt::mousePressEvent( QMouseEvent* e )
   {
     if ( Qt::LeftButton == e->button() )
     {
-      auto                       client_pos = scrollBarPos();
-      auto                       mouse_pos  = mapFromGlobal( e->globalPos() );
+      auto                       client_pos = scaled( scrollBarPos() );
+      auto                       mouse_pos  = scaled( mapFromGlobal( e->globalPos() ) );
       litehtml::position::vector redraw_boxes;
       if ( mDocument->on_lbutton_down( mouse_pos.x() + client_pos.x(), mouse_pos.y() + client_pos.y(), client_pos.x(), client_pos.y(),
                                        redraw_boxes ) )
