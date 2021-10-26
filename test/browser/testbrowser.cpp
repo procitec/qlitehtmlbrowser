@@ -29,18 +29,22 @@ TestBrowser::TestBrowser()
 
   mUrl = new QLineEdit( this );
   mToolBar.addWidget( mUrl );
-  connect( mUrl, &QLineEdit::editingFinished, this, [this]() {
-    if ( mUrl )
-      loadHtml( mUrl->text() );
-  } );
-  connect( mBrowser, &QLiteHtmlBrowser::sourceChanged, mUrl, [this]( const QUrl& url ) {
-    if ( mUrl )
-    {
-      mUrl->blockSignals( true );
-      mUrl->setText( url.toString() );
-      mUrl->blockSignals( false );
-    }
-  } );
+  connect( mUrl, &QLineEdit::editingFinished, this,
+           [this]()
+           {
+             if ( mUrl )
+               loadHtml( mUrl->text() );
+           } );
+  connect( mBrowser, &QLiteHtmlBrowser::sourceChanged, mUrl,
+           [this]( const QUrl& url )
+           {
+             if ( mUrl )
+             {
+               mUrl->blockSignals( true );
+               mUrl->setText( url.toString() );
+               mUrl->blockSignals( false );
+             }
+           } );
 
   setMenuBar( &mMenu );
   addToolBar( Qt::TopToolBarArea, &mToolBar );
