@@ -215,7 +215,16 @@ jobs:
       run: |
         execute_process(COMMAND ctest -C ${{env.BUILD_TYPE}} -E NOT_BUILT --output-on-failure
                         WORKING_DIRECTORY build
+                        RESULT_VARIABLE result
+                        OUTPUT_VARIABLE output
+                        ERROR_VARIABLE output
+                        COMMAND_ECHO STDOUT
         )
+
+        if (NOT result EQUAL 0)
+          message("output from running tests: ${output}")
+          #message(FATAL_ERROR "running tests failed")
+        endif()
       env:
         QT_QPA_PLATFORM: offscreen
         Qt5_DIR: ${{ steps.qt.outputs.qt_dir}}
@@ -229,9 +238,9 @@ jobs:
     - uses: actions/upload-artifact@v2
       id: upload_artifact
       with:
-        name: ${{ env.PLUGIN_NAME}}-source.tar.gz
+        name: ${{ env.PLUGIN_NAME}}-source-{{ matrix.artifact }}
         path: |
-            ${{github.workspace}}/build/${{ env.PLUGIN_NAME }}-*-source.tar.gz
+            ${{github.workspace}}/build/${{ env.PLUGIN_NAME }}-*-source.*
 
 #  release_info:
 #      runs-on: ubuntu-latest
