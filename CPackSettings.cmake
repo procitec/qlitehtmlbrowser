@@ -8,7 +8,7 @@ set(CPACK_SOURCE_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_NAME_LC} ${PROJECT_VERSI
 
 set(CPACK_PACKAGE_NAME "${PROJECT_NAME_LC}")
 
-set( CPACK_SOURCE_IGNORE_FILES "/\\\\.git/;/\\\\.github/;/\\\\.gitmodules;/doc/;CMakeLists.txt.user;CPack*;/build/" )
+set( CPACK_SOURCE_IGNORE_FILES "/\\\\.git/;/\\\\.github/;/\\\\.gitmodules;/doc/;CMakeLists.txt.user;CPack*;/build*/" )
 
 if( UNIX )
     set( CPACK_SOURCE_GENERATOR TGZ)

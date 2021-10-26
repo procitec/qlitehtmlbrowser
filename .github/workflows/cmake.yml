@@ -238,7 +238,7 @@ jobs:
     - uses: actions/upload-artifact@v2
       id: upload_artifact
       with:
-        name: ${{ env.PLUGIN_NAME}}-source-${{ matrix.artifact }}
+        name: ${{ env.PLUGIN_NAME}}-source-${{ matrix.config.artifact }}
         path: |
             ${{github.workspace}}/build/${{ env.PLUGIN_NAME }}-*-source.*
 
