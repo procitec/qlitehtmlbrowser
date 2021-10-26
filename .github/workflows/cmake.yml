@@ -149,14 +149,15 @@ jobs:
                   set(qt_package_suffix "-MacOS-MacOS_10_13-Clang-MacOS-MacOS_10_13-X86_64")
                 endif()
 
-                set(qt_base_url "https://download.qt.io/online/qtsdkrepository/${url_os}/desktop/qt5_${qt_version_dotless}")
-                file(DOWNLOAD "${qt_base_url}/Updates.xml" ./Updates.xml SHOW_PROGRESS)
+                file(MAKE_DIRECTORY build-qt5)
 
-                file(READ ./Updates.xml updates_xml)
+                set(qt_base_url "https://download.qt.io/online/qtsdkrepository/${url_os}/desktop/qt5_${qt_version_dotless}")
+                file(DOWNLOAD "${qt_base_url}/Updates.xml" ./build-qt5/Updates.xml SHOW_PROGRESS)
+
+                file(READ ./build-qt5/Updates.xml updates_xml)
                 string(REGEX MATCH "<Name>qt.qt5.*<Version>([0-9+-.]+)</Version>" updates_xml_output "${updates_xml}")
                 set(qt_package_version ${CMAKE_MATCH_1})
 
-                file(MAKE_DIRECTORY build-qt5)
 
                 # Save the path for other steps
                 file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/build-qt5/${qt_dir_prefix}" qt_dir)
@@ -229,7 +230,7 @@ jobs:
               with:
                   name: ${{ env.PLUGIN_NAME}}-source-${{ matrix.config.artifact }}
                   path: |
-                      ${{github.workspace}}/build/${{ env.PLUGIN_NAME }}-*-source.*
+                      ${{github.workspace}}/build/${{ env.PLUGIN_NAME }}-*-source-*.*
 
     release:
         runs-on: ubuntu-latest
@@ -253,4 +254,4 @@ jobs:
                   prerelease: true
                   title: "Development Build"
                   files: |
-                      download/${{ env.PLUGIN_NAME}}-source-*/${{ env.PLUGIN_NAME}}-*-source.*
+                      download/${{ env.PLUGIN_NAME}}-source-*/${{ env.PLUGIN_NAME}}-*-source-*.*
