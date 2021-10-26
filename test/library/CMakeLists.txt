@@ -31,4 +31,15 @@ foreach( name ${test_names})
 
     add_test( NAME ${name} COMMAND ${name} --searchpath=${CMAKE_CURRENT_SOURCE_DIR})
 
+    set( runpath $<TARGET_FILE_DIR:QLiteHtmlBrowser>)
+    if(WIN32)
+      string(REPLACE ";" "\\\;" runpath "${runpath}")
+    endif()
+
+    list(APPEND environment "$<IF:$<PLATFORM_ID:Windows>,PATH,LD_LIBRARY_PATH>=$<SHELL_PATH:${runpath}>")
+    set_tests_properties(${name} PROPERTIES
+        ENVIRONMENT "${environment}"
+    )
+
+
 endforeach()
