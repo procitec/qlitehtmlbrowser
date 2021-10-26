@@ -57,233 +57,201 @@ env:
   BUILD_TYPE: Release
 #  NINJA_VERSION: 1.10.1
 
+
+
 jobs:
-  build:
-    name: Build ${{ matrix.config.name }}
-    runs-on: ${{ matrix.config.os }}
-    outputs:
-      qt_url: ${{ steps.qt.outputs.qt_base_url }}
-    strategy:
-      matrix:
-        config:
-        - {
-            name: "Windows Latest MSVC", artifact: "Windows",
-            os: windows-latest,
-            cc: "cl", cxx: "cl",
-            environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat",
-          }
-        - {
-            name: "Ubuntu Latest GCC", artifact: "Linux",
-            os: ubuntu-latest,
-            cc: "gcc", cxx: "g++"
-          }
-        - {
-            name: "macOS Latest Clang", artifact: "macOS",
-            os: macos-latest,
-            cc: "clang", cxx: "clang++"
-          }
 
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
+    formatting-check:
+        name: Formatting Check
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+            path:
+                - 'include'
+                - 'src'
+                - 'test'
+        steps:
+            - uses: actions/checkout@v2
+            - name: Run clang-format style check for C/C++ programs.
+            uses: jidicula/clang-format-action@v4.2.0
+                with:
+                    clang-format-version: '12'
+                    check-path: ${{ matrix.path }}
+                    #        fallback-style: 'LLVM'
 
-#    - name: Download Ninja and CMake
-#      shell: cmake -P {0}
-#      run: |
-#        set(ninja_version "$ENV{NINJA_VERSION}")
-#
-#        if ("${{ runner.os }}" STREQUAL "Windows")
-#          set(ninja_suffix "win.zip")
-#        elseif ("${{ runner.os }}" STREQUAL "Linux")
-#          set(ninja_suffix "linux.zip")
-#        elseif ("${{ runner.os }}" STREQUAL "macOS")
-#          set(ninja_suffix "mac.zip")
-#        endif()
-#
-#        set(ninja_url "https://github.com/ninja-build/ninja/releases/download/v${ninja_version}/ninja-${ninja_suffix}")
-#        file(DOWNLOAD "${ninja_url}" ./ninja.zip SHOW_PROGRESS)
-#        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./ninja.zip)
-#
-#        set(path_separator ":")
-#        if ("${{ runner.os }}" STREQUAL "Windows")
-#          set(path_separator ";")
-#        endif()
-#        file(APPEND "$ENV{GITHUB_PATH}" "$ENV{GITHUB_WORKSPACE}")
-#
-#        if (NOT "${{ runner.os }}" STREQUAL "Windows")
-#          execute_process(
-#            COMMAND chmod +x ninja
-#          )
-#        endif()
+    build:
+        needs: formatting-check
+        name: Build ${{ matrix.config.name }}
+        runs-on: ${{ matrix.config.os }}
+        outputs:
+            qt_url: ${{ steps.qt.outputs.qt_base_url }}
+        strategy:
+            matrix:
+                config:
+                - {
+                    name: "Windows Latest MSVC", artifact: "Windows",
+                    os: windows-latest,
+                    cc: "cl", cxx: "cl",
+                    environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat",
+                  }
+                - {
+                    name: "Ubuntu Latest GCC", artifact: "Linux",
+                    os: ubuntu-latest,
+                    cc: "gcc", cxx: "g++"
+                  }
+                - {
+                    name: "macOS Latest Clang", artifact: "macOS",
+                    os: macos-latest,
+                    cc: "clang", cxx: "clang++"
+                  }
 
-    - name: Install system libs
-      shell: cmake -P {0}
-      run: |
-        if ("${{ runner.os }}" STREQUAL "Linux")
-          execute_process(
-            COMMAND sudo apt update
-          )
-          execute_process(
-            COMMAND sudo apt install libgl1-mesa-dev
-            RESULT_VARIABLE result
-          )
-          if (NOT result EQUAL 0)
-            message(FATAL_ERROR "Failed to install dependencies")
-          endif()
-        endif()
+            steps:
+                - uses: actions/checkout@v2
+                  with:
+                      submodules: recursive
 
-    - name: Download Qt
-      id: qt
-      shell: cmake -P {0}
-      run: |
-        set(qt_version "$ENV{QT_VERSION}")
-
-        string(REPLACE "." "" qt_version_dotless "${qt_version}")
-        if ("${{ runner.os }}" STREQUAL "Windows")
-          set(url_os "windows_x86")
-          set(qt_package_arch_suffix "win64_msvc2019_64")
-            set(qt_dir_prefix "${qt_version}/msvc2019_64")
-          set(qt_package_suffix "-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64")
-        elseif ("${{ runner.os }}" STREQUAL "Linux")
-          set(url_os "linux_x64")
-          set(qt_package_arch_suffix "gcc_64")
-          set(qt_dir_prefix "${qt_version}/gcc_64")
-          set(qt_package_suffix "-Linux-RHEL_7_6-GCC-Linux-RHEL_7_6-X86_64")
-        elseif ("${{ runner.os }}" STREQUAL "macOS")
-          set(url_os "mac_x64")
-          set(qt_package_arch_suffix "clang_64")
-          set(qt_dir_prefix "${qt_version}/clang_64")
-          set(qt_package_suffix "-MacOS-MacOS_10_13-Clang-MacOS-MacOS_10_13-X86_64")
-        endif()
-
-        set(qt_base_url "https://download.qt.io/online/qtsdkrepository/${url_os}/desktop/qt5_${qt_version_dotless}")
-        file(DOWNLOAD "${qt_base_url}/Updates.xml" ./Updates.xml SHOW_PROGRESS)
-
-        file(READ ./Updates.xml updates_xml)
-        string(REGEX MATCH "<Name>qt.qt5.*<Version>([0-9+-.]+)</Version>" updates_xml_output "${updates_xml}")
-        set(qt_package_version ${CMAKE_MATCH_1})
-
-        file(MAKE_DIRECTORY build-qt5)
-
-        # Save the path for other steps
-        file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/build-qt5/${qt_dir_prefix}" qt_dir)
-        message("::set-output name=qt_dir::${qt_dir}")
-
-        message("Downloading Qt to ${qt_dir}")
-        function(downloadAndExtract url archive)
-          message("Downloading ${url}")
-          file(DOWNLOAD "${url}" ./build-qt5/${archive} SHOW_PROGRESS)
-          execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ${archive} WORKING_DIRECTORY build-qt5)
-        endfunction()
-
-        # qtdeclarative qttools qtsvg qtxmlpatterns
-        foreach(package qtbase qttools )
-          downloadAndExtract(
-            "${qt_base_url}/qt.qt5.${qt_version_dotless}.${qt_package_arch_suffix}/${qt_package_version}${package}${qt_package_suffix}.7z"
-            ${package}.7z
-          )
-        endforeach()
-
-        # uic depends on libicu56.so
-        if ("${{ runner.os }}" STREQUAL "Linux")
-          downloadAndExtract(
-            "${qt_base_url}/qt.qt5.${qt_version_dotless}.${qt_package_arch_suffix}/${qt_package_version}icu-linux-Rhel7.2-x64.7z"
-            icu.7z
-          )
-        endif()
-
-        message("::set-output name=qt_base_url::${qt_base_url}")
-
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: |
-        cmake --version
-        cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-      env:
-        Qt5_DIR: ${{ steps.qt.outputs.qt_dir}}
-
-    - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-
-    - name: Test
-      # Execute tests defined by the CMake configuration.
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      shell: cmake -P {0}
-      run: |
-        execute_process(COMMAND ctest -C ${{env.BUILD_TYPE}} -E NOT_BUILT --verbose
-                        WORKING_DIRECTORY build
+                - name: Install system libs
+                  shell: cmake -P {0}
+                  run: |
+                    if ("${{ runner.os }}" STREQUAL "Linux")
+                      execute_process(
+                        COMMAND sudo apt update
+                      )
+                      execute_process(
+                        COMMAND sudo apt install libgl1-mesa-dev
                         RESULT_VARIABLE result
-                        COMMAND_ECHO STDOUT
-        )
+                      )
+                      if (NOT result EQUAL 0)
+                        message(FATAL_ERROR "Failed to install dependencies")
+                      endif()
+                    endif()
 
-        if (NOT result EQUAL 0)
-          message(FATAL_ERROR "running tests failed")
-        endif()
-      env:
-        QT_QPA_PLATFORM: offscreen
-        Qt5_DIR: ${{ steps.qt.outputs.qt_dir}}
+                - name: Download Qt
+                  id: qt
+                  shell: cmake -P {0}
+                  run: |
+                    set(qt_version "$ENV{QT_VERSION}")
 
-    - name: Deploy
-      # Execute tests defined by the CMake configuration.
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: |
-        cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target dist-source
+                    string(REPLACE "." "" qt_version_dotless "${qt_version}")
+                    if ("${{ runner.os }}" STREQUAL "Windows")
+                      set(url_os "windows_x86")
+                      set(qt_package_arch_suffix "win64_msvc2019_64")
+                        set(qt_dir_prefix "${qt_version}/msvc2019_64")
+                      set(qt_package_suffix "-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64")
+                    elseif ("${{ runner.os }}" STREQUAL "Linux")
+                      set(url_os "linux_x64")
+                      set(qt_package_arch_suffix "gcc_64")
+                      set(qt_dir_prefix "${qt_version}/gcc_64")
+                      set(qt_package_suffix "-Linux-RHEL_7_6-GCC-Linux-RHEL_7_6-X86_64")
+                    elseif ("${{ runner.os }}" STREQUAL "macOS")
+                      set(url_os "mac_x64")
+                      set(qt_package_arch_suffix "clang_64")
+                      set(qt_dir_prefix "${qt_version}/clang_64")
+                      set(qt_package_suffix "-MacOS-MacOS_10_13-Clang-MacOS-MacOS_10_13-X86_64")
+                    endif()
 
-    - uses: actions/upload-artifact@v2
-      id: upload_artifact
-      with:
-        name: ${{ env.PLUGIN_NAME}}-source-${{ matrix.config.artifact }}
-        path: |
-            ${{github.workspace}}/build/${{ env.PLUGIN_NAME }}-*-source.*
+                    set(qt_base_url "https://download.qt.io/online/qtsdkrepository/${url_os}/desktop/qt5_${qt_version_dotless}")
+                    file(DOWNLOAD "${qt_base_url}/Updates.xml" ./Updates.xml SHOW_PROGRESS)
 
-#  release_info:
-#      runs-on: ubuntu-latest
-#      needs: build
+                    file(READ ./Updates.xml updates_xml)
+                    string(REGEX MATCH "<Name>qt.qt5.*<Version>([0-9+-.]+)</Version>" updates_xml_output "${updates_xml}")
+                    set(qt_package_version ${CMAKE_MATCH_1})
 
-#      steps:
-#      - uses: actions/checkout@v2
+                    file(MAKE_DIRECTORY build-qt5)
 
-#      - name: ReleaseInfo
-#        id: release_info
-#        shell: cmake -P {0}
-#        run: |
-#            set( qt_version "$ENV{QT_VERSION}")
-#            set( qtc_version "$ENV{QT_CREATOR_VERSION}" )
-#            set( qtc_url "${{ needs.build.outputs.qtc_url }}" )
-#            string( REPLACE "refs/tags/" "" tag_name "$ENV{GITHUB_REF}" )
-#            set( readme_url "$ENV{GITHUB_SERVER_URL}/$ENV{GITHUB_REPOSITORY}/blob/${tag_name}/RELEASENOTES.md" )
-#            configure_file( $ENV{GITHUB_WORKSPACE}/RELEASEINFO.md.in $ENV{GITHUB_WORKSPACE}/RELEASEINFO.md @ONLY )
+                    # Save the path for other steps
+                    file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/build-qt5/${qt_dir_prefix}" qt_dir)
+                    message("::set-output name=qt_dir::${qt_dir}")
 
-#      - uses: actions/upload-artifact@v2
-#        with:
-#            name: RELEASEINFO.md
-#            path: |
-#                ./RELEASEINFO.md
+                    message("Downloading Qt to ${qt_dir}")
+                    function(downloadAndExtract url archive)
+                      message("Downloading ${url}")
+                      file(DOWNLOAD "${url}" ./build-qt5/${archive} SHOW_PROGRESS)
+                      execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ${archive} WORKING_DIRECTORY build-qt5)
+                    endfunction()
 
-  release:
-    runs-on: ubuntu-latest
-    needs: build
+                    # qtdeclarative qttools qtsvg qtxmlpatterns
+                    foreach(package qtbase qttools )
+                      downloadAndExtract(
+                        "${qt_base_url}/qt.qt5.${qt_version_dotless}.${qt_package_arch_suffix}/${qt_package_version}${package}${qt_package_suffix}.7z"
+                        ${package}.7z
+                      )
+                    endforeach()
 
-    steps:
-    - name: Download artifact
-      uses: actions/download-artifact@v2
-      id: download
-      with:
-        path: download
+                    # uic depends on libicu56.so
+                    if ("${{ runner.os }}" STREQUAL "Linux")
+                      downloadAndExtract(
+                        "${qt_base_url}/qt.qt5.${qt_version_dotless}.${qt_package_arch_suffix}/${qt_package_version}icu-linux-Rhel7.2-x64.7z"
+                        icu.7z
+                      )
+                    endif()
 
-    - name: Display structure of downloaded files
-      run: ls -R
-      working-directory: download
+                    message("::set-output name=qt_base_url::${qt_base_url}")
 
+                - name: Configure CMake
+                  # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+                  # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+                  run: |
+                    cmake --version
+                    cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+                  env:
+                    Qt5_DIR: ${{ steps.qt.outputs.qt_dir}}
 
-    - uses: "marvinpinto/action-automatic-releases@latest"
-      with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
-          prerelease: true
-          title: "Development Build"
-          files: |
-              download/${{ env.PLUGIN_NAME}}-source-*/${{ env.PLUGIN_NAME}}-*-source.*
+                - name: Build
+                  # Build your program with the given configuration
+                  run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+                - name: Test
+                  # Execute tests defined by the CMake configuration.
+                  # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+                  shell: cmake -P {0}
+                  run: |
+                    execute_process(COMMAND ctest -C ${{env.BUILD_TYPE}} -E NOT_BUILT --verbose
+                                    WORKING_DIRECTORY build
+                                    RESULT_VARIABLE result
+                                    COMMAND_ECHO STDOUT
+                    )
+
+                    if (NOT result EQUAL 0)
+                      message(FATAL_ERROR "running tests failed")
+                    endif()
+                  env:
+                    QT_QPA_PLATFORM: offscreen
+                    Qt5_DIR: ${{ steps.qt.outputs.qt_dir}}
+
+                - name: Deploy
+                  # Execute tests defined by the CMake configuration.
+                  # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+                  run: |
+                    cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target dist-source
+
+                - uses: actions/upload-artifact@v2
+                  id: upload_artifact
+                  with:
+                    name: ${{ env.PLUGIN_NAME}}-source-${{ matrix.config.artifact }}
+                    path: |
+                        ${{github.workspace}}/build/${{ env.PLUGIN_NAME }}-*-source.*
+
+    release:
+        runs-on: ubuntu-latest
+        needs: build
+
+        steps:
+        - name: Download artifact
+          uses: actions/download-artifact@v2
+          id: download
+          with:
+            path: download
+
+        - name: Display structure of downloaded files
+          run: ls -R
+          working-directory: download
+
+        - uses: "marvinpinto/action-automatic-releases@latest"
+          with:
+              repo_token: "${{ secrets.GITHUB_TOKEN }}"
+              automatic_release_tag: "latest"
+              prerelease: true
+              title: "Development Build"
+              files: |
+                  download/${{ env.PLUGIN_NAME}}-source-*/${{ env.PLUGIN_NAME}}-*-source.*
