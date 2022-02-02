@@ -83,7 +83,7 @@ protected:
   void get_language( litehtml::tstring& language, litehtml::tstring& culture ) const override;
 
 private:
-  void                   resetScrollBars();
+  void                   updateScrollBars();
   QPoint                 scrollBarPos() const;
   QSize                  scaled( const QSize& size );
   QRect                  scaled( const QRect& rect );
