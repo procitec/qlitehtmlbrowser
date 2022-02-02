@@ -66,8 +66,8 @@ void container_qt::resetScrollBars()
 {
   horizontalScrollBar()->setValue( 0 );
   verticalScrollBar()->setValue( 0 );
-  horizontalScrollBar()->setMaximum( inv_scaled( mDocument->width() ) );
-  verticalScrollBar()->setMaximum( inv_scaled( mDocument->height() ) );
+  horizontalScrollBar()->setMaximum( std::max( inv_scaled( mDocument->width() ) - viewport()->width(), 0 ) );
+  verticalScrollBar()->setMaximum( std::max( inv_scaled( mDocument->height() ) - viewport()->height(), 0 ) );
   horizontalScrollBar()->setPageStep( ( viewport()->width() ) );
   verticalScrollBar()->setPageStep( ( viewport()->height() ) );
 
