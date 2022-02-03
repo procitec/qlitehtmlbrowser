@@ -743,8 +743,8 @@ std::shared_ptr<litehtml::element> container_qt::create_element( const litehtml:
 
 void container_qt::setScale( double scale )
 {
-  mScale = scale < mMinScale ? mMinScale : scale > mMaxScale ? mMaxScale : scale;
-  updateScrollBars();
+  mScale = std::clamp( scale, mMinScale, mMaxScale );
+  resetScrollBars();
   update();
   viewport()->update();
 }
