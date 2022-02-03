@@ -2,6 +2,7 @@
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QLineEdit>
 #include <QtCore/QFileInfo>
+#include <QtCore/QSignalBlocker>
 #include <QtWidgets/QApplication>
 
 TestBrowser::TestBrowser()
@@ -40,9 +41,8 @@ TestBrowser::TestBrowser()
            {
              if ( mUrl )
              {
-               mUrl->blockSignals( true );
+               QSignalBlocker signalBlocker{ mUrl };
                mUrl->setText( url.toString() );
-               mUrl->blockSignals( false );
              }
            } );
 
@@ -92,7 +92,7 @@ void TestBrowser::loadHtml( const QString& html_file )
     {
       mBrowser->setSource( url );
       setWindowTitle( QString( "%1 <%2>" ).arg( qApp->applicationDisplayName(), mBrowser->caption() ) );
-      ;
+      mUrl->setText( mBrowser->source().toString() );
     }
   }
 }
@@ -104,7 +104,6 @@ void TestBrowser::openHtml()
   if ( !fileName.isEmpty() )
   {
     loadHtml( fileName );
-    mUrl->setText( mBrowser->source().toString() );
   }
 }
 
