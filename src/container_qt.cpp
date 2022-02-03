@@ -50,10 +50,14 @@ void container_qt::setHtml( const QString& html, const QUrl& source_url )
     mSourceUrl      = pure_url;
     mDocumentSource = html.toUtf8();
     mCaption.clear();
+
     mDocument = litehtml::document::createFromUTF8( mDocumentSource, this, &mContext );
+    verticalScrollBar()->setValue( 0 );
+    horizontalScrollBar()->setValue( 0 );
     mDocument->render( this->viewport()->width(), litehtml::render_all );
-    resetScrollBars();
+    updateScrollBars();
     viewport()->update();
+
     auto frag = source_url.fragment();
     if ( !frag.isEmpty() )
     {
@@ -62,18 +66,29 @@ void container_qt::setHtml( const QString& html, const QUrl& source_url )
   }
 }
 
-void container_qt::resetScrollBars()
+void container_qt::updateScrollBars()
 {
-  horizontalScrollBar()->setValue( 0 );
-  verticalScrollBar()->setValue( 0 );
-  horizontalScrollBar()->setMaximum( inv_scaled( mDocument->width() ) );
-  verticalScrollBar()->setMaximum( inv_scaled( mDocument->height() ) );
-  horizontalScrollBar()->setPageStep( ( viewport()->width() ) );
-  verticalScrollBar()->setPageStep( ( viewport()->height() ) );
+  auto* hBar = horizontalScrollBar();
+  auto* vBar = verticalScrollBar();
+
+  const auto relativeXPos   = static_cast<float>( hBar->value() ) / hBar->maximum();
+  const auto relativeYPos   = static_cast<float>( vBar->value() ) / vBar->maximum();
+  const auto viewportWidth  = viewport()->width();
+  const auto viewportHeight = viewport()->height();
+  const auto newMaxWidth    = std::max( inv_scaled( mDocument->width() ) - viewportWidth, 0 );
+  const auto newMaxHeight   = std::max( inv_scaled( mDocument->height() ) - viewportHeight, 0 );
+
+  hBar->setMaximum( newMaxWidth );
+  hBar->setValue( newMaxWidth * relativeXPos );
+  vBar->setMaximum( newMaxHeight );
+  vBar->setValue( newMaxHeight * relativeYPos );
+
+  hBar->setPageStep( viewportWidth );
+  vBar->setPageStep( viewportHeight );
 
   const QFontMetrics _fm( this->font() );
-  horizontalScrollBar()->setSingleStep( _fm.averageCharWidth() );
-  verticalScrollBar()->setSingleStep( _fm.height() );
+  hBar->setSingleStep( _fm.averageCharWidth() );
+  vBar->setSingleStep( _fm.height() );
 }
 
 QPoint container_qt::scrollBarPos() const
