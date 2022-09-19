@@ -811,25 +811,25 @@ void container_qt::keyPressEvent( QKeyEvent* e )
   }
 }
 
-QSize container_qt::scaled( const QSize& size )
+QSize container_qt::scaled( const QSize& size ) const
 {
   return QSize( std::floor( size.width() / mScale ), std::floor( size.height() / mScale ) );
 }
-QRect container_qt::scaled( const QRect& rect )
+QRect container_qt::scaled( const QRect& rect ) const
 {
   return QRect( scaled( rect.topLeft() ), scaled( rect.size() ) );
 }
-QPoint container_qt::scaled( const QPoint& point )
+QPoint container_qt::scaled( const QPoint& point ) const
 {
   return QPoint( std::floor( point.x() / mScale ), std::floor( point.y() / mScale ) );
 }
 
-int container_qt::scaled( int i )
+int container_qt::scaled( int i ) const
 {
   return std::floor( i / mScale );
 }
 
-int container_qt::inv_scaled( int i )
+int container_qt::inv_scaled( int i ) const
 {
   return std::floor( i * mScale );
 }

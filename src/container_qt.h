@@ -85,11 +85,11 @@ protected:
 private:
   void                   updateScrollBars();
   QPoint                 scrollBarPos() const;
-  QSize                  scaled( const QSize& size );
-  QRect                  scaled( const QRect& rect );
-  QPoint                 scaled( const QPoint& point );
-  int                    scaled( int i );
-  int                    inv_scaled( int i );
+  QSize                  scaled( const QSize& size ) const;
+  QRect                  scaled( const QRect& rect ) const;
+  QPoint                 scaled( const QPoint& point ) const;
+  int                    scaled( int i ) const;
+  int                    inv_scaled( int i ) const;
   QPixmap                load_image_data( const QUrl& url );
   QPixmap                load_pixmap( const QUrl& url );
   QUrl                   resolveUrl( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl ) const;
