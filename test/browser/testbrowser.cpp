@@ -11,7 +11,8 @@ TestBrowser::TestBrowser()
   mBrowser = new QHelpBrowser( this );
   setCentralWidget( mBrowser );
   setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
-  setMinimumSize( { 1024, 768 } );
+  setMinimumSize( { 200, 150 } );
+  resize( 1024, 768 );
   mBrowser->show();
 
   auto file_menu = mMenu.addMenu( "File" );
