@@ -4,6 +4,7 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QSignalBlocker>
 #include <QtWidgets/QApplication>
+#include <QtGui/QKeySequence>
 
 TestBrowser::TestBrowser()
 {
@@ -27,6 +28,12 @@ TestBrowser::TestBrowser()
   action->setText( tr( "Quit" ) );
   file_menu->addAction( action );
   connect( action, &QAction::triggered, this, [this]() { close(); } );
+
+  action = new QAction( this );
+  action->setText( tr( "Reload" ) );
+  action->setShortcut( QKeySequence::Refresh );
+  connect( action, &QAction::triggered, this, [this]() { loadHtml( mUrl->text() ); } );
+  mToolBar.addAction( action );
 
   mUrl = new QLineEdit( this );
   mToolBar.addWidget( mUrl );
