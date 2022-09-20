@@ -215,7 +215,7 @@ void container_qt::draw_text(
   p->restore();
 }
 
-int container_qt::pt_to_px( int pt )
+int container_qt::pt_to_px( int pt ) const
 {
   return this->viewport()->physicalDpiY() * pt / this->viewport()->logicalDpiY();
 }
