@@ -252,4 +252,55 @@ void HTMLContentTest::test_qstyles()
   qApp->setStyleSheet( style );
   auto browser = createMainWindow( mBrowserSize );
   browser->setHtml( html );
+  qApp->setStyleSheet( "" );
+}
+
+void HTMLContentTest::test_zoom_reflow_data()
+{
+  const QString html(R"-(<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test page</title>
+  </head>
+  <body style="margin: 2em;">
+    <p style="font-size: 24px;">Text must occupy all availble horizontal space. Horizontal scroll must <em>not</em> be possible as line wrapping is performed.</p>
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. In vel ornare massa, eget tempor urna. Aenean pretium massa non iaculis consequat. In vel rutrum neque. Nulla condimentum dolor id tincidunt suscipit. Ut molestie aliquet turpis, id maximus ipsum pharetra quis. Vivamus dignissim aliquet est, ac iaculis quam auctor eget. Nam venenatis, justo a eleifend vulputate, dui lacus tristique sem, a finibus risus lectus sit amet urna. Nullam scelerisque commodo elementum. Nulla ut semper est. Donec cursus accumsan purus, nec bibendum massa porttitor eu. Ut nec lacus accumsan, vehicula tortor at, vulputate lorem.</p>
+    <p>Integer nisl dolor, sagittis sed magna id, malesuada eleifend nisl. Nam pharetra nisl ac dictum lobortis. Nunc elementum mauris felis, vitae accumsan sem tincidunt nec. Ut placerat ut felis non condimentum. Nullam a arcu at ex tincidunt fermentum. Vestibulum auctor arcu a nisl molestie, sit amet efficitur nunc vestibulum. Donec placerat id purus eget consectetur. Quisque ornare leo eget lorem malesuada fermentum. Curabitur fermentum ultricies nibh, nec aliquam quam dapibus et.</p>
+    <p>Etiam mollis augue risus, ac finibus felis commodo eget. Nunc nec facilisis lacus. Fusce pretium metus eu ante ullamcorper dignissim. Aliquam in ullamcorper odio, a congue diam. Proin nec enim eu metus sagittis gravida ac sit amet mi. Sed cursus urna non justo fermentum efficitur. Maecenas efficitur est ac cursus feugiat. Sed sem mauris, varius vitae ipsum in, viverra dapibus orci. Etiam vitae volutpat dolor. Curabitur tincidunt mauris quis libero pulvinar, at maximus nisl tincidunt. Vestibulum laoreet scelerisque metus, vitae ornare erat porttitor eget.</p>
+    <p>Nulla aliquet lobortis est in euismod. Nullam nec varius enim. Suspendisse convallis mi venenatis neque ornare, et tempus leo semper. Vivamus vitae erat ac erat tempor congue non quis elit. Nam euismod volutpat turpis, et eleifend diam vestibulum a. Ut mattis fermentum consectetur. Vestibulum elit nulla, malesuada vitae ante sit amet, sagittis hendrerit dolor. Nullam a purus pharetra, lobortis est ac, feugiat sapien. Nulla est mauris, rutrum sit amet accumsan at, vehicula sit amet turpis. Pellentesque in purus at est sollicitudin maximus. Vestibulum ac sapien sagittis, gravida velit a, maximus dolor. Phasellus aliquam ultrices neque, eget placerat diam aliquam quis. Cras ante nulla, faucibus vitae ex sit amet, dignissim hendrerit leo. Duis rutrum iaculis odio vel venenatis.</p>
+    <p>Pellentesque eget justo sollicitudin, dapibus nibh at, blandit nunc. Nulla pretium lorem nunc, in convallis diam dictum a. Sed fringilla ultrices erat non hendrerit. Curabitur non justo scelerisque, imperdiet ligula et, rutrum odio. Ut sit amet tristique ligula. Quisque felis sapien, bibendum nec lorem sed, feugiat tristique tortor. Phasellus pharetra purus quam, vel dapibus leo rutrum sed. Morbi et porta massa. In ut massa consectetur tortor facilisis vehicula ac vitae nisi. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Aliquam mattis purus sed dui sollicitudin, a varius ligula varius. Donec at magna eleifend nisi facilisis fringilla. Suspendisse vel mi non nisi consequat commodo. Quisque placerat mauris luctus tristique finibus.</p>
+  </body>
+</html>
+)-");
+
+  const QString html_long_word(R"-(<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test page</title>
+  </head>
+  <body style="margin: 2em; font-size: 24px">
+    <p>Text must occupy all availble horizontal space. Horizontal scroll must be possible if the paragraph below does <em>not</em> fit.</p>
+    <p>abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789</p>
+  </body>
+</html>
+)-");
+
+  QTest::addColumn<QString>( "html" );
+  QTest::addColumn<double>( "scale" );
+  QTest::addRow( "test reflow zoom 0.75" ) << html << 0.75;
+  QTest::addRow( "test reflow zoom 1.00" ) << html << 1.0;
+  QTest::addRow( "test reflow zoom 1.25" ) << html << 1.25;
+  QTest::addRow( "test reflow long zoom 0.75" ) << html_long_word << 0.75;
+  QTest::addRow( "test reflow long zoom 1.00" ) << html_long_word << 1.0;
+  QTest::addRow( "test reflow long zoom 1.25" ) << html_long_word << 1.25;
+}
+
+void HTMLContentTest::test_zoom_reflow()
+{
+  QFETCH( QString, html );
+  QFETCH( double, scale );
+  auto browser = createMainWindow( mBrowserSize );
+  browser->resize( 800, 600 );
+  browser->setHtml( html );
+  browser->setScale( scale );
 }

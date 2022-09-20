@@ -82,8 +82,15 @@ protected:
   void get_media_features( litehtml::media_features& media ) const override;
   void get_language( litehtml::tstring& language, litehtml::tstring& culture ) const override;
 
+  void resizeEvent( QResizeEvent* event ) override;
+
 private:
-  void                   updateScrollBars();
+  struct MousePos
+  {
+    QPoint html;   // absolute position in HTML document
+    QPoint client; // relative position in viewport
+  };
+
   QPoint                 scrollBarPos() const;
   QSize                  scaled( const QSize& size ) const;
   QRect                  scaled( const QRect& rect ) const;
@@ -99,6 +106,7 @@ private:
   std::pair<int, int>    findAnchorPos( const QString& anchor );
   litehtml::element::ptr findAnchor( const QString& anchor );
   QByteArray             loadResource( Browser::ResourceType type, const QUrl& url );
+  MousePos               convertMousePos( const QMouseEvent* event );
 
 private:
   std::shared_ptr<litehtml::document> mDocument;

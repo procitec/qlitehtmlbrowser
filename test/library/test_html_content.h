@@ -34,6 +34,8 @@ private Q_SLOTS:
   void test_tables();
   void test_qstyles_data();
   void test_qstyles();
+  void test_zoom_reflow_data();
+  void test_zoom_reflow();
 
 private:
   QLiteHtmlBrowser*            createMainWindow( const QSize& );

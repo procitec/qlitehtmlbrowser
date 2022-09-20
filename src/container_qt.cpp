@@ -54,9 +54,7 @@ void container_qt::setHtml( const QString& html, const QUrl& source_url )
     mDocument = litehtml::document::createFromUTF8( mDocumentSource, this, &mContext );
     verticalScrollBar()->setValue( 0 );
     horizontalScrollBar()->setValue( 0 );
-    mDocument->render( this->viewport()->width(), litehtml::render_all );
-    updateScrollBars();
-    viewport()->update();
+    render();
 
     auto frag = source_url.fragment();
     if ( !frag.isEmpty() )
@@ -66,31 +64,6 @@ void container_qt::setHtml( const QString& html, const QUrl& source_url )
   }
 }
 
-void container_qt::updateScrollBars()
-{
-  auto* hBar = horizontalScrollBar();
-  auto* vBar = verticalScrollBar();
-
-  const auto relativeXPos   = static_cast<float>( hBar->value() ) / hBar->maximum();
-  const auto relativeYPos   = static_cast<float>( vBar->value() ) / vBar->maximum();
-  const auto viewportWidth  = viewport()->width();
-  const auto viewportHeight = viewport()->height();
-  const auto newMaxWidth    = std::max( inv_scaled( mDocument->width() ) - viewportWidth, 0 );
-  const auto newMaxHeight   = std::max( inv_scaled( mDocument->height() ) - viewportHeight, 0 );
-
-  hBar->setMaximum( newMaxWidth );
-  hBar->setValue( newMaxWidth * relativeXPos );
-  vBar->setMaximum( newMaxHeight );
-  vBar->setValue( newMaxHeight * relativeYPos );
-
-  hBar->setPageStep( viewportWidth );
-  vBar->setPageStep( viewportHeight );
-
-  const QFontMetrics _fm( this->font() );
-  hBar->setSingleStep( _fm.averageCharWidth() );
-  vBar->setSingleStep( _fm.height() );
-}
-
 QPoint container_qt::scrollBarPos() const
 {
   return { horizontalScrollBar()->value(), verticalScrollBar()->value() };
@@ -98,11 +71,22 @@ QPoint container_qt::scrollBarPos() const
 
 void container_qt::render()
 {
-  if ( mDocument )
-  {
-    mDocument->render( scaled( this->viewport()->width() ) );
-    viewport()->update();
-  }
+  if ( !mDocument )
+    return;
+
+  mDocument->render( scaled( this->viewport()->width() ) );
+
+  auto* hBar = horizontalScrollBar();
+  hBar->setPageStep( scaled( viewport()->width() ) );
+  hBar->setSingleStep( hBar->pageStep() / 20 );
+  hBar->setRange( 0, std::max( 0, mDocument->width() - scaled( viewport()->width() ) ) );
+
+  auto* vBar = verticalScrollBar();
+  vBar->setPageStep( scaled( viewport()->height() ) );
+  vBar->setSingleStep( vBar->pageStep() / 20 );
+  vBar->setRange( 0, std::max( 0, mDocument->height() - scaled( viewport()->height() ) ) );
+
+  viewport()->update();
 }
 
 void container_qt::paintEvent( QPaintEvent* event )
@@ -112,7 +96,6 @@ void container_qt::paintEvent( QPaintEvent* event )
     if ( mDocument )
     {
       /*auto     width = */
-      mDocument->render( scaled( this->viewport()->width() ) );
       QPainter p( viewport() );
       p.setWorldTransform( QTransform().scale( mScale, mScale ) );
       p.setRenderHint( QPainter::SmoothPixmapTransform, true );
@@ -124,8 +107,7 @@ void container_qt::paintEvent( QPaintEvent* event )
       auto margins    = viewport()->contentsMargins();
       auto scroll_pos = -scrollBarPos();
 
-      mDocument->draw( reinterpret_cast<litehtml::uint_ptr>( &p ), scaled( margins.left() + scroll_pos.x() ),
-                       scaled( margins.top() + scroll_pos.y() ), &clipRect );
+      mDocument->draw( reinterpret_cast<litehtml::uint_ptr>( &p ), margins.left() + scroll_pos.x(), margins.top() + scroll_pos.y(), &clipRect );
     }
   }
 }
@@ -358,6 +340,15 @@ QByteArray container_qt::loadResource( Browser::ResourceType type, const QUrl& u
   return mResourceHandler( static_cast<int>( type ), url );
 }
 
+container_qt::MousePos container_qt::convertMousePos( const QMouseEvent* event )
+{
+  MousePos pos;
+  pos.client = { scaled( mapFromGlobal( event->globalPos() ) ) };
+  pos.html   = { pos.client + scrollBarPos() };
+
+  return pos;
+}
+
 void container_qt::load_image( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl, bool redraw_on_ready )
 {
   auto url = resolveUrl( src, baseurl );
@@ -574,8 +565,8 @@ void container_qt::draw_borders( litehtml::uint_ptr hdc, const litehtml::borders
 void container_qt::scrollToAnchor( const QString& anchor )
 {
   auto [x, y] = findAnchorPos( anchor );
-  horizontalScrollBar()->setValue( inv_scaled( x ) );
-  verticalScrollBar()->setValue( inv_scaled( y ) );
+  horizontalScrollBar()->setValue( x );
+  verticalScrollBar()->setValue( y );
 }
 
 litehtml::element::ptr container_qt::findAnchor( const QString& anchor )
@@ -725,8 +716,8 @@ void container_qt::del_clip() {}
 
 void container_qt::get_client_rect( litehtml::position& client ) const
 {
-  client.width  = this->viewport()->width();
-  client.height = this->viewport()->height();
+  client.width  = scaled( this->viewport()->width() );
+  client.height = scaled( this->viewport()->height() );
   //  auto clientPos = mapToParent( { contentsMargins().left(), contentsMargins().top() } );
   //  client.x       = clientPos.x();
   //  client.y       = clientPos.y();
@@ -743,10 +734,12 @@ std::shared_ptr<litehtml::element> container_qt::create_element( const litehtml:
 
 void container_qt::setScale( double scale )
 {
-  mScale = std::clamp( scale, mMinScale, mMaxScale );
-  updateScrollBars();
-  update();
-  viewport()->update();
+  auto relH = static_cast<float>( horizontalScrollBar()->value() ) / horizontalScrollBar()->maximum();
+  auto relV = static_cast<float>( verticalScrollBar()->value() ) / verticalScrollBar()->maximum();
+  mScale    = std::clamp( scale, mMinScale, mMaxScale );
+  render();
+  horizontalScrollBar()->setValue( std::floor( relH * horizontalScrollBar()->maximum() ) );
+  verticalScrollBar()->setValue( std::floor( relV * verticalScrollBar()->maximum() ) );
 }
 
 void container_qt::get_media_features( litehtml::media_features& media ) const
@@ -767,6 +760,16 @@ void container_qt::get_language( litehtml::tstring& language, litehtml::tstring&
 {
   language = _t( "en" );
   culture  = _t( "" );
+}
+
+void container_qt::resizeEvent( QResizeEvent* event )
+{
+  auto relH = static_cast<float>( horizontalScrollBar()->value() ) / horizontalScrollBar()->maximum();
+  auto relV = static_cast<float>( verticalScrollBar()->value() ) / verticalScrollBar()->maximum();
+  QAbstractScrollArea::resizeEvent( event );
+  render();
+  horizontalScrollBar()->setValue( std::floor( relH * horizontalScrollBar()->maximum() ) );
+  verticalScrollBar()->setValue( std::floor( relV * verticalScrollBar()->maximum() ) );
 }
 
 void container_qt::wheelEvent( QWheelEvent* e )
@@ -839,10 +842,10 @@ void container_qt::mouseMoveEvent( QMouseEvent* e )
 
   if ( e && mDocument )
   {
-    auto                       client_pos = scaled( scrollBarPos() );
-    auto                       mouse_pos  = scaled( mapFromGlobal( e->globalPos() ) );
+
     litehtml::position::vector redraw_boxes;
-    if ( mDocument->on_mouse_over( mouse_pos.x() + client_pos.x(), mouse_pos.y() + client_pos.y(), client_pos.x(), client_pos.y(), redraw_boxes ) )
+    const auto                 mousePos = convertMousePos( e );
+    if ( mDocument->on_mouse_over( mousePos.html.x(), mousePos.html.y(), mousePos.client.x(), mousePos.client.y(), redraw_boxes ) )
     {
       // something changed, redraw of boxes required;
     }
@@ -855,10 +858,9 @@ void container_qt::mouseReleaseEvent( QMouseEvent* e )
   {
     if ( Qt::LeftButton == e->button() )
     {
-      auto                       client_pos = scaled( scrollBarPos() );
-      auto                       mouse_pos  = scaled( mapFromGlobal( e->globalPos() ) );
       litehtml::position::vector redraw_boxes;
-      if ( mDocument->on_lbutton_up( mouse_pos.x() + client_pos.x(), mouse_pos.y() + client_pos.y(), client_pos.x(), client_pos.y(), redraw_boxes ) )
+      const auto                 mousePos = convertMousePos( e );
+      if ( mDocument->on_lbutton_up( mousePos.html.x(), mousePos.html.y(), mousePos.client.x(), mousePos.client.y(), redraw_boxes ) )
       {
         // something changed, redraw of boxes required;
       }
@@ -871,11 +873,9 @@ void container_qt::mousePressEvent( QMouseEvent* e )
   {
     if ( Qt::LeftButton == e->button() )
     {
-      auto                       client_pos = scaled( scrollBarPos() );
-      auto                       mouse_pos  = scaled( mapFromGlobal( e->globalPos() ) );
       litehtml::position::vector redraw_boxes;
-      if ( mDocument->on_lbutton_down( mouse_pos.x() + client_pos.x(), mouse_pos.y() + client_pos.y(), client_pos.x(), client_pos.y(),
-                                       redraw_boxes ) )
+      const auto                 mousePos = convertMousePos( e );
+      if ( mDocument->on_lbutton_down( mousePos.html.x(), mousePos.html.y(), mousePos.client.x(), mousePos.client.y(), redraw_boxes ) )
       {
         // something changed, redraw of boxes required;
       }
