@@ -4,7 +4,7 @@
 #include <QtCore/QUrl>
 #include <QtCore/QByteArray>
 
-#include <qglobal.h>
+#include <QtCore/qglobal.h>
 
 #if defined( QLITEHTMLBROWSER_LIBRARY )
 #define QLITEHTMLBROWSER_EXPORT Q_DECL_EXPORT
