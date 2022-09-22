@@ -257,7 +257,7 @@ void HTMLContentTest::test_qstyles()
 
 void HTMLContentTest::test_zoom_reflow_data()
 {
-  const QString html(R"-(<!DOCTYPE html>
+  const QString html( R"-(<!DOCTYPE html>
 <html>
   <head>
     <title>Test page</title>
@@ -271,9 +271,9 @@ void HTMLContentTest::test_zoom_reflow_data()
     <p>Pellentesque eget justo sollicitudin, dapibus nibh at, blandit nunc. Nulla pretium lorem nunc, in convallis diam dictum a. Sed fringilla ultrices erat non hendrerit. Curabitur non justo scelerisque, imperdiet ligula et, rutrum odio. Ut sit amet tristique ligula. Quisque felis sapien, bibendum nec lorem sed, feugiat tristique tortor. Phasellus pharetra purus quam, vel dapibus leo rutrum sed. Morbi et porta massa. In ut massa consectetur tortor facilisis vehicula ac vitae nisi. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Aliquam mattis purus sed dui sollicitudin, a varius ligula varius. Donec at magna eleifend nisi facilisis fringilla. Suspendisse vel mi non nisi consequat commodo. Quisque placerat mauris luctus tristique finibus.</p>
   </body>
 </html>
-)-");
+)-" );
 
-  const QString html_long_word(R"-(<!DOCTYPE html>
+  const QString html_long_word( R"-(<!DOCTYPE html>
 <html>
   <head>
     <title>Test page</title>
@@ -283,7 +283,7 @@ void HTMLContentTest::test_zoom_reflow_data()
     <p>abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789</p>
   </body>
 </html>
-)-");
+)-" );
 
   QTest::addColumn<QString>( "html" );
   QTest::addColumn<double>( "scale" );
