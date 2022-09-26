@@ -33,7 +33,7 @@ TestBrowser::TestBrowser()
   action = new QAction( this );
   action->setText( tr( "Reload" ) );
   action->setShortcut( QKeySequence::Refresh );
-  connect( action, &QAction::triggered, this, [this]() { loadHtml( mUrl->text() ); } );
+  connect( action, &QAction::triggered, mBrowser, &QHelpBrowser::reload );
   mToolBar.addAction( action );
 
   mUrl = new QLineEdit( this );
