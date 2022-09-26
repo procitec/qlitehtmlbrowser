@@ -19,13 +19,6 @@
 container_qt::container_qt( QWidget* parent )
   : QAbstractScrollArea( parent )
 {
-  setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOn );
-  setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOn );
-
-  //  auto* layout = new QVBoxLayout();
-
-  //  layout->addWidget( new QPushButton( "text" ) );
-  //  setLayout( layout );
   setMouseTracking( true );
 #if ( QT_VERSION >= QT_VERSION_CHECK( 5, 11, 0 ) )
   connect( qApp, &QApplication::fontChanged, this, [this]() { mFontInfo = this->fontInfo().family().toLocal8Bit(); } );
