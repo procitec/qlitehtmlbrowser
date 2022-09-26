@@ -8,15 +8,11 @@ QLiteHtmlBrowser::QLiteHtmlBrowser( QWidget* parent )
   : QWidget( parent )
   , mImpl( new QLiteHtmlBrowserImpl( this ) )
 {
-  setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
-  //  setStyleSheet( "background-color:black;" );
-
   auto* layout = new QVBoxLayout;
+  layout->setContentsMargins( 0, 0, 0, 0 );
   layout->addWidget( mImpl );
-
   setLayout( layout );
 
-  mImpl->show();
   mImpl->setResourceHandler( std::bind( &QLiteHtmlBrowser::loadResource, this, std::placeholders::_1, std::placeholders::_2 ) );
   mImpl->setUrlResolveHandler( std::bind( &QLiteHtmlBrowser::resolveUrl, this, std::placeholders::_1 ) );
 

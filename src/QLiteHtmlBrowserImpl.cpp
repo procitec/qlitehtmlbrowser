@@ -14,21 +14,16 @@
 QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
   : QWidget( parent )
 {
-  setMinimumSize( 200, 200 );
-  setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
   mContainer = new container_qt( this );
   connect( mContainer, &container_qt::anchorClicked, this, &QLiteHtmlBrowserImpl::onAnchorClicked, Qt::QueuedConnection );
-
   connect( mContainer, &container_qt::urlChanged, this, &QLiteHtmlBrowserImpl::urlChanged, Qt::QueuedConnection );
   connect( mContainer, &container_qt::anchorClickedInfo, this, &QLiteHtmlBrowserImpl::anchorClicked, Qt::QueuedConnection );
 
-  mContainer->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
-  mContainer->show();
-
   auto* layout = new QVBoxLayout;
+  layout->setContentsMargins( 0, 0, 0, 0 );
   layout->addWidget( mContainer );
-
   setLayout( layout );
+
   mCSS = readResourceCss( QString( ":/css/master.css" ) );
   loadStyleSheet();
 }

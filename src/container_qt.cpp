@@ -19,7 +19,6 @@
 container_qt::container_qt( QWidget* parent )
   : QAbstractScrollArea( parent )
 {
-  setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
   setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOn );
   setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOn );
 
