@@ -11,6 +11,8 @@
 #include <QtCore/QDebug>
 #include <QtCore/QRegularExpression>
 #include <QtGui/QPalette>
+#include <QtGui/QKeySequence>
+#include <QtWidgets/QShortcut>
 #include <QtWidgets/QApplication>
 #include <QtCore/QTextBoundaryFinder>
 #include <string>
@@ -19,6 +21,18 @@
 container_qt::container_qt( QWidget* parent )
   : QAbstractScrollArea( parent )
 {
+  auto* shortcut = new QShortcut( QKeySequence{ QKeySequence::ZoomIn }, this );
+  shortcut->setContext( Qt::WidgetShortcut );
+  connect( shortcut, &QShortcut::activated, this, [this]() { setScale( scale() + 0.1 ); } );
+
+  shortcut = new QShortcut( QKeySequence{ QKeySequence::ZoomOut }, this );
+  shortcut->setContext( Qt::WidgetShortcut );
+  connect( shortcut, &QShortcut::activated, this, [this]() { setScale( scale() - 0.1 ); } );
+
+  shortcut = new QShortcut( tr( "Ctrl+0" ), this );
+  shortcut->setContext( Qt::WidgetShortcut );
+  connect( shortcut, &QShortcut::activated, this, [this]() { setScale( 1.0 ); } );
+
   setMouseTracking( true );
 #if ( QT_VERSION >= QT_VERSION_CHECK( 5, 11, 0 ) )
   connect( qApp, &QApplication::fontChanged, this, [this]() { mFontInfo = this->fontInfo().family().toLocal8Bit(); } );
@@ -779,29 +793,6 @@ void container_qt::wheelEvent( QWheelEvent* e )
     else
     {
       QAbstractScrollArea::wheelEvent( e );
-    }
-  }
-}
-
-void container_qt::keyPressEvent( QKeyEvent* e )
-{
-  if ( e )
-  {
-    QAbstractScrollArea::keyPressEvent( e );
-    if ( e->modifiers() & Qt::ControlModifier )
-    {
-      auto k = e->key();
-
-      switch ( k )
-      {
-        case Qt::Key_Enter:
-          setScale( 1.0 );
-          e->setAccepted( true );
-          break;
-
-        default:
-          break;
-      }
     }
   }
 }
