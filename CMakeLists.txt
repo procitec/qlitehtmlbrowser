@@ -27,7 +27,7 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
 endif()
 
 
-project( QLiteHtmlBrowser VERSION 1.1.0)
+project( QLiteHtmlBrowser VERSION 1.1.1)
 
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
     find_package(Qt5 COMPONENTS Widgets Gui Core Test REQUIRED)
