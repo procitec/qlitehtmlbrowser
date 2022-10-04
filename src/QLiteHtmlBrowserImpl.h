@@ -23,7 +23,7 @@ public:
 
   using UrlType = std::tuple<QUrl, int>;
 
-  void           setUrl( const QUrl& url, int resourceType = static_cast<int>( Browser::ResourceType::Unknown ) );
+  void           setUrl( const QUrl& url, int resourceType = static_cast<int>( Browser::ResourceType::Unknown ), bool clearFWHist = true);
   void           setHtml( const QString& html, const QUrl& source_url = {} );
   QString        html() const;
   void           setScale( double scale );

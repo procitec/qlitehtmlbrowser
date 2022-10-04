@@ -131,7 +131,7 @@ void QLiteHtmlBrowserImpl::mousePressEvent( QMouseEvent* e )
 //  }
 //}
 
-void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type )
+void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type, bool clearFWHist )
 {
   mUrl                       = UrlType( url, type );
   auto [home_url, home_type] = mHome;
@@ -179,6 +179,9 @@ void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type )
       {
         mBWHistStack.push( { url, type, mContainer->caption() } );
       }
+
+      if ( clearFWHist )
+        mFWHistStack.clear();
 
       update();
     }
@@ -404,7 +407,7 @@ void QLiteHtmlBrowserImpl::forward()
   if ( !mFWHistStack.isEmpty() )
   {
     auto entry = mFWHistStack.pop();
-    setUrl( entry.url, entry.urlType );
+    setUrl( entry.url, entry.urlType, false /* don’t clear forward history */ );
   }
 }
 
@@ -416,7 +419,7 @@ void QLiteHtmlBrowserImpl::backward()
     auto entry = mBWHistStack.pop();
     mFWHistStack.push( { entry.url, entry.urlType, entry.urlTitle } );
     entry = mBWHistStack.pop();
-    setUrl( entry.url, entry.urlType );
+    setUrl( entry.url, entry.urlType, false /* don’t clear forward history */ );
   }
 }
 void QLiteHtmlBrowserImpl::reload()
