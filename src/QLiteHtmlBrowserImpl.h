@@ -68,6 +68,7 @@ public:
 
 protected:
   void changeEvent( QEvent* ) override;
+  void mousePressEvent( QMouseEvent* ) override;
 
 Q_SIGNALS:
   /// emited when the url changed due to user interaction, e.g. link activation

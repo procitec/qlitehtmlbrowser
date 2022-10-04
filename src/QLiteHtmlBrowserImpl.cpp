@@ -6,8 +6,10 @@
 #include <QtCore/QDir>
 #include <QtCore/QDebug>
 #include <QtGui/QPalette>
+#include <QtGui/QKeySequence>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QStyle>
+#include <QtWidgets/QShortcut>
 #include <QtGui/QDesktopServices>
 #include <functional>
 
@@ -18,6 +20,12 @@ QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
   connect( mContainer, &container_qt::anchorClicked, this, &QLiteHtmlBrowserImpl::onAnchorClicked, Qt::QueuedConnection );
   connect( mContainer, &container_qt::urlChanged, this, &QLiteHtmlBrowserImpl::urlChanged, Qt::QueuedConnection );
   connect( mContainer, &container_qt::anchorClickedInfo, this, &QLiteHtmlBrowserImpl::anchorClicked, Qt::QueuedConnection );
+
+  auto* shortcut = new QShortcut( QKeySequence{ QKeySequence::Forward }, this );
+  connect( shortcut, &QShortcut::activated, this, &QLiteHtmlBrowserImpl::forward );
+
+  shortcut = new QShortcut( QKeySequence{ QKeySequence::Back }, this );
+  connect( shortcut, &QShortcut::activated, this, &QLiteHtmlBrowserImpl::backward );
 
   auto* layout = new QVBoxLayout;
   layout->setContentsMargins( 0, 0, 0, 0 );
@@ -102,6 +110,17 @@ void QLiteHtmlBrowserImpl::changeEvent( QEvent* e )
       loadStyleSheet();
     }
   }
+}
+
+void QLiteHtmlBrowserImpl::mousePressEvent( QMouseEvent* e )
+{
+  if ( const auto button = e->button(); button == Qt::ForwardButton || button == Qt::BackButton )
+  {
+    button == Qt::ForwardButton ? forward() : backward();
+    e->accept();
+  }
+  else
+    e->ignore();
 }
 
 // void QLiteHtmlBrowser::resizeEvent( QResizeEvent* ev )

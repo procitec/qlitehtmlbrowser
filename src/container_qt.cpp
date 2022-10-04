@@ -846,8 +846,13 @@ void container_qt::mouseReleaseEvent( QMouseEvent* e )
       if ( mDocument->on_lbutton_up( mousePos.html.x(), mousePos.html.y(), mousePos.client.x(), mousePos.client.y(), redraw_boxes ) )
       {
         // something changed, redraw of boxes required;
+        e->accept();
       }
+      else
+        e->ignore();
     }
+    else
+      e->ignore();
   }
 }
 void container_qt::mousePressEvent( QMouseEvent* e )
@@ -861,7 +866,12 @@ void container_qt::mousePressEvent( QMouseEvent* e )
       if ( mDocument->on_lbutton_down( mousePos.html.x(), mousePos.html.y(), mousePos.client.x(), mousePos.client.y(), redraw_boxes ) )
       {
         // something changed, redraw of boxes required;
+        e->accept();
       }
+      else
+        e->ignore();
     }
+    else
+      e->ignore();
   }
 }
