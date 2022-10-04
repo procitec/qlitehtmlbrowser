@@ -18,8 +18,6 @@ QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
 {
   mContainer = new container_qt( this );
   connect( mContainer, &container_qt::anchorClicked, this, &QLiteHtmlBrowserImpl::onAnchorClicked, Qt::QueuedConnection );
-  connect( mContainer, &container_qt::urlChanged, this, &QLiteHtmlBrowserImpl::urlChanged, Qt::QueuedConnection );
-  connect( mContainer, &container_qt::anchorClickedInfo, this, &QLiteHtmlBrowserImpl::anchorClicked, Qt::QueuedConnection );
 
   auto* shortcut = new QShortcut( QKeySequence{ QKeySequence::Forward }, this );
   connect( shortcut, &QShortcut::activated, this, &QLiteHtmlBrowserImpl::forward );

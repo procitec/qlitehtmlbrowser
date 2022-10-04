@@ -38,8 +38,6 @@ protected:
 
 Q_SIGNALS:
   void anchorClicked( const QUrl& );
-  void anchorClickedInfo( const QUrl& );
-  void urlChanged( const QUrl& );
 
 protected:
   litehtml::uint_ptr       create_font( const litehtml::tchar_t* faceName,

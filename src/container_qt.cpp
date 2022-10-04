@@ -50,6 +50,8 @@ void container_qt::setHtml( const QString& html, const QUrl& source_url )
 
   if ( !html.isEmpty() )
   {
+    if ( !source_url.isValid() )
+      qCritical( "container_qt.::setHtml(): `source_url` is not valid" );
     auto pure_url = source_url;
 
     pure_url.setFragment( {} );
@@ -627,27 +629,20 @@ void container_qt::on_anchor_click( const litehtml::tchar_t* url, const litehtml
 {
   if ( mDocument )
   {
-    auto url_str = QString( url );
-    if ( url_str.startsWith( "#" ) )
+    QUrl resolved_url;
+
+    if ( url && *url == '#' )
     {
       // assert( std::string( el->get_attr( "class", "" ) ) == std::string( "reference internal" ) );
-      auto frag = url_str.remove( 0, 1 );
-      if ( mSourceUrl.isValid() )
-      {
-        auto anchor_url = mSourceUrl;
-        anchor_url.setFragment( frag );
-        ( mOpenLinks ) ? emit urlChanged( anchor_url ) : emit anchorClickedInfo( anchor_url );
-      }
-      if ( mOpenLinks )
-      {
-        scrollToAnchor( frag );
-      }
+      resolved_url = mSourceUrl;
+      resolved_url.setFragment( QString( url + 1 ) );
     }
     else
     {
-      auto resolved_url = resolveUrl( url, nullptr );
-      emit anchorClicked( resolved_url );
+      resolved_url = resolveUrl( url, nullptr );
     }
+
+    emit anchorClicked( resolved_url );
   }
 }
 void container_qt::set_cursor( const litehtml::tchar_t* cursor )
