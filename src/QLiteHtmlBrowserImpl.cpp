@@ -72,7 +72,6 @@ void QLiteHtmlBrowserImpl::onAnchorClicked( const QUrl& url )
     {
       setUrl( url );
       emit anchorClicked( url );
-      emit urlChanged( url );
     }
   }
   else
@@ -185,6 +184,8 @@ void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type, bool clearFWHist )
 
       update();
     }
+
+    emit urlChanged( url );
   }
 }
 
