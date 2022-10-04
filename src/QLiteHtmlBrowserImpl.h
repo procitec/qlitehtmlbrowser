@@ -67,7 +67,6 @@ public:
   const QString& caption() const;
 
 protected:
-  void wheelEvent( QWheelEvent* ) override;
   void changeEvent( QEvent* ) override;
 
 Q_SIGNALS:

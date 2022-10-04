@@ -236,19 +236,6 @@ double QLiteHtmlBrowserImpl::scale() const
   return scale;
 }
 
-void QLiteHtmlBrowserImpl::wheelEvent( QWheelEvent* e )
-{
-  if ( mContainer && ( e->modifiers() & Qt::ControlModifier ) )
-  {
-    e->setAccepted( true );
-    float delta = e->angleDelta().y() / 120.f;
-    auto  scale = mContainer->scale();
-    scale += delta / 10.0; // get scaling in 10 percent steps;
-
-    mContainer->setScale( scale );
-  }
-}
-
 QByteArray QLiteHtmlBrowserImpl::loadResource( int type, const QUrl& url )
 {
   QByteArray data;
