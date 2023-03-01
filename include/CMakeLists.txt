@@ -12,5 +12,4 @@
 
 install( FILES ${CMAKE_CURRENT_SOURCE_DIR}/qlitehtmlbrowser/QLiteHtmlBrowser.h
                ${CMAKE_CURRENT_SOURCE_DIR}/qlitehtmlbrowser/QLiteHtmlBrowser
-         DESTINATION "include/qlitehtmlbrowser" COMPONENT QLiteHtmlBrowser )
-
+         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/qlitehtmlbrowser" COMPONENT QLiteHtmlBrowser )

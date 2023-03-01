@@ -29,6 +29,8 @@ endif()
 
 project( QLiteHtmlBrowser VERSION 1.1.2 )
 
+include(GNUInstallDirs)
+
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
     find_package(Qt5 COMPONENTS Widgets Gui Core Test REQUIRED)
     if( WITH_DOCS )
@@ -55,4 +57,3 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
         add_custom_target(dist-source COMMAND cpack --config ${CMAKE_BINARY_DIR}/CPackSourceConfig.cmake  )
     endif()
 endif()
-
