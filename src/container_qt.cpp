@@ -735,8 +735,8 @@ std::shared_ptr<litehtml::element> container_qt::create_element( const litehtml:
 
 void container_qt::setScale( double scale )
 {
-  auto relH = static_cast<float>( horizontalScrollBar()->value() ) / horizontalScrollBar()->maximum();
-  auto relV = static_cast<float>( verticalScrollBar()->value() ) / verticalScrollBar()->maximum();
+  auto relH = ( 0 < horizontalScrollBar()->maximum() ) ? static_cast<float>( horizontalScrollBar()->value() ) / horizontalScrollBar()->maximum() : 0.0;
+  auto relV = ( 0 < verticalScrollBar()->maximum() ) ? static_cast<float>( verticalScrollBar()->value() ) / verticalScrollBar()->maximum() : 0.0;
   mScale    = std::clamp( scale, mMinScale, mMaxScale );
   render();
   horizontalScrollBar()->setValue( std::floor( relH * horizontalScrollBar()->maximum() ) );
@@ -765,8 +765,8 @@ void container_qt::get_language( litehtml::tstring& language, litehtml::tstring&
 
 void container_qt::resizeEvent( QResizeEvent* event )
 {
-  auto relH = static_cast<float>( horizontalScrollBar()->value() ) / horizontalScrollBar()->maximum();
-  auto relV = static_cast<float>( verticalScrollBar()->value() ) / verticalScrollBar()->maximum();
+  auto relH = ( 0 < horizontalScrollBar()->maximum() ) ? static_cast<float>( horizontalScrollBar()->value() ) / horizontalScrollBar()->maximum() : 0.0;
+  auto relV = ( 0 < verticalScrollBar()->maximum() ) ? static_cast<float>( verticalScrollBar()->value() ) / verticalScrollBar()->maximum() : 0.0;
   QAbstractScrollArea::resizeEvent( event );
   render();
   horizontalScrollBar()->setValue( std::floor( relH * horizontalScrollBar()->maximum() ) );
