@@ -50,8 +50,8 @@ void container_qt::setHtml( const QString& html, const QUrl& source_url )
 
   if ( !html.isEmpty() )
   {
-    if ( !source_url.isValid() )
-      qCritical( "container_qt.::setHtml(): `source_url` is not valid" );
+    if ( !source_url.isEmpty() && !source_url.isValid() )
+      qCritical( "%s", qPrintable(QString("container_qt.::setHtml(): `source_url` is not valid: %1").arg(source_url.toString())) );
     auto pure_url = source_url;
 
     pure_url.setFragment( {} );
