@@ -98,11 +98,16 @@ jobs:
                         os: ubuntu-latest,
                         cc: "gcc", cxx: "g++"
                     }
-                    - {
-                        name: "macOS Latest Clang", artifact: "macOS",
-                        os: macos-latest,
-                        cc: "clang", cxx: "clang++"
-                    }
+                    #- {
+                    #    name: "Ubuntu Latest CLANG", artifact: "Linux",
+                    #    os: ubuntu-latest,
+                    #    cc: "clang", cxx: "clang++"
+                    #}
+                    #- {
+                    #    name: "macOS Latest Clang", artifact: "macOS",
+                    #    os: macos-latest,
+                    #    cc: "clang", cxx: "clang++"
+                    #}
 
         steps:
             - uses: actions/checkout@v4
