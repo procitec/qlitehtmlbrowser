@@ -29,25 +29,35 @@ QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
   layout->setContentsMargins( 0, 0, 0, 0 );
   layout->addWidget( mContainer );
   setLayout( layout );
-
-  mCSS = readResourceCss( QString( ":/css/master.css" ) );
-  loadStyleSheet();
-  checkLightness();
+  applyCSS();
 }
 
-void QLiteHtmlBrowserImpl::checkLightness()
+void QLiteHtmlBrowserImpl::applyCSS()
 {
   auto lightness = this->palette().color( QPalette::Window ).lightnessF();
   bool dark_mode = ( lightness > 0.5 ) ? false : true;
+
+  auto css = readResourceCss( QString( ":/css/master.css" ) );
+
   if ( dark_mode )
   {
-    mCSS     = readResourceCss( QString( ":/css/master.css" ) );
-    auto css = readResourceCss( ":/styles/dark.css" );
-    css.replace( "@QPalette::Window@", palette().color( QPalette::Window ).name() );
-    css.replace( "@QPalette::Text@", palette().color( QPalette::Text ).name() );
-    mCSS += css;
-    loadStyleSheet();
+    auto dark_css = readResourceCss( ":/styles/dark.css" );
+    dark_css.replace( "@QPalette::Window@", palette().color( QPalette::Window ).name() );
+    dark_css.replace( "@QPalette::Text@", palette().color( QPalette::Text ).name() );
+    css += dark_css;
   }
+
+  css += mExternalCSS;
+  if ( mContainer )
+  {
+    mContainer->setCSS( css );
+  }
+}
+
+void QLiteHtmlBrowserImpl::setCSS( const QString& css )
+{
+  mExternalCSS = css;
+  applyCSS();
 }
 
 QString QLiteHtmlBrowserImpl::readResourceCss( const QString& resource ) const
@@ -111,7 +121,7 @@ void QLiteHtmlBrowserImpl::changeEvent( QEvent* e )
   QWidget::changeEvent( e );
   if ( e && e->type() == QEvent::PaletteChange )
   {
-    checkLightness();
+    applyCSS();
   }
 }
 
@@ -240,10 +250,6 @@ QString QLiteHtmlBrowserImpl::html() const
 //  }
 //}
 
-void QLiteHtmlBrowserImpl::loadStyleSheet()
-{
-  mContainer->setCSS( mCSS );
-}
 
 void QLiteHtmlBrowserImpl::setScale( double scale )
 {

@@ -325,3 +325,26 @@ void HTMLCssTest::test_text_transform()
   auto browser = createMainWindow( mBrowserSize );
   browser->setHtml( html );
 }
+
+void HTMLCssTest::test_custom_css_data()
+{
+  QTest::addColumn<QString>( "html" );
+  QTest::addColumn<QString>( "css" );
+  QTest::newRow( "default line of text" ) << R"-(<html><body><p class="custom">paragraph default color</body></html>)-"
+                                          << R"-()-";
+  QTest::newRow( "green line of text" ) << R"-(<html><body><p class="custom">paragraph green color</body></html>)-"
+                                        << R"-(p.custom { color: green;})-";
+  QTest::newRow( "centered red line of text" ) << R"-(<html><body><p class="custom">paragraph red and centered color</body></html>)-"
+                                               << R"-(p.custom { color: red;
+                                                          text-align: center;
+                                               })-";
+}
+
+void HTMLCssTest::test_custom_css()
+{
+  QFETCH( QString, html );
+  QFETCH( QString, css );
+  auto browser = createMainWindow( mBrowserSize );
+  browser->setCSS( css );
+  browser->setHtml( html );
+}

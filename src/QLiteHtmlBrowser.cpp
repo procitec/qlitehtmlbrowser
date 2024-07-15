@@ -51,6 +51,11 @@ void QLiteHtmlBrowser::setHtml( const QString& html, const QString& baseurl )
   mImpl->setHtml( html, baseurl );
 }
 
+void QLiteHtmlBrowser::setCSS( const QString& css )
+{
+  mImpl->setCSS( css );
+}
+
 QString QLiteHtmlBrowser::html() const
 {
   return mImpl->html();

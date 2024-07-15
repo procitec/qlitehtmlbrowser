@@ -32,6 +32,8 @@ private Q_SLOTS:
   void test_tables();
   void test_text_transform_data();
   void test_text_transform();
+  void test_custom_css_data();
+  void test_custom_css();
 
 private:
   QLiteHtmlBrowser*            createMainWindow( const QSize& );

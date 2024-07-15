@@ -62,6 +62,10 @@ public:
   /// without any parent.
   QLiteHtmlBrowser( QWidget* parent = nullptr );
 
+  /// set a css as string. This css would be appended to the library provided css
+  /// so the user can customize the default css by its own css.
+  void setCSS( const QString& css );
+
   /// if setHtml is called with the html content,
   /// it is require to set the base directory if not in current working directory
   /// for the given html code to resolve file system dependencies. To avoid issues

@@ -25,11 +25,11 @@ public:
 
   void           setUrl( const QUrl& url, int resourceType = static_cast<int>( Browser::ResourceType::Unknown ), bool clearFWHist = true);
   void           setHtml( const QString& html, const QUrl& source_url = {} );
+  void           setCSS( const QString& css );
   QString        html() const;
   void           setScale( double scale );
   double         scale() const;
   const UrlType& url() const { return mUrl; }
-  void           loadStyleSheet();
   void           setResourceHandler( const Browser::ResourceHandlerType& rh );
   void           setUrlResolveHandler( const Browser::UrlResolveHandlerType& rh );
   QByteArray     loadResource( int type, const QUrl& url );
@@ -98,7 +98,7 @@ private:
   QUrl    baseUrl( const QUrl& url ) const;
   void    parseUrl( const QUrl& url );
   QString readResourceCss( const QString& ) const;
-  void checkLightness();
+  void    applyCSS();
 
   Q_DISABLE_COPY( QLiteHtmlBrowserImpl );
 #if ( QT_VERSION >= QT_VERSION_CHECK( 5, 13, 0 ) )
@@ -107,7 +107,7 @@ private:
 
   container_qt*                  mContainer = nullptr;
   QUrl                           mBaseUrl   = {};
-  QString                        mCSS       = {};
+  QString                        mExternalCSS = {};
   UrlType                        mUrl       = {};
   Browser::ResourceHandlerType   mResourceHandler;
   Browser::UrlResolveHandlerType mUrlResolveHandler;
