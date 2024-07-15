@@ -27,7 +27,7 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
 endif()
 
 
-project( QLiteHtmlBrowser VERSION 1.1.3 )
+project( QLiteHtmlBrowser VERSION 1.1.4 )
 
 include(GNUInstallDirs)
 
