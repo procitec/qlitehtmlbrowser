@@ -51,7 +51,7 @@ void container_qt::setHtml( const QString& html, const QUrl& source_url )
   if ( !html.isEmpty() )
   {
     if ( !source_url.isEmpty() && !source_url.isValid() )
-      qCritical( "%s", qPrintable(QString("container_qt.::setHtml(): `source_url` is not valid: %1").arg(source_url.toString())) );
+      qCritical( "%s", qPrintable( QString( "container_qt.::setHtml(): `source_url` is not valid: %1" ).arg( source_url.toString() ) ) );
     auto pure_url = source_url;
 
     pure_url.setFragment( {} );
@@ -735,7 +735,8 @@ std::shared_ptr<litehtml::element> container_qt::create_element( const litehtml:
 
 void container_qt::setScale( double scale )
 {
-  auto relH = ( 0 < horizontalScrollBar()->maximum() ) ? static_cast<float>( horizontalScrollBar()->value() ) / horizontalScrollBar()->maximum() : 0.0;
+  auto relH =
+    ( 0 < horizontalScrollBar()->maximum() ) ? static_cast<float>( horizontalScrollBar()->value() ) / horizontalScrollBar()->maximum() : 0.0;
   auto relV = ( 0 < verticalScrollBar()->maximum() ) ? static_cast<float>( verticalScrollBar()->value() ) / verticalScrollBar()->maximum() : 0.0;
   mScale    = std::clamp( scale, mMinScale, mMaxScale );
   render();
@@ -765,7 +766,8 @@ void container_qt::get_language( litehtml::tstring& language, litehtml::tstring&
 
 void container_qt::resizeEvent( QResizeEvent* event )
 {
-  auto relH = ( 0 < horizontalScrollBar()->maximum() ) ? static_cast<float>( horizontalScrollBar()->value() ) / horizontalScrollBar()->maximum() : 0.0;
+  auto relH =
+    ( 0 < horizontalScrollBar()->maximum() ) ? static_cast<float>( horizontalScrollBar()->value() ) / horizontalScrollBar()->maximum() : 0.0;
   auto relV = ( 0 < verticalScrollBar()->maximum() ) ? static_cast<float>( verticalScrollBar()->value() ) / verticalScrollBar()->maximum() : 0.0;
   QAbstractScrollArea::resizeEvent( event );
   render();

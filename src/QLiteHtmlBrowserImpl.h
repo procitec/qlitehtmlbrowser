@@ -23,7 +23,7 @@ public:
 
   using UrlType = std::tuple<QUrl, int>;
 
-  void           setUrl( const QUrl& url, int resourceType = static_cast<int>( Browser::ResourceType::Unknown ), bool clearFWHist = true);
+  void           setUrl( const QUrl& url, int resourceType = static_cast<int>( Browser::ResourceType::Unknown ), bool clearFWHist = true );
   void           setHtml( const QString& html, const QUrl& source_url = {} );
   void           setCSS( const QString& css );
   QString        html() const;
@@ -105,10 +105,10 @@ private:
   Q_DISABLE_MOVE( QLiteHtmlBrowserImpl );
 #endif
 
-  container_qt*                  mContainer = nullptr;
-  QUrl                           mBaseUrl   = {};
+  container_qt*                  mContainer   = nullptr;
+  QUrl                           mBaseUrl     = {};
   QString                        mExternalCSS = {};
-  UrlType                        mUrl       = {};
+  UrlType                        mUrl         = {};
   Browser::ResourceHandlerType   mResourceHandler;
   Browser::UrlResolveHandlerType mUrlResolveHandler;
   QStack<HistoryEntry>           mBWHistStack  = {};

@@ -250,7 +250,6 @@ QString QLiteHtmlBrowserImpl::html() const
 //  }
 //}
 
-
 void QLiteHtmlBrowserImpl::setScale( double scale )
 {
   if ( mContainer )
