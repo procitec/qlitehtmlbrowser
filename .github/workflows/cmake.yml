@@ -24,7 +24,7 @@ name: Build QLiteHtmlBrowser
 #    runs-on: ubuntu-latest
 
 #    steps:
-#    - uses: actions/checkout@v2
+#    - uses: actions/checkout@v4
 #
 #    - name: Configure CMake
 #      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -70,11 +70,11 @@ jobs:
                     - 'src'
                     - 'test'
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v4
             - name: Run clang-format style check for C/C++ programs.
-              uses: jidicula/clang-format-action@v4.2.0
+              uses: jidicula/clang-format-action@v4.13.0
               with:
-                  clang-format-version: '12'
+                  clang-format-version: '18'
                   check-path: ${{ matrix.path }}
                   #        fallback-style: 'LLVM'
 
@@ -105,7 +105,7 @@ jobs:
                     }
 
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v4
               with:
                   submodules: recursive
 
