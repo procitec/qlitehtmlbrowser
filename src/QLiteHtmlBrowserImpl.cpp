@@ -32,6 +32,22 @@ QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
 
   mCSS = readResourceCss( QString( ":/css/master.css" ) );
   loadStyleSheet();
+  checkLightness();
+}
+
+void QLiteHtmlBrowserImpl::checkLightness()
+{
+  auto lightness = this->palette().color( QPalette::Window ).lightnessF();
+  bool dark_mode = ( lightness > 0.5 ) ? false : true;
+  if ( dark_mode )
+  {
+    mCSS     = readResourceCss( QString( ":/css/master.css" ) );
+    auto css = readResourceCss( ":/styles/dark.css" );
+    css.replace( "@QPalette::Window@", palette().color( QPalette::Window ).name() );
+    css.replace( "@QPalette::Text@", palette().color( QPalette::Text ).name() );
+    mCSS += css;
+    loadStyleSheet();
+  }
 }
 
 QString QLiteHtmlBrowserImpl::readResourceCss( const QString& resource ) const
@@ -95,17 +111,7 @@ void QLiteHtmlBrowserImpl::changeEvent( QEvent* e )
   QWidget::changeEvent( e );
   if ( e && e->type() == QEvent::PaletteChange )
   {
-    auto lightness = this->palette().color( QPalette::Window ).lightnessF();
-    bool dark_mode = ( lightness > 0.5 ) ? false : true;
-    if ( dark_mode )
-    {
-      mCSS     = readResourceCss( QString( ":/css/master.css" ) );
-      auto css = readResourceCss( ":/styles/dark.css" );
-      css.replace( "@QPalette::Window@", palette().color( QPalette::Window ).name() );
-      css.replace( "@QPalette::Text@", palette().color( QPalette::Text ).name() );
-      mCSS += css;
-      loadStyleSheet();
-    }
+    checkLightness();
   }
 }
 

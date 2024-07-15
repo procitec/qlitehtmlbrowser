@@ -98,6 +98,7 @@ private:
   QUrl    baseUrl( const QUrl& url ) const;
   void    parseUrl( const QUrl& url );
   QString readResourceCss( const QString& ) const;
+  void checkLightness();
 
   Q_DISABLE_COPY( QLiteHtmlBrowserImpl );
 #if ( QT_VERSION >= QT_VERSION_CHECK( 5, 13, 0 ) )
