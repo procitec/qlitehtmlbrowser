@@ -194,7 +194,7 @@ jobs:
 
                 # message("::set-output name=qt_base_url::${qt_base_url}")
                 # message("\"qt_base_url::${qt_base_url}\" >> $GITHUB_OUTPUT")
-                file(APPEND "$ENV{GITHUB_OUTPUT}" "qt_base_url::${qt_base_url}\n")
+                file(APPEND "$ENV{GITHUB_OUTPUT}" "qt_base_url=${qt_base_url}\n")
 
             - name: Configure CMake
               # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
