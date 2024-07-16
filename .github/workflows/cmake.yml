@@ -166,7 +166,8 @@ jobs:
 
                 # Save the path for other steps
                 file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/build-qt5/${qt_dir_prefix}" qt_dir)
-                message("\"qt_dir=${qt_dir}\" >> $GITHUB_OUTPUT")
+                #message("\"qt_dir=${qt_dir}\" >> $GITHUB_OUTPUT")
+                file(APPEND "$ENV{GITHUB_OUTPUT}" "qt_dir=${qt_dir}\n")
 
                 message("Downloading Qt to ${qt_dir}")
                 function(downloadAndExtract url archive)
@@ -192,7 +193,8 @@ jobs:
                 endif()
 
                 # message("::set-output name=qt_base_url::${qt_base_url}")
-                message("\"qt_base_url::${qt_base_url}\" >> $GITHUB_OUTPUT")
+                # message("\"qt_base_url::${qt_base_url}\" >> $GITHUB_OUTPUT")
+                file(APPEND "$ENV{GITHUB_OUTPUT}" "qt_base_url::${qt_base_url}\n")
 
             - name: Configure CMake
               # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
