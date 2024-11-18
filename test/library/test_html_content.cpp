@@ -1,6 +1,5 @@
 #include "test_html_content.h"
 #include <qlitehtmlbrowser/QLiteHtmlBrowser>
-#include "test_base.h"
 
 #include <QtWidgets/QMainWindow>
 #include <QtTest/QTest>
@@ -162,6 +161,34 @@ void HTMLContentTest::test_img()
   browser->setHtml( html, QUrl::fromLocalFile( QDir::currentPath() ).path() + "/" );
 }
 
+void HTMLContentTest::test_img_scale_data()
+{
+  QTest::addColumn<QString>( "html" );
+  QTest::addColumn<double>( "scale" );
+
+  auto content = R"-(
+  <!DOCTYPE html>
+  <html>
+  <body>
+  <img src="images/procitec_text.png"/>
+  </body>
+  </html>
+  )-";
+
+  QTest::newRow( "procitec_logo scale 100% <execute in SOURCE_DIR required>" ) << content << 1.0;
+  QTest::newRow( "procitec_logo scale 150% <execute in SOURCE_DIR required>" ) << content << 1.50;
+  QTest::newRow( "procitec_logo scale 50% <execute in SOURCE_DIR required>" ) << content << 0.50;
+}
+
+void HTMLContentTest::test_img_scale()
+{
+  QFETCH( QString, html );
+  QFETCH( double, scale );
+  auto browser = createMainWindow( mBrowserSize );
+  browser->setHtml( html, QUrl::fromLocalFile( QDir::currentPath() ).path() + "/" );
+  browser->setScale( scale );
+}
+
 void HTMLContentTest::test_tables_data()
 {
   /// https://www.w3schools.com/html/html_tables.asp
@@ -174,11 +201,11 @@ void HTMLContentTest::test_tables_data()
 <h2>HTML Table</h2>
   
 <table>
-  <th>
+  <tr>
     <th>Company</th>
     <th>Contact</th>
     <th>Country</th>
-  </th>
+  </tr>
   <tr>
     <td>Alfreds Futterkiste</td>
     <td>Maria Anders</td>

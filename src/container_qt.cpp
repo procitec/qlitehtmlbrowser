@@ -39,10 +39,12 @@ container_qt::container_qt( QWidget* parent )
 #endif
 }
 
-void container_qt::setCSS( const QString& css )
+void container_qt::setCSS( const QString& master_css, const QString& user_css )
 {
-  mContext.load_master_stylesheet( css.toUtf8().constData() );
-  render();
+  mMasterCSS = master_css;
+  mUserCSS   = user_css;
+  // mContext.load_master_stylesheet( css.toUtf8().constData() );
+  //  render();
 }
 
 void container_qt::setHtml( const QString& html, const QUrl& source_url )
@@ -59,7 +61,9 @@ void container_qt::setHtml( const QString& html, const QUrl& source_url )
     mDocumentSource = html.toUtf8();
     mCaption.clear();
 
-    mDocument = litehtml::document::createFromUTF8( mDocumentSource, this, &mContext );
+    // mDocument = litehtml::document::createFromUTF8( mDocumentSource, this, &mContext );
+    mDocument = litehtml::document::createFromString(
+      mDocumentSource, this, mMasterCSS.isEmpty() ? litehtml::master_css : mMasterCSS.toUtf8().constData(), mUserCSS.toUtf8().constData() );
     verticalScrollBar()->setValue( 0 );
     horizontalScrollBar()->setValue( 0 );
     render();
@@ -121,7 +125,7 @@ void container_qt::paintEvent( QPaintEvent* event )
 }
 
 litehtml::uint_ptr container_qt::create_font(
-  const litehtml::tchar_t* faceName, int size, int weight, litehtml::font_style italic, unsigned int decoration, litehtml::font_metrics* fm )
+  const char* faceName, int size, int weight, litehtml::font_style italic, unsigned int decoration, litehtml::font_metrics* fm )
 {
   auto* font = new QFont();
 
@@ -145,7 +149,7 @@ litehtml::uint_ptr container_qt::create_font(
   font->setFixedPitch( true );
   font->setPixelSize( size );
 
-  font->setItalic( litehtml::fontStyleItalic == italic ? true : false );
+  font->setItalic( litehtml::font_style_italic == italic ? true : false );
 
   // thinner, thicker? @see https://www.w3schools.com/cssref/pr_font_weight.asp
   font->setWeight( ( weight - 1 ) / 10 );
@@ -185,7 +189,7 @@ void container_qt::delete_font( litehtml::uint_ptr hFont )
   }
 }
 
-int container_qt::text_width( const litehtml::tchar_t* text, litehtml::uint_ptr hFont )
+int container_qt::text_width( const char* text, litehtml::uint_ptr hFont )
 {
   int text_width = -1;
   if ( hFont )
@@ -203,7 +207,7 @@ int container_qt::text_width( const litehtml::tchar_t* text, litehtml::uint_ptr 
 }
 
 void container_qt::draw_text(
-  litehtml::uint_ptr hdc, const litehtml::tchar_t* text, litehtml::uint_ptr hFont, litehtml::web_color color, const litehtml::position& pos )
+  litehtml::uint_ptr hdc, const char* text, litehtml::uint_ptr hFont, litehtml::web_color color, const litehtml::position& pos )
 {
   QPainter* p( reinterpret_cast<QPainter*>( hdc ) );
   QFont*    f = reinterpret_cast<QFont*>( hFont );
@@ -233,7 +237,7 @@ int container_qt::get_default_font_size() const
   return mFontSize;
 }
 
-const litehtml::tchar_t* container_qt::get_default_font_name() const
+const char* container_qt::get_default_font_name() const
 {
   return mFontInfo.constData();
 }
@@ -320,7 +324,7 @@ QPixmap container_qt::load_image_data( const QUrl& url )
 }
 
 // hint: from QTextBrowser Private
-QUrl container_qt::resolveUrl( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl ) const
+QUrl container_qt::resolveUrl( const char* src, const char* baseurl ) const
 {
   QUrl _url     = ( src == nullptr ) ? QUrl() : QUrl( QString::fromStdString( src ) );
   QUrl _baseurl = ( baseurl == nullptr || std::string( baseurl ).empty() ) ? mBaseUrl : QUrl( QString::fromStdString( baseurl ) );
@@ -357,7 +361,7 @@ container_qt::MousePos container_qt::convertMousePos( const QMouseEvent* event )
   return pos;
 }
 
-void container_qt::load_image( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl, bool redraw_on_ready )
+void container_qt::load_image( const char* src, const char* baseurl, bool redraw_on_ready )
 {
   auto url = resolveUrl( src, baseurl );
   if ( !mPixmapCache.contains( url ) )
@@ -388,7 +392,7 @@ QPixmap container_qt::load_pixmap( const QUrl& url )
   return QPixmap( ":/images/broken_link.png" );
 }
 
-void container_qt::get_image_size( const litehtml::tchar_t* src, const litehtml::tchar_t* baseurl, litehtml::size& sz )
+void container_qt::get_image_size( const char* src, const char* baseurl, litehtml::size& sz )
 {
   auto url = resolveUrl( src, baseurl );
   if ( !url.isEmpty() )
@@ -401,28 +405,31 @@ void container_qt::get_image_size( const litehtml::tchar_t* src, const litehtml:
     }
   }
 }
-void container_qt::draw_background( litehtml::uint_ptr hdc, const litehtml::background_paint& bg )
+void container_qt::draw_background( litehtml::uint_ptr hdc, const std::vector<litehtml::background_paint>& bgs )
 {
   QPainter* p( reinterpret_cast<QPainter*>( hdc ) );
   p->save();
   p->setPen( Qt::NoPen );
-  p->setBrush( QColor( bg.color.red, bg.color.green, bg.color.blue, bg.color.alpha ) );
-  p->drawRect( bg.border_box.x, bg.border_box.y, bg.border_box.width, bg.border_box.height );
-  if ( !bg.image.empty() )
+  for ( auto bg : bgs )
   {
-    auto url = resolveUrl( bg.image.c_str(), bg.baseurl.c_str() );
-    auto pm  = load_pixmap( url );
-    switch ( bg.repeat )
+    p->setBrush( QColor( bg.color.red, bg.color.green, bg.color.blue, bg.color.alpha ) );
+    p->drawRect( bg.border_box.x, bg.border_box.y, bg.border_box.width, bg.border_box.height );
+    if ( !bg.image.empty() )
     {
-      case litehtml::background_repeat_no_repeat:
-        p->drawPixmap( QRect( bg.position_x, bg.position_y, bg.image_size.width, bg.image_size.height ), pm );
-        break;
+      auto url = resolveUrl( bg.image.c_str(), bg.baseurl.c_str() );
+      auto pm  = load_pixmap( url );
+      switch ( bg.repeat )
+      {
+        case litehtml::background_repeat_no_repeat:
+          p->drawPixmap( QRect( bg.position_x, bg.position_y, bg.image_size.width, bg.image_size.height ), pm );
+          break;
 
-      case litehtml::background_repeat_repeat:
-      case litehtml::background_repeat_repeat_x:
-      case litehtml::background_repeat_repeat_y:
-        // todo handlie this
-        break;
+        case litehtml::background_repeat_repeat:
+        case litehtml::background_repeat_repeat_x:
+        case litehtml::background_repeat_repeat_y:
+          // todo handlie this
+          break;
+      }
     }
   }
   p->restore();
@@ -612,12 +619,12 @@ std::pair<int, int> container_qt::findAnchorPos( const QString& anchor )
   return pos;
 }
 
-void container_qt::set_caption( const litehtml::tchar_t* caption )
+void container_qt::set_caption( const char* caption )
 {
   mCaption = QString::fromStdString( caption );
 }
 
-void container_qt::set_base_url( const litehtml::tchar_t* base_url )
+void container_qt::set_base_url( const char* base_url )
 {
   auto url = QUrl( base_url );
   url.setFragment( {} );
@@ -625,7 +632,7 @@ void container_qt::set_base_url( const litehtml::tchar_t* base_url )
 }
 
 void container_qt::link( const std::shared_ptr<litehtml::document>& doc, const litehtml::element::ptr& el ) {}
-void container_qt::on_anchor_click( const litehtml::tchar_t* url, const litehtml::element::ptr& el )
+void container_qt::on_anchor_click( const char* url, const litehtml::element::ptr& el )
 {
   if ( mDocument )
   {
@@ -645,7 +652,7 @@ void container_qt::on_anchor_click( const litehtml::tchar_t* url, const litehtml
     emit anchorClicked( resolved_url );
   }
 }
-void container_qt::set_cursor( const litehtml::tchar_t* cursor )
+void container_qt::set_cursor( const char* cursor )
 {
   // todo
   /// @see https://www.w3schools.com/cssref/pr_class_cursor.asp
@@ -660,7 +667,7 @@ void container_qt::set_cursor( const litehtml::tchar_t* cursor )
   }
   viewport()->setCursor( c );
 }
-void container_qt::transform_text( litehtml::tstring& text, litehtml::text_transform tt )
+void container_qt::transform_text( litehtml::string& text, litehtml::text_transform tt )
 {
   switch ( tt )
   {
@@ -703,7 +710,7 @@ void container_qt::transform_text( litehtml::tstring& text, litehtml::text_trans
       break;
   }
 }
-void container_qt::import_css( litehtml::tstring& text, const litehtml::tstring& url, litehtml::tstring& baseurl )
+void container_qt::import_css( litehtml::string& text, const litehtml::string& url, litehtml::string& baseurl )
 {
   auto resolved_url = resolveUrl( url.c_str(), baseurl.c_str() );
   auto content      = loadResource( Browser::ResourceType::Css, resolved_url );
@@ -712,7 +719,7 @@ void container_qt::import_css( litehtml::tstring& text, const litehtml::tstring&
     text = QString::fromUtf8( content.constData() ).toStdString();
   }
 }
-void container_qt::set_clip( const litehtml::position& pos, const litehtml::border_radiuses& brd_radius, bool valid_x, bool valid_y ) {}
+void container_qt::set_clip( const litehtml::position& pos, const litehtml::border_radiuses& bdr_radius /*,bool valid_x, bool valid_y */ ) {}
 void container_qt::del_clip() {}
 
 void container_qt::get_client_rect( litehtml::position& client ) const
@@ -726,9 +733,8 @@ void container_qt::get_client_rect( litehtml::position& client ) const
   client.y = contentsMargins().top();
 }
 
-std::shared_ptr<litehtml::element> container_qt::create_element( const litehtml::tchar_t*                   tag_name,
-                                                                 const litehtml::string_map&                attributes,
-                                                                 const std::shared_ptr<litehtml::document>& doc )
+std::shared_ptr<litehtml::element>
+container_qt::create_element( const char* tag_name, const litehtml::string_map& attributes, const std::shared_ptr<litehtml::document>& doc )
 {
   return {};
 }
@@ -758,10 +764,10 @@ void container_qt::get_media_features( litehtml::media_features& media ) const
   media.color_index   = 256;
   media.resolution    = 96;
 }
-void container_qt::get_language( litehtml::tstring& language, litehtml::tstring& culture ) const
+void container_qt::get_language( litehtml::string& language, litehtml::string& culture ) const
 {
-  language = _t( "en" );
-  culture  = _t( "" );
+  language = "en";
+  culture  = "";
 }
 
 void container_qt::resizeEvent( QResizeEvent* event )

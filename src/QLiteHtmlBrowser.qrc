@@ -2,6 +2,5 @@
     <qresource prefix="/">
         <file alias="images/broken_link.png">images/broken_link.png</file>
         <file alias="styles/dark.css">styles/dark.css</file>
-        <file alias="css/master.css">../foreign/litehtml/include/master.css</file>
     </qresource>
 </RCC>

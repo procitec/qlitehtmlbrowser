@@ -30,6 +30,8 @@ private Q_SLOTS:
   //  void test_fonts();
   void test_img_data();
   void test_img();
+  void test_img_scale_data();
+  void test_img_scale();
   void test_tables_data();
   void test_tables();
   void test_qstyles_data();

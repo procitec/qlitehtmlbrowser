@@ -37,20 +37,22 @@ void QLiteHtmlBrowserImpl::applyCSS()
   auto lightness = this->palette().color( QPalette::Window ).lightnessF();
   bool dark_mode = ( lightness > 0.5 ) ? false : true;
 
-  auto css = readResourceCss( QString( ":/css/master.css" ) );
+  auto    css = readResourceCss( QString( ":/css/master.css" ) );
+  QString user_css;
 
   if ( dark_mode )
   {
     auto dark_css = readResourceCss( ":/styles/dark.css" );
     dark_css.replace( "@QPalette::Window@", palette().color( QPalette::Window ).name() );
     dark_css.replace( "@QPalette::Text@", palette().color( QPalette::Text ).name() );
-    css += dark_css;
+    user_css = dark_css;
   }
 
-  css += mExternalCSS;
+  user_css += mExternalCSS;
+
   if ( mContainer )
   {
-    mContainer->setCSS( css );
+    mContainer->setCSS( css, user_css );
   }
 }
 
