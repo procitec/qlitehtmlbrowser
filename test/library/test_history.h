@@ -10,7 +10,7 @@ class HistoryTest : public TestBase
   Q_OBJECT
 public:
   HistoryTest()
-    : TestBase( qApp->arguments() ){};
+    : TestBase( qApp->arguments() ) {};
   virtual ~HistoryTest() = default;
 
 private Q_SLOTS:

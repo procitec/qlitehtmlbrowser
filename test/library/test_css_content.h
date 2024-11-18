@@ -10,7 +10,7 @@ class HTMLCssTest : public TestBase
   Q_OBJECT
 public:
   HTMLCssTest()
-    : TestBase( qApp->arguments() ){};
+    : TestBase( qApp->arguments() ) {};
   virtual ~HTMLCssTest() = default;
 
 private Q_SLOTS:
