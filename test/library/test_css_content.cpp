@@ -330,8 +330,7 @@ void HTMLCssTest::test_custom_css_data()
 {
   QTest::addColumn<QString>( "html" );
   QTest::addColumn<QString>( "css" );
-  QTest::newRow( "default line of text" ) << R"-(<html><body><p class="custom">paragraph default color</body></html>)-"
-                                          << R"-()-";
+  QTest::newRow( "default line of text" ) << R"-(<html><body><p class="custom">paragraph default color</body></html>)-" << R"-()-";
   QTest::newRow( "green line of text" ) << R"-(<html><body><p class="custom">paragraph green color</body></html>)-"
                                         << R"-(p.custom { color: green;})-";
   QTest::newRow( "centered red line of text" ) << R"-(<html><body><p class="custom">paragraph red and centered color</body></html>)-"

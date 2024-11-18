@@ -10,7 +10,7 @@ class HTMLContentTest : public TestBase
   Q_OBJECT
 public:
   HTMLContentTest()
-    : TestBase( qApp->arguments() ) {};
+    : TestBase( qApp->arguments() ){};
   virtual ~HTMLContentTest() = default;
 
 private Q_SLOTS:

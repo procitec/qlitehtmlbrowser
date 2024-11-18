@@ -12,16 +12,10 @@ int main( int argc, char** argv )
   parser.setApplicationDescription( "TestBrowser for the qlitehtml browser widget" );
   parser.addHelpOption();
 
-  QCommandLineOption fileOption( QStringList() << "f"
-                                               << "file",
-                                 "Load html file <file> on startup.", "file" );
-  QCommandLineOption dirOption( QStringList() << "d"
-                                              << "dir",
-                                "Set directory to load files from to <directory> on startup.", "dir" );
+  QCommandLineOption fileOption( QStringList() << "f" << "file", "Load html file <file> on startup.", "file" );
+  QCommandLineOption dirOption( QStringList() << "d" << "dir", "Set directory to load files from to <directory> on startup.", "dir" );
 
-  QCommandLineOption pathOption( QStringList() << "s"
-                                               << "searchpath",
-                                 "Add <directory> to list of search paths.", "searchpath" );
+  QCommandLineOption pathOption( QStringList() << "s" << "searchpath", "Add <directory> to list of search paths.", "searchpath" );
   parser.addOption( fileOption );
   parser.addOption( dirOption );
   parser.addOption( pathOption );
