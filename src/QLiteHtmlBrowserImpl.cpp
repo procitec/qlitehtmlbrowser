@@ -447,3 +447,11 @@ const QString& QLiteHtmlBrowserImpl::caption() const
 {
   return mContainer->caption();
 }
+
+void QLiteHtmlBrowserImpl::print( QPagedPaintDevice* printer ) const
+{
+  if ( mContainer && printer )
+  {
+    mContainer->print( printer );
+  }
+}

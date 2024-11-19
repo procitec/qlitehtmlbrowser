@@ -6,6 +6,7 @@ class container_qt;
 #include <QtWidgets/QWidget>
 #include <QtCore/QUrl>
 #include <QtCore/QStack>
+#include <QtGui/QPagedPaintDevice>
 
 ///
 /// \brief The QLiteHtmlBrowser class
@@ -65,6 +66,7 @@ public:
   int  forwardHistoryCount() const { return ( 0 < mFWHistStack.count() ) ? mFWHistStack.count() : 0; }
 
   const QString& caption() const;
+  void           print( QPagedPaintDevice* printer ) const;
 
 protected:
   void changeEvent( QEvent* ) override;

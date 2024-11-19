@@ -5,6 +5,8 @@
 #include <QtCore/QSignalBlocker>
 #include <QtWidgets/QApplication>
 #include <QtGui/QKeySequence>
+#include <QtPrintSupport/QPrinter>
+#include <QtGui/QPainter>
 
 TestBrowser::TestBrowser()
 {
@@ -34,6 +36,11 @@ TestBrowser::TestBrowser()
   action->setText( tr( "Reload" ) );
   action->setShortcut( QKeySequence::Refresh );
   connect( action, &QAction::triggered, mBrowser, &QHelpBrowser::reload );
+  action = new QAction( this );
+  action->setText( tr( "Print PDF" ) );
+  file_menu->addAction( action );
+  connect( action, &QAction::triggered, this, &TestBrowser::export2pdf );
+
   mToolBar.addAction( action );
 
   mUrl = new QLineEdit( this );
@@ -115,20 +122,24 @@ void TestBrowser::openHtml()
   }
 }
 
-void TestBrowser::openHelp()
+void TestBrowser::loadQtHelp( const QString& qch_file )
 {
-  QString fileName = QFileDialog::getOpenFileName( this, tr( "Open Help File" ), mLastDirectory.absolutePath(), tr( "Qt Help (*.qch)" ) );
-
-  if ( !fileName.isEmpty() )
+  if ( !qch_file.isEmpty() )
   {
-    auto ns = QHelpEngineCore::namespaceName( fileName );
+    auto ns = QHelpEngineCore::namespaceName( qch_file );
     mHelpEngine->unregisterDocumentation( ns );
-    auto reg = mHelpEngine->registerDocumentation( fileName );
+    auto reg = mHelpEngine->registerDocumentation( qch_file );
     if ( reg )
     {
       loadHelp();
     }
   }
+}
+
+void TestBrowser::openHelp()
+{
+  QString fileName = QFileDialog::getOpenFileName( this, tr( "Open Help File" ), mLastDirectory.absolutePath(), tr( "Qt Help (*.qch)" ) );
+  loadQtHelp( fileName );
 }
 void TestBrowser::loadHelp()
 {
@@ -147,4 +158,39 @@ void TestBrowser::loadHelp()
       }
     }
   }
+}
+
+void TestBrowser::export2pdf()
+{
+#ifndef QT_NO_PRINTER
+  //! [0]
+  QFileDialog fileDialog( this, tr( "Export PDF" ) );
+  fileDialog.setAcceptMode( QFileDialog::AcceptSave );
+  fileDialog.setMimeTypeFilters( QStringList( "application/pdf" ) );
+  fileDialog.setDefaultSuffix( "pdf" );
+  if ( fileDialog.exec() )
+  {
+    auto files = fileDialog.selectedFiles();
+    if ( !files.empty() )
+    {
+      QString  fileName = files.first();
+      QPrinter printer( QPrinter::HighResolution );
+      printer.setOutputFormat( QPrinter::PdfFormat );
+      printer.setOutputFileName( fileName );
+      // todo depends maybe on locales?
+      printer.setPageSize( QPageSize::A4 );
+      printer.setPageOrientation( QPageLayout::Portrait );
+
+      // double xscale = printer.pageLayout().paintRectPixels( 72 ).width() / double( this->width() );
+      // double yscale = printer.pageLayout().paintRectPixels( 72 ).height() / double( this->height() );
+      // double scale  = qMin( xscale, yscale );
+      // painter.translate( printer.pageLayout().fullRectPixels( 72 ).x() + printer.pageLayout().paintRectPixels( 72 ).width() / 2,
+      //                    printer.pageLayout().fullRectPixels( 72 ).y() + printer.pageLayout().paintRectPixels( 72 ).height() / 2 );
+      // painter.scale( scale, scale );
+      // painter.translate( -width() / 2, -height() / 2 );
+
+      mBrowser->print( &printer );
+    }
+  }
+#endif
 }

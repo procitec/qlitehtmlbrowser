@@ -6,6 +6,7 @@
 #include <QtWidgets/QAbstractScrollArea>
 #include <QtCore/QHash>
 #include <QtCore/QUrl>
+#include <QtGui/QPagedPaintDevice>
 
 class container_qt : public QAbstractScrollArea, protected litehtml::document_container
 {
@@ -28,6 +29,7 @@ public:
   void           setOpenLinks( bool open ) { mOpenLinks = open; }
   void           setOpenExternalLinks( bool open ) { mOpenExternLinks = open; }
   const QString& caption() const { return mCaption; }
+  void           print( QPagedPaintDevice* paintDevice ) const;
 
 protected:
   void paintEvent( QPaintEvent* ) override;
