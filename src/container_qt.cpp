@@ -891,25 +891,30 @@ void container_qt::print( QPagedPaintDevice* paintDevice ) const
   qDebug() << "resolution" << resolutionX << "x" << resolutionY;
 
   // code from qt https://doc.qt.io/qt-6/qtprintsupport-index.html
-  const auto pageLayout = paintDevice->pageLayout();
-  const auto pageRect   = pageLayout.paintRectPixels( resolutionX );
-  const auto paperRect  = pageLayout.fullRectPixels( resolutionX );
-  double     xscale = ( pageRect.width() - ( pageLayout.marginsPixels( resolutionX ).left() + pageLayout.marginsPixels( resolutionX ).right() ) ) /
-                  double( mDocument->width() );
+  const auto pageLayout  = paintDevice->pageLayout();
+  const auto pageRect    = pageLayout.paintRectPixels( resolutionX );
+  const auto paperRect   = pageLayout.fullRectPixels( resolutionX );
+  const auto pageMargins = pageLayout.marginsPixels( resolutionX );
 
+  qDebug() << "pageRect" << pageRect;
+  qDebug() << "paperRect" << paperRect;
+  qDebug() << "pageMargins" << pageMargins;
+
+  // orig: double xscale = ( pageRect.width() - ( pageMargins.left() + pageMargins.right() ) ) / double( mDocument->width() );
+  const double xscale = pageRect.width() / double( mDocument->width() );
   // keep aspect ratio in width, output may contain several pages
   // double     yscale     = pageRect.height() / double( mDocument->height() );
   // double     scale      = qMin( xscale, yscale );
 
-  painter.translate( pageRect.x() + paperRect.width() / 2., pageRect.y() + paperRect.height() / 2. );
+  // orig: painter.translate( pageRect.x() + paperRect.width() / 2., pageRect.y() + paperRect.height() / 2. );
+  painter.translate( /*pageRect.x() +*/ pageRect.width() / 2., /*pageRect.y() +*/ pageRect.height() / 2. );
   painter.scale( xscale, xscale );
   // todo translate not in height
   // painter.translate( -mDocument->width() / 2., -mDocument->height() / 2. );
   painter.translate( -mDocument->width() / 2., ( -pageRect.height() / xscale / 2. ) );
 
   auto scaled_document_height = mDocument->height() * xscale;
-  auto printable_page_height =
-    ( pageRect.height() - ( pageLayout.marginsPixels( resolutionY ).top() + pageLayout.marginsPixels( resolutionY ).bottom() ) );
+  auto printable_page_height  = ( pageRect.height() - ( pageMargins.top() + pageMargins.bottom() ) );
 
   auto number_of_pages = static_cast<int>( std::ceil( scaled_document_height / printable_page_height ) );
   qDebug() << "number of pages" << number_of_pages;
@@ -917,11 +922,6 @@ void container_qt::print( QPagedPaintDevice* paintDevice ) const
 
   for ( auto page = 0; page < number_of_pages; page++ )
   {
-    // const litehtml::position clipRect = { 0, page * ( static_cast<int>( mDocument->height() * number_of_pages ) ), mDocument->width(),
-    //                                       static_cast<int>( mDocument->height() / number_of_pages ) };
-    // const litehtml::position clipRect = { 0, page * ( static_cast<int>( mDocument->height() / number_of_pages ) ), mDocument->width(),
-    //                                       static_cast<int>( mDocument->height() / number_of_pages ) };
-    const litehtml::position clipRect = { 0, 0, mDocument->width(), static_cast<int>( mDocument->height() / number_of_pages ) };
 
     mDocument->draw( reinterpret_cast<litehtml::uint_ptr>( &painter ), 0, -page * static_cast<int>( mDocument->height() / number_of_pages ),
                      nullptr );
