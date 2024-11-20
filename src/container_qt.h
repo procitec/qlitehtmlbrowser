@@ -29,7 +29,7 @@ public:
   void           setOpenLinks( bool open ) { mOpenLinks = open; }
   void           setOpenExternalLinks( bool open ) { mOpenExternLinks = open; }
   const QString& caption() const { return mCaption; }
-  void           print( QPagedPaintDevice* paintDevice ) const;
+  void           print( QPagedPaintDevice* paintDevice );
 
 protected:
   void paintEvent( QPaintEvent* ) override;
@@ -118,4 +118,6 @@ private:
   Browser::UrlResolveHandlerType mUrlResolverHandler = {};
   QString                        mMasterCSS;
   QString                        mUserCSS;
+  // litehtml::media_features       mPrintMedia;
+  // litehtml::media_features*      mCurrentMedia = nullptr;
 };

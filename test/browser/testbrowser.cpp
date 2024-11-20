@@ -70,6 +70,17 @@ TestBrowser::TestBrowser()
   mHelpEngine         = new QHelpEngine( collectionFile );
   mHelpEngine->setupData();
   mBrowser->setHelpEnginge( mHelpEngine );
+  mBrowser->setCSS( R"(@page {
+  size: A4;
+  margin: 0;
+}
+@media print {
+  html, body {
+    width: 210mm;
+    height: 297mm;
+  }
+}
+)" );
 }
 
 TestBrowser::~TestBrowser()

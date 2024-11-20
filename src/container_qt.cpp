@@ -14,6 +14,7 @@
 #include <QtGui/QKeySequence>
 #include <QtWidgets/QShortcut>
 #include <QtWidgets/QApplication>
+#include <QtGui/QScreen>
 #include <QtCore/QTextBoundaryFinder>
 #include <string>
 
@@ -214,15 +215,7 @@ void container_qt::draw_text(
   p->save();
   p->setFont( *f );
   auto web_color = toColor( color );
-  // todo: how to handle darkmode
-  //  auto widget_color = QPalette().color( QPalette::Text );
-  //  auto widget_bg_color = QPalette().color( QPalette::Window );
   p->setPen( web_color );
-  //  litehtml::position clientPos;
-  //  get_client_rect( clientPos );
-  //  QRect rect;
-  //  auto  brect = p->boundingRect( rect, /*Qt::AlignTop | Qt::AlignLeft*/ 0, QString::fromUtf8( text ) );
-  //  p->drawText( pos.x, pos.y + brect.height(), QString::fromUtf8( text ) );
   p->drawText( QRect( pos.x, pos.y, pos.width, pos.height ), 0, QString::fromUtf8( text ) );
   p->restore();
 }
@@ -724,6 +717,8 @@ void container_qt::del_clip() {}
 
 void container_qt::get_client_rect( litehtml::position& client ) const
 {
+  // if ( nullptr == mCurrentMedia )
+  // {
   client.width  = scaled( this->viewport()->width() );
   client.height = scaled( this->viewport()->height() );
   //  auto clientPos = mapToParent( { contentsMargins().left(), contentsMargins().top() } );
@@ -731,6 +726,14 @@ void container_qt::get_client_rect( litehtml::position& client ) const
   //  client.y       = clientPos.y();
   client.x = contentsMargins().left();
   client.y = contentsMargins().top();
+  // }
+  // else
+  // {
+  //   client.width  = mCurrentMedia->width;
+  //   client.height = mCurrentMedia->height;
+  //   client.x      = 0;
+  //   client.y      = 0;
+  // }
 }
 
 std::shared_ptr<litehtml::element>
@@ -752,17 +755,28 @@ void container_qt::setScale( double scale )
 
 void container_qt::get_media_features( litehtml::media_features& media ) const
 {
+  // if ( nullptr == mCurrentMedia )
+  // {
   litehtml::position client;
   get_client_rect( client );
-  media.type          = litehtml::media_type_screen;
-  media.width         = client.width;
-  media.height        = client.height;
-  media.device_width  = 1920;
-  media.device_height = 1080;
-  media.color         = 8;
-  media.monochrome    = 0;
-  media.color_index   = 256;
-  media.resolution    = 96;
+  media.type        = litehtml::media_type_screen;
+  media.width       = client.width;
+  media.height      = client.height;
+  media.color       = 8;
+  media.monochrome  = 0;
+  media.color_index = 256;
+  auto w_screen     = screen();
+  if ( w_screen )
+  {
+    media.device_width  = w_screen->availableGeometry().width();
+    media.device_height = w_screen->availableGeometry().height();
+    media.resolution    = w_screen->devicePixelRatio();
+  }
+  // }
+  // else
+  // {
+  //   media = *mCurrentMedia;
+  // }
 }
 void container_qt::get_language( litehtml::string& language, litehtml::string& culture ) const
 {
@@ -879,55 +893,65 @@ void container_qt::mousePressEvent( QMouseEvent* e )
   }
 }
 
-void container_qt::print( QPagedPaintDevice* paintDevice ) const
+void container_qt::print( QPagedPaintDevice* paintDevice )
 {
   QPainter painter( paintDevice );
-  // p.setWorldTransform( QTransform().scale( mScale, mScale ) );
+
   painter.setRenderHint( QPainter::SmoothPixmapTransform, true );
   painter.setRenderHint( QPainter::Antialiasing, true );
 
   auto resolutionX = paintDevice->physicalDpiX();
-  auto resolutionY = paintDevice->physicalDpiY();
-  qDebug() << "resolution" << resolutionX << "x" << resolutionY;
+  // auto resolutionY = paintDevice->physicalDpiY();
 
   // code from qt https://doc.qt.io/qt-6/qtprintsupport-index.html
-  const auto pageLayout  = paintDevice->pageLayout();
-  const auto pageRect    = pageLayout.paintRectPixels( resolutionX );
-  const auto paperRect   = pageLayout.fullRectPixels( resolutionX );
-  const auto pageMargins = pageLayout.marginsPixels( resolutionX );
+  const auto pageLayout = paintDevice->pageLayout();
+  const auto pageRect   = pageLayout.paintRectPixels( resolutionX );
+  // const auto paperRect    = pageLayout.fullRectPixels( resolutionX );
+  // const auto pageMarginsV = pageLayout.marginsPixels( resolutionY );
+  // const auto pageMarginsH = pageLayout.marginsPixels( resolutionX );
 
-  qDebug() << "pageRect" << pageRect;
-  qDebug() << "paperRect" << paperRect;
-  qDebug() << "pageMargins" << pageMargins;
+  auto         width  = mDocument->width();
+  const double xscale = static_cast<int>( std::floor( pageRect.width() / double( width ) ) );
 
-  // orig: double xscale = ( pageRect.width() - ( pageMargins.left() + pageMargins.right() ) ) / double( mDocument->width() );
-  const double xscale = pageRect.width() / double( mDocument->width() );
-  // keep aspect ratio in width, output may contain several pages
-  // double     yscale     = pageRect.height() / double( mDocument->height() );
-  // double     scale      = qMin( xscale, yscale );
+  // const auto   scaledPageMarginsV = pageLayout.marginsPixels( resolutionY ) / xscale;
 
-  // orig: painter.translate( pageRect.x() + paperRect.width() / 2., pageRect.y() + paperRect.height() / 2. );
-  painter.translate( /*pageRect.x() +*/ pageRect.width() / 2., /*pageRect.y() +*/ pageRect.height() / 2. );
+  auto       scaled_document_height       = mDocument->height() * xscale;
+  const auto printable_page_height        = ( pageRect.height() );
+  const auto scaled_printable_page_height = static_cast<int>( std::floor( printable_page_height / xscale ) );
+  const auto scaled_printable_page_width  = mDocument->width();
+  auto       number_of_pages              = static_cast<int>( std::ceil( scaled_document_height / printable_page_height ) );
+
+  // mCurrentMedia             = &mPrintMedia;
+  // mPrintMedia.type          = litehtml::media_type_print;
+  // mPrintMedia.width         = scaled_printable_page_width;
+  // mPrintMedia.height        = scaled_printable_page_height;
+  // mPrintMedia.color         = 8;
+  // mPrintMedia.monochrome    = 0;
+  // mPrintMedia.color_index   = 256;
+  // mPrintMedia.device_width  = scaled_printable_page_width;
+  // mPrintMedia.device_height = scaled_printable_page_width;
+  // mPrintMedia.resolution    = resolutionX;
+
+  if ( mDocument->media_changed() )
+  {
+    // mDocument->render( width );
+  }
+
+  painter.translate( pageRect.width() / 2., pageRect.height() / 2. );
   painter.scale( xscale, xscale );
-  // todo translate not in height
-  // painter.translate( -mDocument->width() / 2., -mDocument->height() / 2. );
-  painter.translate( -mDocument->width() / 2., ( -pageRect.height() / xscale / 2. ) );
+  painter.translate( -scaled_printable_page_width / 2., ( -scaled_printable_page_height / 2. ) );
 
-  auto scaled_document_height = mDocument->height() * xscale;
-  auto printable_page_height  = ( pageRect.height() - ( pageMargins.top() + pageMargins.bottom() ) );
-
-  auto number_of_pages = static_cast<int>( std::ceil( scaled_document_height / printable_page_height ) );
-  qDebug() << "number of pages" << number_of_pages;
-  qDebug() << "height" << static_cast<int>( mDocument->height() / number_of_pages );
+  litehtml::position clipRect = { 0, 0, scaled_printable_page_width, scaled_printable_page_height };
+  painter.setClipRect( QRect{ 0, 0, scaled_printable_page_width, scaled_printable_page_height } );
 
   for ( auto page = 0; page < number_of_pages; page++ )
   {
-
-    mDocument->draw( reinterpret_cast<litehtml::uint_ptr>( &painter ), 0, -page * static_cast<int>( mDocument->height() / number_of_pages ),
-                     nullptr );
+    mDocument->draw( reinterpret_cast<litehtml::uint_ptr>( &painter ), 0, -page * ( scaled_printable_page_height ), &clipRect );
     if ( page != number_of_pages - 1 )
     {
       paintDevice->newPage();
     }
   }
+  // mCurrentMedia = nullptr;
+  // mDocument->media_changed();
 }
