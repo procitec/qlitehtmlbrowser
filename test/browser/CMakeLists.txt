@@ -1,6 +1,6 @@
 project( TestBrowser )
 
-find_package( Qt5 COMPONENTS Widgets Gui Core Help PrintSupport REQUIRED)
+find_package( Qt5 COMPONENTS Widgets Gui Core Help REQUIRED)
 
 
 add_executable( testbrowser )
@@ -21,4 +21,4 @@ target_sources( testbrowser
     )
 
 target_include_directories(testbrowser PRIVATE "${QLiteHtmlBrowser_SOURCE_DIR}/include")
-target_link_libraries( testbrowser PRIVATE QLiteHtmlBrowser Qt::Widgets Qt5::Gui Qt5::Core Qt5::Help Qt5::PrintSupport )
+target_link_libraries( testbrowser PRIVATE QLiteHtmlBrowser Qt::Widgets Qt5::Gui Qt5::Core Qt5::Help )

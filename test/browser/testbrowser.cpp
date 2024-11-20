@@ -5,8 +5,9 @@
 #include <QtCore/QSignalBlocker>
 #include <QtWidgets/QApplication>
 #include <QtGui/QKeySequence>
-#include <QtPrintSupport/QPrinter>
+// #include <QtPrintSupport/QPrinter>
 #include <QtGui/QPainter>
+#include <QtGui/QPdfWriter>
 
 TestBrowser::TestBrowser()
 {
@@ -174,22 +175,12 @@ void TestBrowser::export2pdf()
     if ( !files.empty() )
     {
       QString  fileName = files.first();
-      QPrinter printer( QPrinter::HighResolution );
-      printer.setOutputFormat( QPrinter::PdfFormat );
-      printer.setOutputFileName( fileName );
-      // todo depends maybe on locales?
-      printer.setPageSize( QPageSize::A4 );
-      printer.setPageOrientation( QPageLayout::Portrait );
 
-      // double xscale = printer.pageLayout().paintRectPixels( 72 ).width() / double( this->width() );
-      // double yscale = printer.pageLayout().paintRectPixels( 72 ).height() / double( this->height() );
-      // double scale  = qMin( xscale, yscale );
-      // painter.translate( printer.pageLayout().fullRectPixels( 72 ).x() + printer.pageLayout().paintRectPixels( 72 ).width() / 2,
-      //                    printer.pageLayout().fullRectPixels( 72 ).y() + printer.pageLayout().paintRectPixels( 72 ).height() / 2 );
-      // painter.scale( scale, scale );
-      // painter.translate( -width() / 2, -height() / 2 );
-
-      mBrowser->print( &printer );
+      QPdfWriter pdf( fileName );
+      pdf.setPageSize( QPageSize::A4 );
+      pdf.setPageOrientation( QPageLayout::Portrait );
+      pdf.setPageMargins( { 10, 10, 10, 10 }, QPageLayout::Millimeter );
+      mBrowser->print( &pdf );
     }
   }
 #endif
