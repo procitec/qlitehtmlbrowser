@@ -70,17 +70,6 @@ TestBrowser::TestBrowser()
   mHelpEngine         = new QHelpEngine( collectionFile );
   mHelpEngine->setupData();
   mBrowser->setHelpEnginge( mHelpEngine );
-  mBrowser->setCSS( R"(@page {
-  size: A4;
-  margin: 0;
-}
-@media print {
-  html, body {
-    width: 210mm;
-    height: 297mm;
-  }
-}
-)" );
 }
 
 TestBrowser::~TestBrowser()
@@ -104,16 +93,6 @@ void TestBrowser::loadHtml( const QString& html_file )
   {
     QFileInfo fi( html_file );
     mLastDirectory.setPath( fi.absoluteDir().absolutePath() );
-    //  QFile f( html_file );
-    //  if ( f.open( QIODevice::ReadOnly ) )
-    //  {
-    //    auto html = f.readAll();
-    //    f.close();
-    //    mBrowser->setHtml( html, mLastDirectory.absolutePath() );
-
-    //    mBrowser->update();
-    //    update();
-    //  }
     auto url = QUrl::fromUserInput( html_file );
     if ( mBrowser )
     {
@@ -185,7 +164,7 @@ void TestBrowser::export2pdf()
     auto files = fileDialog.selectedFiles();
     if ( !files.empty() )
     {
-      QString  fileName = files.first();
+      QString fileName = files.first();
 
       QPdfWriter pdf( fileName );
       pdf.setPageSize( QPageSize::A4 );

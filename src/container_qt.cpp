@@ -44,8 +44,6 @@ void container_qt::setCSS( const QString& master_css, const QString& user_css )
 {
   mMasterCSS = master_css;
   mUserCSS   = user_css;
-  // mContext.load_master_stylesheet( css.toUtf8().constData() );
-  //  render();
 }
 
 void container_qt::setHtml( const QString& html, const QUrl& source_url )
@@ -62,7 +60,6 @@ void container_qt::setHtml( const QString& html, const QUrl& source_url )
     mDocumentSource = html.toUtf8();
     mCaption.clear();
 
-    // mDocument = litehtml::document::createFromUTF8( mDocumentSource, this, &mContext );
     mDocument = litehtml::document::createFromString(
       mDocumentSource, this, mMasterCSS.isEmpty() ? litehtml::master_css : mMasterCSS.toUtf8().constData(), mUserCSS.toUtf8().constData() );
     verticalScrollBar()->setValue( 0 );
@@ -108,17 +105,15 @@ void container_qt::paintEvent( QPaintEvent* event )
   {
     if ( mDocument )
     {
-      /*auto     width = */
       QPainter p( viewport() );
       p.setWorldTransform( QTransform().scale( mScale, mScale ) );
       p.setRenderHint( QPainter::SmoothPixmapTransform, true );
       p.setRenderHint( QPainter::Antialiasing, true );
 
-      const litehtml::position clipRect = { scaled( event->rect().x() ), scaled( event->rect().y() ), scaled( event->rect().width() ),
-                                            scaled( event->rect().height() ) };
-      // auto                     margins  = contentsMargins();
-      auto margins    = viewport()->contentsMargins();
-      auto scroll_pos = -scrollBarPos();
+      const litehtml::position clipRect   = { scaled( event->rect().x() ), scaled( event->rect().y() ), scaled( event->rect().width() ),
+                                              scaled( event->rect().height() ) };
+      auto                     margins    = viewport()->contentsMargins();
+      auto                     scroll_pos = -scrollBarPos();
 
       mDocument->draw( reinterpret_cast<litehtml::uint_ptr>( &p ), margins.left() + scroll_pos.x(), margins.top() + scroll_pos.y(), &clipRect );
     }
@@ -683,13 +678,6 @@ void container_qt::transform_text( litehtml::string& text, litehtml::text_transf
         position = finder.toNextBoundary();
       }
 
-      //      QStringList parts = QString::fromStdString( text ).split( QRegularExpression( "\\s+" ), Qt::SkipEmptyParts );
-      //      for ( auto& str : parts )
-      //      {
-      //        str.replace( 0, 1, str[0].toUpper() );
-      //      }
-
-      //      text = parts.join( " " ).toStdString();
       text = str.toStdString();
     }
     break;
@@ -717,23 +705,10 @@ void container_qt::del_clip() {}
 
 void container_qt::get_client_rect( litehtml::position& client ) const
 {
-  // if ( nullptr == mCurrentMedia )
-  // {
   client.width  = scaled( this->viewport()->width() );
   client.height = scaled( this->viewport()->height() );
-  //  auto clientPos = mapToParent( { contentsMargins().left(), contentsMargins().top() } );
-  //  client.x       = clientPos.x();
-  //  client.y       = clientPos.y();
-  client.x = contentsMargins().left();
-  client.y = contentsMargins().top();
-  // }
-  // else
-  // {
-  //   client.width  = mCurrentMedia->width;
-  //   client.height = mCurrentMedia->height;
-  //   client.x      = 0;
-  //   client.y      = 0;
-  // }
+  client.x      = contentsMargins().left();
+  client.y      = contentsMargins().top();
 }
 
 std::shared_ptr<litehtml::element>
@@ -755,8 +730,6 @@ void container_qt::setScale( double scale )
 
 void container_qt::get_media_features( litehtml::media_features& media ) const
 {
-  // if ( nullptr == mCurrentMedia )
-  // {
   litehtml::position client;
   get_client_rect( client );
   media.type        = litehtml::media_type_screen;
@@ -772,11 +745,6 @@ void container_qt::get_media_features( litehtml::media_features& media ) const
     media.device_height = w_screen->availableGeometry().height();
     media.resolution    = w_screen->devicePixelRatio();
   }
-  // }
-  // else
-  // {
-  //   media = *mCurrentMedia;
-  // }
 }
 void container_qt::get_language( litehtml::string& language, litehtml::string& culture ) const
 {
@@ -901,41 +869,18 @@ void container_qt::print( QPagedPaintDevice* paintDevice )
   painter.setRenderHint( QPainter::Antialiasing, true );
 
   auto resolutionX = paintDevice->physicalDpiX();
-  // auto resolutionY = paintDevice->physicalDpiY();
 
-  // code from qt https://doc.qt.io/qt-6/qtprintsupport-index.html
   const auto pageLayout = paintDevice->pageLayout();
   const auto pageRect   = pageLayout.paintRectPixels( resolutionX );
-  // const auto paperRect    = pageLayout.fullRectPixels( resolutionX );
-  // const auto pageMarginsV = pageLayout.marginsPixels( resolutionY );
-  // const auto pageMarginsH = pageLayout.marginsPixels( resolutionX );
 
   auto         width  = mDocument->width();
   const double xscale = static_cast<int>( std::floor( pageRect.width() / double( width ) ) );
-
-  // const auto   scaledPageMarginsV = pageLayout.marginsPixels( resolutionY ) / xscale;
 
   auto       scaled_document_height       = mDocument->height() * xscale;
   const auto printable_page_height        = ( pageRect.height() );
   const auto scaled_printable_page_height = static_cast<int>( std::floor( printable_page_height / xscale ) );
   const auto scaled_printable_page_width  = mDocument->width();
   auto       number_of_pages              = static_cast<int>( std::ceil( scaled_document_height / printable_page_height ) );
-
-  // mCurrentMedia             = &mPrintMedia;
-  // mPrintMedia.type          = litehtml::media_type_print;
-  // mPrintMedia.width         = scaled_printable_page_width;
-  // mPrintMedia.height        = scaled_printable_page_height;
-  // mPrintMedia.color         = 8;
-  // mPrintMedia.monochrome    = 0;
-  // mPrintMedia.color_index   = 256;
-  // mPrintMedia.device_width  = scaled_printable_page_width;
-  // mPrintMedia.device_height = scaled_printable_page_width;
-  // mPrintMedia.resolution    = resolutionX;
-
-  // if ( mDocument->media_changed() )
-  // {
-  //   // mDocument->render( width );
-  // }
 
   painter.translate( pageRect.width() / 2., pageRect.height() / 2. );
   painter.scale( xscale, xscale );
@@ -952,6 +897,4 @@ void container_qt::print( QPagedPaintDevice* paintDevice )
       paintDevice->newPage();
     }
   }
-  // mCurrentMedia = nullptr;
-  // mDocument->media_changed();
 }
