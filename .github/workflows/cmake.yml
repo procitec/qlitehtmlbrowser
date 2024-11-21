@@ -54,7 +54,7 @@ on:
 
 env:
     PLUGIN_NAME: qlitehtmlbrowser
-    QT_VERSION: 5.15.8
+    QT_VERSION: 5.15.2
     BUILD_TYPE: Release
     #NINJA_VERSION: 1.10.1
 

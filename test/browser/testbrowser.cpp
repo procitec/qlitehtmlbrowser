@@ -167,7 +167,7 @@ void TestBrowser::export2pdf()
       QString fileName = files.first();
 
       QPdfWriter pdf( fileName );
-      pdf.setPageSize( QPageSize::A4 );
+      pdf.setPageSize( QPageSize( QPageSize::A4 ) );
       pdf.setPageOrientation( QPageLayout::Portrait );
       pdf.setPageMargins( { 10, 10, 10, 10 }, QPageLayout::Millimeter );
       mBrowser->print( &pdf );
