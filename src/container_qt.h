@@ -6,6 +6,7 @@
 #include <QtWidgets/QAbstractScrollArea>
 #include <QtCore/QHash>
 #include <QtCore/QUrl>
+#include <QtGui/QPagedPaintDevice>
 
 class container_qt : public QAbstractScrollArea, protected litehtml::document_container
 {
@@ -28,6 +29,7 @@ public:
   void           setOpenLinks( bool open ) { mOpenLinks = open; }
   void           setOpenExternalLinks( bool open ) { mOpenExternLinks = open; }
   const QString& caption() const { return mCaption; }
+  void           print( QPagedPaintDevice* paintDevice );
 
 protected:
   void paintEvent( QPaintEvent* ) override;
@@ -100,20 +102,19 @@ private:
 private:
   std::shared_ptr<litehtml::document> mDocument;
   QByteArray                          mDocumentSource;
-  // litehtml::context                   mContext;
-  QUrl                           mBaseUrl;
-  QUrl                           mSourceUrl;
-  int                            mFontSize           = 12;
-  double                         mScale              = 1.0;
-  double                         mMinScale           = 0.1;
-  double                         mMaxScale           = 4.0;
-  QHash<QUrl, QPixmap>           mPixmapCache        = {};
-  Browser::ResourceHandlerType   mResourceHandler    = {};
-  bool                           mOpenLinks          = true;
-  bool                           mOpenExternLinks    = false;
-  QByteArray                     mFontInfo           = {};
-  QString                        mCaption            = {};
-  Browser::UrlResolveHandlerType mUrlResolverHandler = {};
-  QString                        mMasterCSS;
-  QString                        mUserCSS;
+  QUrl                                mBaseUrl;
+  QUrl                                mSourceUrl;
+  int                                 mFontSize           = 12;
+  double                              mScale              = 1.0;
+  double                              mMinScale           = 0.1;
+  double                              mMaxScale           = 4.0;
+  QHash<QUrl, QPixmap>                mPixmapCache        = {};
+  Browser::ResourceHandlerType        mResourceHandler    = {};
+  bool                                mOpenLinks          = true;
+  bool                                mOpenExternLinks    = false;
+  QByteArray                          mFontInfo           = {};
+  QString                             mCaption            = {};
+  Browser::UrlResolveHandlerType      mUrlResolverHandler = {};
+  QString                             mMasterCSS;
+  QString                             mUserCSS;
 };

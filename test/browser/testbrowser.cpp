@@ -5,6 +5,9 @@
 #include <QtCore/QSignalBlocker>
 #include <QtWidgets/QApplication>
 #include <QtGui/QKeySequence>
+// #include <QtPrintSupport/QPrinter>
+#include <QtGui/QPainter>
+#include <QtGui/QPdfWriter>
 
 TestBrowser::TestBrowser()
 {
@@ -34,6 +37,11 @@ TestBrowser::TestBrowser()
   action->setText( tr( "Reload" ) );
   action->setShortcut( QKeySequence::Refresh );
   connect( action, &QAction::triggered, mBrowser, &QHelpBrowser::reload );
+  action = new QAction( this );
+  action->setText( tr( "Print PDF" ) );
+  file_menu->addAction( action );
+  connect( action, &QAction::triggered, this, &TestBrowser::export2pdf );
+
   mToolBar.addAction( action );
 
   mUrl = new QLineEdit( this );
@@ -85,16 +93,6 @@ void TestBrowser::loadHtml( const QString& html_file )
   {
     QFileInfo fi( html_file );
     mLastDirectory.setPath( fi.absoluteDir().absolutePath() );
-    //  QFile f( html_file );
-    //  if ( f.open( QIODevice::ReadOnly ) )
-    //  {
-    //    auto html = f.readAll();
-    //    f.close();
-    //    mBrowser->setHtml( html, mLastDirectory.absolutePath() );
-
-    //    mBrowser->update();
-    //    update();
-    //  }
     auto url = QUrl::fromUserInput( html_file );
     if ( mBrowser )
     {
@@ -115,20 +113,24 @@ void TestBrowser::openHtml()
   }
 }
 
-void TestBrowser::openHelp()
+void TestBrowser::loadQtHelp( const QString& qch_file )
 {
-  QString fileName = QFileDialog::getOpenFileName( this, tr( "Open Help File" ), mLastDirectory.absolutePath(), tr( "Qt Help (*.qch)" ) );
-
-  if ( !fileName.isEmpty() )
+  if ( !qch_file.isEmpty() )
   {
-    auto ns = QHelpEngineCore::namespaceName( fileName );
+    auto ns = QHelpEngineCore::namespaceName( qch_file );
     mHelpEngine->unregisterDocumentation( ns );
-    auto reg = mHelpEngine->registerDocumentation( fileName );
+    auto reg = mHelpEngine->registerDocumentation( qch_file );
     if ( reg )
     {
       loadHelp();
     }
   }
+}
+
+void TestBrowser::openHelp()
+{
+  QString fileName = QFileDialog::getOpenFileName( this, tr( "Open Help File" ), mLastDirectory.absolutePath(), tr( "Qt Help (*.qch)" ) );
+  loadQtHelp( fileName );
 }
 void TestBrowser::loadHelp()
 {
@@ -147,4 +149,29 @@ void TestBrowser::loadHelp()
       }
     }
   }
+}
+
+void TestBrowser::export2pdf()
+{
+#ifndef QT_NO_PRINTER
+  //! [0]
+  QFileDialog fileDialog( this, tr( "Export PDF" ) );
+  fileDialog.setAcceptMode( QFileDialog::AcceptSave );
+  fileDialog.setMimeTypeFilters( QStringList( "application/pdf" ) );
+  fileDialog.setDefaultSuffix( "pdf" );
+  if ( fileDialog.exec() )
+  {
+    auto files = fileDialog.selectedFiles();
+    if ( !files.empty() )
+    {
+      QString fileName = files.first();
+
+      QPdfWriter pdf( fileName );
+      pdf.setPageSize( QPageSize( QPageSize::A4 ) );
+      pdf.setPageOrientation( QPageLayout::Portrait );
+      pdf.setPageMargins( { 10, 10, 10, 10 }, QPageLayout::Millimeter );
+      mBrowser->print( &pdf );
+    }
+  }
+#endif
 }

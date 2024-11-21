@@ -21,4 +21,4 @@ target_sources( testbrowser
     )
 
 target_include_directories(testbrowser PRIVATE "${QLiteHtmlBrowser_SOURCE_DIR}/include")
-target_link_libraries( testbrowser PRIVATE QLiteHtmlBrowser Qt::Widgets Qt::Gui Qt::Core Qt::Help )
+target_link_libraries( testbrowser PRIVATE QLiteHtmlBrowser Qt::Widgets Qt5::Gui Qt5::Core Qt5::Help )

@@ -28,11 +28,13 @@ public:
   }
 
   void setSearchPaths( const QStringList& );
+  void loadQtHelp( const QString& qch_file );
 
 protected:
   void openHtml();
   void openHelp();
   void loadHelp();
+  void export2pdf();
 
 private:
   QHelpBrowser* mBrowser;

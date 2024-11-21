@@ -4,7 +4,8 @@
 #include <QtCore/QUrl>
 #include <QtCore/QByteArray>
 
-#include <QtCore/qglobal.h>
+#include <QtCore/QtGlobal>
+#include <QtGui/QPagedPaintDevice>
 
 #if defined( QLITEHTMLBROWSER_LIBRARY )
 #define QLITEHTMLBROWSER_EXPORT Q_DECL_EXPORT
@@ -134,6 +135,9 @@ public:
 
   /// return title for url if available, else returns empty string
   const QString& caption() const;
+
+  /// print document into paged paint device like a printer or pdf
+  void print( QPagedPaintDevice* printer ) const;
 
 public Q_SLOTS:
   /// set URL to given url. The URL may be an url to local file, QtHelp, http etc.
