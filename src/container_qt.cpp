@@ -932,10 +932,10 @@ void container_qt::print( QPagedPaintDevice* paintDevice )
   // mPrintMedia.device_height = scaled_printable_page_width;
   // mPrintMedia.resolution    = resolutionX;
 
-  if ( mDocument->media_changed() )
-  {
-    // mDocument->render( width );
-  }
+  // if ( mDocument->media_changed() )
+  // {
+  //   // mDocument->render( width );
+  // }
 
   painter.translate( pageRect.width() / 2., pageRect.height() / 2. );
   painter.scale( xscale, xscale );
