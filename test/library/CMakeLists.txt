@@ -36,6 +36,8 @@ foreach( name ${test_names})
 
     target_link_libraries(${name} PRIVATE QLiteHtmlBrowser Qt6::Widgets Qt6::Gui Qt6::Test )
 
+    target_compile_definitions(${name} PRIVATE TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
     add_test( NAME ${name} COMMAND ${name} --searchpath=${CMAKE_CURRENT_SOURCE_DIR})
 
     set_tests_properties(${name} PROPERTIES

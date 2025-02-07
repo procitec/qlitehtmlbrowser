@@ -62,7 +62,7 @@ void HistoryTest::test_history()
 
   QCOMPARE( browser->forwardHistoryCount(), 0 );
   QCOMPARE( browser->backwardHistoryCount(), 0 );
-  auto base = QDir::currentPath() + "/history/";
+  auto base = QString{ TEST_SOURCE_DIR } + "/history/";
 
   browser->setSource( QUrl::fromLocalFile( base + "/url1.htm" ) );
   QCOMPARE( browser->forwardHistoryCount(), 0 );
