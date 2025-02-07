@@ -1,0 +1,52 @@
+name: Build QLiteHtmlBrowser
+
+on:
+  push:
+    branches:
+      - main
+      - qt6
+
+  pull_request:
+
+  workflow_call:
+
+
+jobs:
+  check-formatting:
+    name: Check code formatting
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        path:
+          - 'include'
+          - 'src'
+          - 'test'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Run clang-format formatting check
+        uses: jidicula/clang-format-action@v4.13.0
+        with:
+          clang-format-version: '18'
+          check-path: ${{ matrix.path }}
+
+  build:
+    needs: check-formatting
+    name: Build and run tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install dependencies
+        run: sudo apt install qt6-base-dev qt6-tools-dev ninja-build
+      - name: Run CMake
+        run: cmake -B ${{github.workspace}}/build -GNinja -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build
+      - name: Test
+        env:
+          QT_QPA_PLATFORM: offscreen
+        working-directory: ${{github.workspace}}/build
+        run: ctest -V -E NOT_BUILT
