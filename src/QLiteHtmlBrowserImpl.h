@@ -102,10 +102,7 @@ private:
   QString readResourceCss( const QString& ) const;
   void    applyCSS();
 
-  Q_DISABLE_COPY( QLiteHtmlBrowserImpl );
-#if ( QT_VERSION >= QT_VERSION_CHECK( 5, 13, 0 ) )
-  Q_DISABLE_MOVE( QLiteHtmlBrowserImpl );
-#endif
+  Q_DISABLE_COPY_MOVE( QLiteHtmlBrowserImpl );
 
   container_qt*                  mContainer   = nullptr;
   QUrl                           mBaseUrl     = {};

@@ -9,7 +9,7 @@
 #include <QtGui/QKeySequence>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QStyle>
-#include <QtWidgets/QShortcut>
+#include <QtGui/QShortcut>
 #include <QtGui/QDesktopServices>
 #include <functional>
 

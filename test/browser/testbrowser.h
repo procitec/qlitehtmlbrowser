@@ -5,7 +5,7 @@
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QToolBar>
 #include <QtWidgets/QLineEdit>
-#include <QtWidgets/QAction>
+#include <QtGui/QAction>
 #include <QtCore/QDir>
 #include <QtHelp/QHelpEngine>
 

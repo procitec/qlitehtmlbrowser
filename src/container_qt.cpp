@@ -12,13 +12,15 @@
 #include <QtCore/QRegularExpression>
 #include <QtGui/QPalette>
 #include <QtGui/QKeySequence>
-#include <QtWidgets/QShortcut>
+#include <QtGui/QShortcut>
 #include <QtWidgets/QApplication>
 #include <QtGui/QScreen>
 #include <QtCore/QTextBoundaryFinder>
+
+#include <algorithm>
+#include <cmath>
 #include <string>
 
-#include <cmath>
 container_qt::container_qt( QWidget* parent )
   : QAbstractScrollArea( parent )
 {
@@ -35,9 +37,6 @@ container_qt::container_qt( QWidget* parent )
   connect( shortcut, &QShortcut::activated, this, [this]() { setScale( 1.0 ); } );
 
   setMouseTracking( true );
-#if ( QT_VERSION >= QT_VERSION_CHECK( 5, 11, 0 ) )
-  connect( qApp, &QApplication::fontChanged, this, [this]() { mFontInfo = this->fontInfo().family().toLocal8Bit(); } );
-#endif
 }
 
 void container_qt::setCSS( const QString& master_css, const QString& user_css )
@@ -134,21 +133,15 @@ litehtml::uint_ptr container_qt::create_font(
     familyNames.append( QString::fromStdString( f ).trimmed().remove( QRegularExpression( R"-('")-" ) ) );
   }
 
-#if ( QT_VERSION >= QT_VERSION_CHECK( 5, 11, 0 ) )
   font->setFamilies( familyNames );
-#else
-  if ( !familyNames.isEmpty() )
-  {
-    font->setFamily( familyNames.first() );
-  }
-#endif
+
   font->setFixedPitch( true );
   font->setPixelSize( size );
 
   font->setItalic( litehtml::font_style_italic == italic ? true : false );
 
   // thinner, thicker? @see https://www.w3schools.com/cssref/pr_font_weight.asp
-  font->setWeight( ( weight - 1 ) / 10 );
+  font->setWeight( static_cast<QFont::Weight>( 100 * std::clamp( weight / 100, 1, 9 ) ) );
 
   /// handle fonts decoration
   if ( litehtml::font_decoration_underline == decoration )
@@ -193,11 +186,7 @@ int container_qt::text_width( const char* text, litehtml::uint_ptr hFont )
     auto* font = reinterpret_cast<QFont*>( hFont );
 
     QFontMetrics fm( *font );
-#if ( QT_VERSION >= QT_VERSION_CHECK( 5, 11, 0 ) )
     text_width = fm.horizontalAdvance( QString::fromUtf8( text ) );
-#else
-    text_width = fm.width( QString::fromUtf8( text ) );
-#endif
   }
   return text_width;
 }
@@ -343,7 +332,7 @@ QByteArray container_qt::loadResource( Browser::ResourceType type, const QUrl& u
 container_qt::MousePos container_qt::convertMousePos( const QMouseEvent* event )
 {
   MousePos pos;
-  pos.client = { scaled( mapFromGlobal( event->globalPos() ) ) };
+  pos.client = { scaled( mapFromGlobal( event->globalPosition().toPoint() ) ) };
   pos.html   = { pos.client + scrollBarPos() };
 
   return pos;
@@ -780,6 +769,16 @@ void container_qt::wheelEvent( QWheelEvent* e )
       QAbstractScrollArea::wheelEvent( e );
     }
   }
+}
+
+bool container_qt::event( QEvent* event )
+{
+  if ( event->type() == QEvent::Type::ApplicationFontChange )
+  {
+    mFontInfo = fontInfo().family().toLocal8Bit();
+  }
+
+  return QAbstractScrollArea::event( event );
 }
 
 QSize container_qt::scaled( const QSize& size ) const

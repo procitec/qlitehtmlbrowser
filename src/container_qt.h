@@ -74,6 +74,7 @@ protected:
   void get_language( litehtml::string& language, litehtml::string& culture ) const override;
 
   void resizeEvent( QResizeEvent* event ) override;
+  bool event( QEvent* event ) override;
 
 private:
   struct MousePos
