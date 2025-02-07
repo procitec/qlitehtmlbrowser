@@ -10,7 +10,7 @@ int main( int argc, char** argv )
   QApplication app( argc, argv );
 
   HTMLCssTest mContentTest;
-  QTest::qExec( &mContentTest, mContentTest.args() );
+  return QTest::qExec( &mContentTest, mContentTest.args() );
 }
 
 QLiteHtmlBrowser* HTMLCssTest::createMainWindow( const QSize& size )

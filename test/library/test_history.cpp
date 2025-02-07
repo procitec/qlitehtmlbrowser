@@ -9,7 +9,7 @@ int main( int argc, char** argv )
   QApplication app( argc, argv );
 
   HistoryTest mContentTest;
-  QTest::qExec( &mContentTest, mContentTest.args() );
+  return QTest::qExec( &mContentTest, mContentTest.args() );
 }
 
 QLiteHtmlBrowser* HistoryTest::createMainWindow( const QSize& size )
