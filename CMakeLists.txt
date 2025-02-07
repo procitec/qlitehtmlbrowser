@@ -1,13 +1,15 @@
-if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
-    cmake_minimum_required( VERSION 3.18 )
+cmake_minimum_required(VERSION 3.28)
 
+project( QLiteHtmlBrowser VERSION 1.1.6 )
+
+include(GNUInstallDirs)
+
+if(PROJECT_IS_TOP_LEVEL)
     if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
-    message(FATAL_ERROR "In-source builds are not allowed.")
+        message(FATAL_ERROR "In-source builds are not allowed.")
     endif()
-    cmake_policy( SET CMP0048 NEW )
 
     set( CMAKE_CXX_STANDARD 17 )
-
     set( CMAKE_INSTALL_MESSAGE "LAZY" ) # one of NEVER, LAZY, ALWAYS
     set( CMAKE_INSTALL_PREFIX "" )
 
@@ -24,15 +26,9 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
     set( AUTOMOC OFF)
     set( AUTOUIC OFF)
     set( AUTORCC OFF)
-endif()
 
+    find_package(Qt6 COMPONENTS Core Gui Widgets REQUIRED)
 
-project( QLiteHtmlBrowser VERSION 1.1.6 )
-
-include(GNUInstallDirs)
-
-if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
-    find_package(Qt5 COMPONENTS Widgets Gui Core Test REQUIRED)
     if( WITH_DOCS )
         find_package(Doxygen REQUIRED)
     endif()
@@ -51,9 +47,7 @@ if (BUILD_TESTING)
 endif()
 
 
-if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
-    if( EXISTS "${CMAKE_SOURCE_DIR}/CPackSettings.cmake")
-        include (CPackSettings.cmake)
-        add_custom_target(dist-source COMMAND cpack --config ${CMAKE_BINARY_DIR}/CPackSourceConfig.cmake  )
-    endif()
+if(PROJECT_IS_TOP_LEVEL AND EXISTS "${CMAKE_SOURCE_DIR}/CPackSettings.cmake")
+    include (CPackSettings.cmake)
+    add_custom_target(dist-source COMMAND cpack --config ${CMAKE_BINARY_DIR}/CPackSourceConfig.cmake  )
 endif()

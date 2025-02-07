@@ -2,11 +2,11 @@ add_library( QLiteHtmlBrowser SHARED "")
 
 add_definitions(-DQLITEHTMLBROWSER_LIBRARY)
 
-qt5_add_resources( qrcs
+qt_add_resources( qrcs
     QLiteHtmlBrowser.qrc
 )
 
-qt5_wrap_cpp ( mocs
+qt_wrap_cpp ( mocs
     container_qt.h
     ${PROJECT_SOURCE_DIR}/include/qlitehtmlbrowser/QLiteHtmlBrowser.h
     QLiteHtmlBrowserImpl.h
@@ -39,7 +39,7 @@ PRIVATE
     "${PROJECT_SOURCE_DIR}/include"
 )
 
-target_link_libraries(QLiteHtmlBrowser PRIVATE litehtml Qt::Widgets Qt::Gui Qt::Core)
+target_link_libraries(QLiteHtmlBrowser PRIVATE litehtml Qt6::Widgets Qt6::Gui Qt6::Core)
 set_target_properties(QLiteHtmlBrowser PROPERTIES VERSION ${QLiteHtmlBrowser_VERSION})
 set_target_properties(QLiteHtmlBrowser PROPERTIES PUBLIC_HEADER "${PUBLIC_HEADERS}")
 set_property(TARGET QLiteHtmlBrowser PROPERTY CXX_STANDARD 17)
@@ -60,5 +60,3 @@ install( TARGETS QLiteHtmlBrowser EXPORT QLiteHtmlBrowserTargets DESTINATION lib
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qlitehtmlbrowser
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # include
     )
-
-

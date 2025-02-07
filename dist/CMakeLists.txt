@@ -3,7 +3,7 @@ include(CMakePackageConfigHelpers)
 set( INCLUDE_INSTALL_DIR "include")
 set( LIBRARY_INSTALL_DIR "lib")
 set( LIBRARY_VERSION ${QLiteHtmlBrowser_VERSION})
-set( QT_VERSION ${Qt5Core_VERSION} )
+set( QT_VERSION ${Qt6Core_VERSION} )
 
 configure_package_config_file(QLiteHtmlBrowserConfig.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/QLiteHtmlBrowserConfig.cmake

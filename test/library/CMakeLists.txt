@@ -1,6 +1,6 @@
 project( QLiteHtmlBrowserTest )
 
-find_package( Qt5 COMPONENTS Test REQUIRED )
+find_package( Qt6 COMPONENTS Test REQUIRED )
 
 set( test_names
     test_html_content
@@ -8,7 +8,7 @@ set( test_names
     test_history
 )
 
-set( runpath "$<TARGET_FILE_DIR:QLiteHtmlBrowser>;$<TARGET_FILE_DIR:Qt5::Widgets>")
+set( runpath "$<TARGET_FILE_DIR:QLiteHtmlBrowser>;$<TARGET_FILE_DIR:Qt6::Widgets>")
 if(WIN32)
   string(REPLACE ";" "\\\;" runpath "${runpath}")
 endif()
@@ -19,7 +19,7 @@ foreach( name ${test_names})
 
     add_executable( ${name} )
 
-    qt5_wrap_cpp ( ${name}_mocs
+    qt_wrap_cpp ( ${name}_mocs
         ${name}.h
         test_base.h
     )
@@ -34,7 +34,7 @@ foreach( name ${test_names})
 
     target_include_directories( ${name} PRIVATE ${QLiteHtmlBrowser_SOURCE_DIR}/include )
 
-    target_link_libraries(${name} PRIVATE QLiteHtmlBrowser Qt::Widgets Qt::Gui Qt::Test )
+    target_link_libraries(${name} PRIVATE QLiteHtmlBrowser Qt6::Widgets Qt6::Gui Qt6::Test )
 
     add_test( NAME ${name} COMMAND ${name} --searchpath=${CMAKE_CURRENT_SOURCE_DIR})
 

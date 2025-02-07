@@ -1,11 +1,11 @@
 project( TestBrowser )
 
-find_package( Qt5 COMPONENTS Widgets Gui Core Help REQUIRED)
+find_package( Qt6 COMPONENTS Widgets Gui Core Help REQUIRED)
 
 
 add_executable( testbrowser )
 
-qt5_wrap_cpp ( testbrowser_mocs
+qt_wrap_cpp ( testbrowser_mocs
   testbrowser.h
   QHelpBrowser.h
 )
@@ -21,4 +21,4 @@ target_sources( testbrowser
     )
 
 target_include_directories(testbrowser PRIVATE "${QLiteHtmlBrowser_SOURCE_DIR}/include")
-target_link_libraries( testbrowser PRIVATE QLiteHtmlBrowser Qt::Widgets Qt5::Gui Qt5::Core Qt5::Help )
+target_link_libraries( testbrowser PRIVATE QLiteHtmlBrowser Qt6::Widgets Qt6::Gui Qt6::Core Qt6::Help )

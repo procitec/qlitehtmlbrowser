@@ -17,7 +17,7 @@ define_property(GLOBAL PROPERTY QT_LIBRARY_DIR
     FULL_DOCS "Basic library dir of QT"
 )
 
-get_target_property( QMAKE Qt::qmake IMPORTED_LOCATION )
+get_target_property( QMAKE Qt6::qmake IMPORTED_LOCATION )
 
 get_filename_component( QT_BIN_DIR ${QMAKE} DIRECTORY)
 get_filename_component( QT_INSTALL_DIR "${QT_BIN_DIR}/../" ABSOLUTE )
