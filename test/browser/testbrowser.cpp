@@ -22,12 +22,15 @@ TestBrowser::TestBrowser()
 
   auto action = new QAction( this );
   action->setText( tr( "Open File" ) );
+  action->setShortcut( QKeySequence( QKeySequence::StandardKey::Open ) );
   file_menu->addAction( action );
   connect( action, &QAction::triggered, this, &TestBrowser::openHtml );
+
   action = new QAction( this );
   action->setText( tr( "Open QtHelp" ) );
   file_menu->addAction( action );
   connect( action, &QAction::triggered, this, &TestBrowser::openHelp );
+
   action = new QAction( this );
   action->setText( tr( "Quit" ) );
   file_menu->addAction( action );
@@ -37,11 +40,11 @@ TestBrowser::TestBrowser()
   action->setText( tr( "Reload" ) );
   action->setShortcut( QKeySequence::Refresh );
   connect( action, &QAction::triggered, mBrowser, &QHelpBrowser::reload );
+
   action = new QAction( this );
   action->setText( tr( "Print PDF" ) );
   file_menu->addAction( action );
   connect( action, &QAction::triggered, this, &TestBrowser::export2pdf );
-
   mToolBar.addAction( action );
 
   mUrl = new QLineEdit( this );
