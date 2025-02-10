@@ -21,6 +21,15 @@
 #include <cmath>
 #include <string>
 
+static const auto CSS_GENERIC_FONT_TO_QFONT_STYLEHINT = QMap<QString, QFont::StyleHint>{ { "serif", QFont::StyleHint::Serif },
+                                                                                         { "sans-serif", QFont::StyleHint::SansSerif },
+                                                                                         { "monospace", QFont::StyleHint::Monospace },
+                                                                                         { "cursive", QFont::StyleHint::Cursive },
+                                                                                         { "fantasy", QFont::StyleHint::Fantasy },
+                                                                                         { "ui-serif", QFont::StyleHint::Serif },
+                                                                                         { "ui-sans-serif", QFont::StyleHint::SansSerif },
+                                                                                         { "ui-monospace", QFont::StyleHint::Monospace } };
+
 container_qt::container_qt( QWidget* parent )
   : QAbstractScrollArea( parent )
 {
@@ -126,21 +135,78 @@ litehtml::uint_ptr container_qt::create_font(
 
   litehtml::string_vector fonts;
   litehtml::split_string( faceName, fonts, "," );
+
   QStringList familyNames;
+  bool        styleHintSet = false;
 
   for ( const auto& f : fonts )
   {
-    familyNames.append( QString::fromStdString( f ).trimmed().remove( QRegularExpression( R"-('")-" ) ) );
+    auto qf = QString::fromStdString( f ).trimmed();
+
+    const auto styleHint = CSS_GENERIC_FONT_TO_QFONT_STYLEHINT.constFind( qf );
+    if ( styleHint != CSS_GENERIC_FONT_TO_QFONT_STYLEHINT.constEnd() )
+    {
+      /*
+       * Don't add CSS generic font name to list of fonts (empty names are
+       * ignored below). While some of the names ("serif", "sans-serif" and
+       * "monospace") do work on Linux, they don't work on Windows.
+       */
+      qf = "";
+
+      /*
+       * Set a style hint based on the first CSS generic font family. The style
+       * hint seems to be respected by QFont if none of the fonts from the list
+       * of fonts is found. Note: The style hint seems to be ignored if one of
+       * the following applies: No font list set, empty font list set, font list
+       * with sole entry "" (empty name) set, font list contains "" entry and
+       * none of the other fonts from the list is found.
+       */
+      if ( !styleHintSet )
+      {
+        font->setStyleHint( styleHint.value() );
+        styleHintSet = true;
+      }
+    }
+
+    /*
+     * CSS font names may be quoted; remove those quotes. Note: CSS generic font
+     * names are keywords (must not be quoted) and are handled above.
+     */
+    if ( qf.startsWith( '"' ) )
+    {
+      qf.remove( 0, 1 );
+    }
+    if ( qf.endsWith( '"' ) )
+    {
+      qf.chop( 1 );
+    }
+
+    /*
+     * Ignore empty font name as it leads to strange behaviour both on Linux and
+     * Windows.
+     */
+    if ( qf.size() )
+    {
+      familyNames.append( qf );
+    }
   }
 
-  font->setFamilies( familyNames );
-
-  font->setFixedPitch( true );
+  /*
+   * Ignore empty list of font names as it leads to strange behaviour both on
+   * Linux and Windows. However, if a style hint has been set, set a list with
+   * an invalid (non-existing) font; otherwise the style hint is ignored (see
+   * comment above).
+   */
+  if ( familyNames.size() )
+  {
+    font->setFamilies( familyNames );
+  }
+  else if ( styleHintSet )
+  {
+    font->setFamilies( { " " } );
+  }
   font->setPixelSize( size );
-
   font->setItalic( litehtml::font_style_italic == italic ? true : false );
-
-  // thinner, thicker? @see https://www.w3schools.com/cssref/pr_font_weight.asp
   font->setWeight( static_cast<QFont::Weight>( 100 * std::clamp( weight / 100, 1, 9 ) ) );
 
   /// handle fonts decoration
