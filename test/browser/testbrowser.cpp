@@ -33,6 +33,7 @@ TestBrowser::TestBrowser()
 
   action = new QAction( this );
   action->setText( tr( "Quit" ) );
+  action->setShortcut( QKeySequence( QKeySequence::StandardKey::Quit ) );
   file_menu->addAction( action );
   connect( action, &QAction::triggered, this, [this]() { close(); } );
 
