@@ -40,12 +40,12 @@ TestBrowser::TestBrowser()
   action->setText( tr( "Reload" ) );
   action->setShortcut( QKeySequence::Refresh );
   connect( action, &QAction::triggered, mBrowser, &QHelpBrowser::reload );
+  mToolBar.addAction( action );
 
   action = new QAction( this );
   action->setText( tr( "Print PDF" ) );
   file_menu->addAction( action );
   connect( action, &QAction::triggered, this, &TestBrowser::export2pdf );
-  mToolBar.addAction( action );
 
   mUrl = new QLineEdit( this );
   mToolBar.addWidget( mUrl );
