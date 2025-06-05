@@ -1,6 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## [2.1.0]
+
+(unreleased)
+
+- tweak dark-mode stylesheet
 
 ## [2.0.0]
 
@@ -22,4 +26,3 @@
 
 - [#18](https://github.com/procitec/qlitehtmlbrowser/issues/18): Scaling of images not possible
 - [#16](https://github.com/procitec/qlitehtmlbrowser/issues/16): Loading a custom css should be possible
-

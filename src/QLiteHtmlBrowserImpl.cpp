@@ -34,17 +34,17 @@ QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
 
 void QLiteHtmlBrowserImpl::applyCSS()
 {
-  auto lightness = this->palette().color( QPalette::Window ).lightnessF();
-  bool dark_mode = ( lightness > 0.5 ) ? false : true;
-
   auto    css = readResourceCss( QString( ":/css/master.css" ) );
   QString user_css;
 
+  auto dark_mode = palette().color( QPalette::Text ).lightness() > palette().color( QPalette::Base ).lightness();
   if ( dark_mode )
   {
     auto dark_css = readResourceCss( ":/styles/dark.css" );
-    dark_css.replace( "@QPalette::Window@", palette().color( QPalette::Window ).name() );
+    dark_css.replace( "@QPalette::Base@", palette().color( QPalette::Base ).name() );
     dark_css.replace( "@QPalette::Text@", palette().color( QPalette::Text ).name() );
+    dark_css.replace( "@QPalette::Link@", palette().color( QPalette::Link ).name() );
+    dark_css.replace( "@QPalette::LinkVisited@", palette().color( QPalette::LinkVisited ).name() );
     user_css = dark_css;
   }
 
