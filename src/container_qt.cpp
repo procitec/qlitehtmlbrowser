@@ -12,7 +12,7 @@
 #include <QtCore/QRegularExpression>
 #include <QtGui/QPalette>
 #include <QtGui/QKeySequence>
-#include <QtGui/QShortcut>
+#include <QShortcut>
 #include <QtWidgets/QApplication>
 #include <QtGui/QScreen>
 #include <QtCore/QTextBoundaryFinder>
@@ -435,8 +435,12 @@ QByteArray container_qt::loadResource( Browser::ResourceType type, const QUrl& u
 container_qt::MousePos container_qt::convertMousePos( const QMouseEvent* event )
 {
   MousePos pos;
+#if QT_VERSION_MAJOR >= 6
   pos.client = { scaled( mapFromGlobal( event->globalPosition().toPoint() ) ) };
-  pos.html   = { pos.client + scrollBarPos() };
+#else
+  pos.client = { scaled( mapFromGlobal( event->globalPos() ) ) };
+#endif
+  pos.html = { pos.client + scrollBarPos() };
 
   return pos;
 }
