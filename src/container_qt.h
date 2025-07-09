@@ -7,6 +7,7 @@
 #include <QtCore/QHash>
 #include <QtCore/QUrl>
 #include <QtGui/QPagedPaintDevice>
+#include <QtCore/QStack>
 
 class container_qt : public QAbstractScrollArea, protected litehtml::document_container
 {
@@ -77,6 +78,9 @@ protected:
   bool event( QEvent* event ) override;
 
 private:
+  void applyClip( QPainter* p );
+  bool checkClipRect( QPainter* p, const QRect& rect ) const;
+
   struct MousePos
   {
     QPoint html;   // absolute position in HTML document
@@ -118,4 +122,6 @@ private:
   Browser::UrlResolveHandlerType      mUrlResolverHandler = {};
   QString                             mMasterCSS;
   QString                             mUserCSS;
+  QStack<litehtml::position>          mClipStack;
+  litehtml::position                  mClip = {};
 };
