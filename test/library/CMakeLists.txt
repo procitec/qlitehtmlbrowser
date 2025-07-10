@@ -1,13 +1,12 @@
 project( QLiteHtmlBrowserTest )
 
-find_package(Qt5 5.15 COMPONENTS Core Gui Widgets Test)
-if(Qt5_FOUND)
-  set(QT_VERSION_MAJOR 5)
-else()
-    find_package(Qt6 COMPONENTS Core Gui Widgets Test REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui Widgets Test)
+if(Qt6_FOUND)
   set(QT_VERSION_MAJOR 6)
+else()
+  find_package(Qt5 5.15 COMPONENTS Core Gui Widgets Test REQUIRED)
+  set(QT_VERSION_MAJOR 5)
 endif()
-
 
 set( test_names
     test_html_content

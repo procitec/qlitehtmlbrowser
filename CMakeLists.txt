@@ -27,12 +27,12 @@ if(PROJECT_IS_TOP_LEVEL)
     set( AUTOUIC OFF)
     set( AUTORCC OFF)
 
-    find_package(Qt5 5.15 COMPONENTS Core Gui Widgets)
-    if(Qt5_FOUND)
-      set(QT_VERSION_MAJOR 5)
-    else()
-        find_package(Qt6 COMPONENTS Core Gui Widgets REQUIRED)
+    find_package(Qt6 COMPONENTS Core Gui Widgets)
+    if(Qt6_FOUND)
       set(QT_VERSION_MAJOR 6)
+    else()
+      set(QT_VERSION_MAJOR 5)
+      find_package(Qt5 5.15 COMPONENTS Core Gui Widgets REQUIRED)
     endif()
 
 

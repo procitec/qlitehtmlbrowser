@@ -1,11 +1,11 @@
 project( TestBrowser )
 
-find_package(Qt5 5.15 COMPONENTS Core Gui Widgets Help)
-if(Qt5_FOUND)
-  set(QT_VERSION_MAJOR 5)
-else()
-    find_package(Qt6 COMPONENTS Core Gui Widgets Help REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui Widgets Help)
+if(Qt6_FOUND)
   set(QT_VERSION_MAJOR 6)
+else()
+  set(QT_VERSION_MAJOR 5)
+  find_package(Qt5 5.15 COMPONENTS Core Gui Widgets Help REQUIRED)
 endif()
 
 add_executable( testbrowser )
