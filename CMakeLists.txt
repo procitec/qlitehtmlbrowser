@@ -35,7 +35,6 @@ if(PROJECT_IS_TOP_LEVEL)
       find_package(Qt5 5.15 COMPONENTS Core Gui Widgets REQUIRED)
     endif()
 
-
     if( WITH_DOCS )
         find_package(Doxygen REQUIRED)
     endif()

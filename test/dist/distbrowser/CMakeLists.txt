@@ -11,7 +11,14 @@ set( CMAKE_CXX_STANDARD 17 )
 set( CMAKE_INSTALL_MESSAGE "LAZY" ) # one of NEVER, LAZY, ALWAYS
 set( CMAKE_INSTALL_PREFIX "" )
 
-find_package( Qt6 COMPONENTS Widgets REQUIRED)
+find_package(Qt6 COMPONENTS Widgets)
+if(Qt6_FOUND)
+  set(QT_VERSION_MAJOR 6)
+else()
+  set(QT_VERSION_MAJOR 5)
+  find_package(Qt5 5.15 COMPONENTS Widgets REQUIRED)
+endif()
+
 find_package( QLiteHtmlBrowser REQUIRED )
 
 add_executable( distbrowser )
@@ -31,4 +38,4 @@ target_sources( distbrowser
       ${distbrowser_mocs}
     )
 
-target_link_libraries( distbrowser PRIVATE QLiteHtmlBrowser::QLiteHtmlBrowser Qt6::Widgets Qt6::Gui Qt6::Core )
+target_link_libraries( distbrowser PRIVATE QLiteHtmlBrowser::QLiteHtmlBrowser Qt::Widgets Qt::Gui Qt::Core )
