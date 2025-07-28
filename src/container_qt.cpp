@@ -207,7 +207,30 @@ litehtml::uint_ptr container_qt::create_font(
   }
   font->setPixelSize( size );
   font->setItalic( litehtml::font_style_italic == italic ? true : false );
+
+#if QT_VERSION_MAJOR >= 6
   font->setWeight( static_cast<QFont::Weight>( 100 * std::clamp( weight / 100, 1, 9 ) ) );
+#else
+  auto htmlFontWeightToQt5 = []( int weight ) -> int
+  {
+    static const std::map<int, int> mapping = {
+      { 100, 0 },  // Thin
+      { 200, 12 }, // ExtraLight
+      { 300, 25 }, // Light
+      { 400, 50 }, // Normal
+      { 500, 57 }, // Medium
+      { 600, 63 }, // DemiBold
+      { 700, 75 }, // Bold
+      { 800, 81 }, // ExtraBold
+      { 900, 87 }  // Black
+    };
+    weight            = std::max( 100, std::min( weight, 900 ) );
+    const int rounded = static_cast<int>( ( weight + 50 ) / 100.0 ) * 100;
+    auto      it      = mapping.find( rounded );
+    return it != mapping.end() ? it->second : 50;
+  };
+  font->setWeight( htmlFontWeightToQt5( weight ) );
+#endif
 
   /// handle fonts decoration
   if ( litehtml::font_decoration_underline == decoration )
