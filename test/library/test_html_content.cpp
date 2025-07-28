@@ -44,7 +44,7 @@ void HTMLContentTest::test_html_data()
 
 <p><b>This text is bold</b></p>
 <p><i>This text is italic</i></p>
-<strong>This test is strong</strong></p>
+<strong>This text is strong</strong></p>
 
 </body>
 </html>
@@ -114,7 +114,23 @@ void HTMLContentTest::test_lists_data()
     <li>New Zealand</li>
   </ul>
   </body></html>)-";
-  QTest::newRow( "unordered list with string definition " ) << R"-(
+  QTest::newRow( "unordered list circle image " ) << R"-(
+  <html><body>
+  <ul style="list-style-type:circle">
+    <li>US</li>
+    <li>Australia</li>
+    <li>New Zealand</li>
+  </ul>
+  </body></html>)-";
+  QTest::newRow( "unordered list square image " ) << R"-(
+  <html><body>
+  <ul style="list-style-type:square">
+    <li>US</li>
+    <li>Australia</li>
+    <li>New Zealand</li>
+  </ul>
+  </body></html>)-";
+  QTest::newRow( "unordered list with invalid string definition WILL_FAIL " ) << R"-(
   <html><body>
   <ul style="list-style-type:'ABC'">
     <li>US</li>

@@ -1,6 +1,12 @@
 project( QLiteHtmlBrowserTest )
 
-find_package( Qt6 COMPONENTS Test REQUIRED )
+find_package(Qt6 COMPONENTS Core Gui Widgets Test)
+if(Qt6_FOUND)
+  set(QT_VERSION_MAJOR 6)
+else()
+  find_package(Qt5 5.15 COMPONENTS Core Gui Widgets Test REQUIRED)
+  set(QT_VERSION_MAJOR 5)
+endif()
 
 set( test_names
     test_html_content
@@ -8,7 +14,7 @@ set( test_names
     test_history
 )
 
-set( runpath "$<TARGET_FILE_DIR:QLiteHtmlBrowser>;$<TARGET_FILE_DIR:Qt6::Widgets>")
+set( runpath "$<TARGET_FILE_DIR:QLiteHtmlBrowser>;$<TARGET_FILE_DIR:Qt${QT_VERSION_MAJOR}::Widgets>")
 if(WIN32)
   string(REPLACE ";" "\\\;" runpath "${runpath}")
 endif()
@@ -34,7 +40,7 @@ foreach( name ${test_names})
 
     target_include_directories( ${name} PRIVATE ${QLiteHtmlBrowser_SOURCE_DIR}/include )
 
-    target_link_libraries(${name} PRIVATE QLiteHtmlBrowser Qt6::Widgets Qt6::Gui Qt6::Test )
+    target_link_libraries(${name} PRIVATE QLiteHtmlBrowser Qt::Widgets Qt::Gui Qt::Test )
 
     target_compile_definitions(${name} PRIVATE TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 

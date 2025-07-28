@@ -12,7 +12,7 @@
 #include <QtCore/QRegularExpression>
 #include <QtGui/QPalette>
 #include <QtGui/QKeySequence>
-#include <QtGui/QShortcut>
+#include <QShortcut>
 #include <QtWidgets/QApplication>
 #include <QtGui/QScreen>
 #include <QtCore/QTextBoundaryFinder>
@@ -207,7 +207,30 @@ litehtml::uint_ptr container_qt::create_font(
   }
   font->setPixelSize( size );
   font->setItalic( litehtml::font_style_italic == italic ? true : false );
+
+#if QT_VERSION_MAJOR >= 6
   font->setWeight( static_cast<QFont::Weight>( 100 * std::clamp( weight / 100, 1, 9 ) ) );
+#else
+  auto htmlFontWeightToQt5 = []( int weight ) -> int
+  {
+    static const std::map<int, int> mapping = {
+      { 100, 0 },  // Thin
+      { 200, 12 }, // ExtraLight
+      { 300, 25 }, // Light
+      { 400, 50 }, // Normal
+      { 500, 57 }, // Medium
+      { 600, 63 }, // DemiBold
+      { 700, 75 }, // Bold
+      { 800, 81 }, // ExtraBold
+      { 900, 87 }  // Black
+    };
+    weight            = std::max( 100, std::min( weight, 900 ) );
+    const int rounded = static_cast<int>( ( weight + 50 ) / 100.0 ) * 100;
+    auto      it      = mapping.find( rounded );
+    return it != mapping.end() ? it->second : 50;
+  };
+  font->setWeight( htmlFontWeightToQt5( weight ) );
+#endif
 
   /// handle fonts decoration
   if ( litehtml::font_decoration_underline == decoration )
@@ -262,11 +285,19 @@ void container_qt::draw_text(
 {
   QPainter* p( reinterpret_cast<QPainter*>( hdc ) );
   QFont*    f = reinterpret_cast<QFont*>( hFont );
+
   p->save();
+  applyClip( p );
+
   p->setFont( *f );
   auto web_color = toColor( color );
   p->setPen( web_color );
-  p->drawText( QRect( pos.x, pos.y, pos.width, pos.height ), 0, QString::fromUtf8( text ) );
+  auto text_rect = QRect( pos.x, pos.y, pos.width, pos.height );
+  if ( checkClipRect( p, text_rect ) )
+  {
+    p->drawText( text_rect, 0, QString::fromUtf8( text ) );
+  }
+
   p->restore();
 }
 
@@ -285,9 +316,36 @@ const char* container_qt::get_default_font_name() const
   return mFontInfo.constData();
 }
 
+void container_qt::applyClip( QPainter* p )
+{
+  if ( p && 0 < mClip.height )
+  {
+    p->setClipRect( mClip.x, mClip.y, mClip.width, mClip.height );
+  }
+}
+
+bool container_qt::checkClipRect( QPainter* p, const QRect& rect ) const
+{
+  bool contained = 0 < mClip.height ? false : true;
+  if ( 0 < mClip.height )
+  {
+    auto clipRect       = QRect( mClip.x, mClip.y, mClip.width, mClip.height );
+    contained           = clipRect.contains( rect.topLeft() );
+    auto contained_rect = clipRect.contains( rect );
+    if ( contained && !contained_rect ) // partially contained
+    {
+      QRegion region( clipRect );
+      p->setClipRegion( region.united( rect ) );
+    }
+  }
+  return contained;
+}
+
 void container_qt::draw_list_marker( litehtml::uint_ptr hdc, const litehtml::list_marker& marker )
 {
   QPainter* p( reinterpret_cast<QPainter*>( hdc ) );
+  p->save();
+  applyClip( p );
 
   // does the marker contain an image?
   if ( !marker.image.empty() )
@@ -357,6 +415,8 @@ void container_qt::draw_list_marker( litehtml::uint_ptr hdc, const litehtml::lis
         break;
     }
   }
+
+  p->restore();
 }
 
 QPixmap container_qt::load_image_data( const QUrl& url )
@@ -398,8 +458,12 @@ QByteArray container_qt::loadResource( Browser::ResourceType type, const QUrl& u
 container_qt::MousePos container_qt::convertMousePos( const QMouseEvent* event )
 {
   MousePos pos;
+#if QT_VERSION_MAJOR >= 6
   pos.client = { scaled( mapFromGlobal( event->globalPosition().toPoint() ) ) };
-  pos.html   = { pos.client + scrollBarPos() };
+#else
+  pos.client = { scaled( mapFromGlobal( event->globalPos() ) ) };
+#endif
+  pos.html = { pos.client + scrollBarPos() };
 
   return pos;
 }
@@ -452,11 +516,14 @@ void container_qt::draw_background( litehtml::uint_ptr hdc, const std::vector<li
 {
   QPainter* p( reinterpret_cast<QPainter*>( hdc ) );
   p->save();
+  applyClip( p );
+
   p->setPen( Qt::NoPen );
   for ( auto bg : bgs )
   {
     p->setBrush( QColor( bg.color.red, bg.color.green, bg.color.blue, bg.color.alpha ) );
     p->drawRect( bg.border_box.x, bg.border_box.y, bg.border_box.width, bg.border_box.height );
+
     if ( !bg.image.empty() )
     {
       auto url = resolveUrl( bg.image.c_str(), bg.baseurl.c_str() );
@@ -464,8 +531,13 @@ void container_qt::draw_background( litehtml::uint_ptr hdc, const std::vector<li
       switch ( bg.repeat )
       {
         case litehtml::background_repeat_no_repeat:
+        {
+          // qDebug() << "draw_background: image" << bg.image_size.width << bg.image_size.height;
+          // qDebug() << "draw_background: pixmap" << pm.width() << pm.height();
+          pm = pm.scaled( bg.image_size.width, bg.image_size.height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation );
           p->drawPixmap( QRect( bg.position_x, bg.position_y, bg.image_size.width, bg.image_size.height ), pm );
-          break;
+        }
+        break;
 
         case litehtml::background_repeat_repeat:
         case litehtml::background_repeat_repeat_x:
@@ -755,8 +827,24 @@ void container_qt::import_css( litehtml::string& text, const litehtml::string& u
     text = QString::fromUtf8( content.constData() ).toStdString();
   }
 }
-void container_qt::set_clip( const litehtml::position& pos, const litehtml::border_radiuses& bdr_radius /*,bool valid_x, bool valid_y */ ) {}
-void container_qt::del_clip() {}
+void container_qt::set_clip( const litehtml::position& pos, const litehtml::border_radiuses& bdr_radius /*,bool valid_x, bool valid_y */ )
+{
+  mClipStack.push( pos );
+  mClip = pos;
+}
+void container_qt::del_clip()
+{
+  if ( !mClipStack.isEmpty() )
+  {
+    mClipStack.pop();
+    mClip = mClipStack.isEmpty() ? litehtml::position() : mClipStack.top();
+  }
+  else
+  {
+    qWarning() << "warning:: unbalanced call to del_clip";
+    mClip = litehtml::position();
+  }
+}
 
 void container_qt::get_client_rect( litehtml::position& client ) const
 {
@@ -952,7 +1040,8 @@ void container_qt::print( QPagedPaintDevice* paintDevice )
   painter.translate( -scaled_printable_page_width / 2., ( -scaled_printable_page_height / 2. ) );
 
   litehtml::position clipRect = { 0, 0, scaled_printable_page_width, scaled_printable_page_height };
-  painter.setClipRect( QRect{ 0, 0, scaled_printable_page_width, scaled_printable_page_height } );
+
+  set_clip( clipRect, litehtml::border_radiuses() );
 
   for ( auto page = 0; page < number_of_pages; page++ )
   {
@@ -962,4 +1051,5 @@ void container_qt::print( QPagedPaintDevice* paintDevice )
       paintDevice->newPage();
     }
   }
+  del_clip();
 }
