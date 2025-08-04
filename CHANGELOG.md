@@ -1,24 +1,24 @@
 # Changelog
 
-## [2.1.0]
+## v2.1.0
 
-(unreleased)
+- re-add support for Qt 5
+- Tweak dark-mode stylesheet
+- consider print margins for text clipping
 
-- tweak dark-mode stylesheet
-
-## [2.0.0]
+## v2.0.0
 
 - Switch to Qt 6
 - Fix/improve font selection
 - Fix test executables: Fix exit code
 
-## [1.1.6]
+## v1.1.6
 
 ### Fixes
 
 - [#3](https://github.com/procitec/qlitehtmlbrowser/issues/3): Print Support
 
-## [1.1.5]
+## v1.1.5
 
 - Update `lighthtml` to Version 0.9
 
