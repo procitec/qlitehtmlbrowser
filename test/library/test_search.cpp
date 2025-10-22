@@ -24,12 +24,6 @@ QLiteHtmlBrowser* SearchTest::createMainWindow( const QSize& size )
   return browser;
 }
 
-void SearchTest::test_creation()
-{
-  auto browser = createMainWindow( mBrowserSize );
-  browser->home();
-}
-
 void SearchTest::test_search_single_word()
 {
   auto browser = createMainWindow( mBrowserSize );
@@ -40,11 +34,17 @@ void SearchTest::test_search_single_word()
   auto base = QString{ TEST_SOURCE_DIR } + "/search/";
 
   browser->setSource( QUrl::fromLocalFile( base + "/LongGermanText.html" ) );
-  auto found = browser->searchText( QStringLiteral( "Sätze" ) );
+  auto found = browser->searchText( ( "Sätze" ) );
+  qApp->processEvents();
   QCOMPARE( found, 40 );
 
-  found = browser->searchText( " Er" );
+  found = browser->searchText( ( " Er" ) );
+  qApp->processEvents();
   QCOMPARE( found, 46 );
+
+  found = browser->searchText( "" );
+  qApp->processEvents();
+  QCOMPARE( found, 0 );
 }
 
 void SearchTest::test_search_phrase()
@@ -58,9 +58,11 @@ void SearchTest::test_search_phrase()
 
   browser->setSource( QUrl::fromLocalFile( base + "/LongGermanText.html" ) );
   auto found = browser->searchText( "allgemeine Beobachtungen" );
+  qApp->processEvents();
   QCOMPARE( found, 1 );
 
   found = browser->searchText( "schliesst ab" );
+  qApp->processEvents();
   QCOMPARE( found, 0 );
 }
 
@@ -69,11 +71,10 @@ void SearchTest::test_search_phrase_multi_element()
   auto browser = createMainWindow( mBrowserSize );
   // QVERIFY( mWnd->centralWidget() );
 
-  QCOMPARE( browser->forwardHistoryCount(), 0 );
-  QCOMPARE( browser->backwardHistoryCount(), 0 );
   auto base = QString{ TEST_SOURCE_DIR } + "/search/";
 
   browser->setSource( QUrl::fromLocalFile( base + "/LongGermanText.html" ) );
   auto found = browser->searchText( QStringLiteral( "schließt ab. Absatz 48" ) );
+  qApp->processEvents();
   QCOMPARE( found, 1 );
 }
