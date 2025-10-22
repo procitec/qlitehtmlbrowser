@@ -34,6 +34,8 @@ public:
   int            searchText( const QString& text );
   void           scrollToNextSearchResult();
   void           scrollToPreviousSearchResult();
+  void           setHighlightColor( const QColor& color ) { mHighlightColor = color; }
+  QColor         highlightColor() const { return mHighlightColor; }
 
 protected:
   void paintEvent( QPaintEvent* ) override;
@@ -166,6 +168,6 @@ private:
   litehtml::position                  mClip                  = {};
   std::vector<TextSearchResult>       m_search_results       = {};
   int                                 m_current_result_index = -1;
-  const QColor                        mHighlightColor        = QColor( 255, 255, 0, 30 );
+  QColor                              mHighlightColor        = QColor( 255, 255, 0, 30 );
   QString                             mSearchTerm;
 };

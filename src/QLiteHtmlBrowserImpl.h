@@ -67,6 +67,8 @@ public:
   int  searchText( const QString& ); // search for given string and return number of found results
   void nextSearchResult();
   void previousSearchResult();
+  QColor highlightColor() const;
+  void   setHighlightColor( QColor color );
 
 protected:
   void changeEvent( QEvent* ) override;

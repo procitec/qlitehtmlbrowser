@@ -45,6 +45,8 @@ class QLITEHTMLBROWSER_EXPORT QLiteHtmlBrowser : public QWidget
   /// Set additional paths to resolve relative urls or resources. These paths are considered
   /// if the url could not get resolved against the given base url.
   Q_PROPERTY( QStringList searchPaths READ searchPaths WRITE setSearchPaths )
+  /// configure highlight color e.g. for search results
+  Q_PROPERTY( QColor highlightColor READ highlightColor WRITE setHighlightColor DESIGNABLE true )
 
 public:
   /// identifier for the type of resource that should get loaded as hint
@@ -138,9 +140,11 @@ public:
   void print( QPagedPaintDevice* printer ) const;
 
   /// search text in document
-  int  searchText( const QString& );
-  void scrollToNextSearchResult();
-  void scrollToPreviousSearchResult();
+  int    searchText( const QString& );
+  void   scrollToNextSearchResult();
+  void   scrollToPreviousSearchResult();
+  QColor highlightColor() const;
+  void   setHighlightColor( QColor color );
 
 public Q_SLOTS:
   /// set URL to given url. The URL may be an url to local file, QtHelp, http etc.

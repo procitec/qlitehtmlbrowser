@@ -177,3 +177,12 @@ void QLiteHtmlBrowser::scrollToPreviousSearchResult()
 {
   mImpl->previousSearchResult();
 }
+
+QColor QLiteHtmlBrowser::highlightColor() const
+{
+  return mImpl->highlightColor();
+}
+void QLiteHtmlBrowser::setHighlightColor( QColor color )
+{
+  mImpl->setHighlightColor( color );
+}

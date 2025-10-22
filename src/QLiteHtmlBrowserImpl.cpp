@@ -62,6 +62,24 @@ void QLiteHtmlBrowserImpl::setCSS( const QString& css )
   applyCSS();
 }
 
+void QLiteHtmlBrowserImpl::setHighlightColor( QColor color )
+{
+  if ( mContainer )
+  {
+    mContainer->setHighlightColor( color );
+  }
+}
+
+QColor QLiteHtmlBrowserImpl::highlightColor() const
+{
+  QColor color;
+  if ( mContainer )
+  {
+    color = mContainer->highlightColor();
+  }
+  return color;
+}
+
 QString QLiteHtmlBrowserImpl::readResourceCss( const QString& resource ) const
 {
   QString css;
@@ -270,7 +288,7 @@ double QLiteHtmlBrowserImpl::scale() const
   return scale;
 }
 
-QByteArray QLiteHtmlBrowserImpl::loadResource( int type, const QUrl& url )
+QByteArray QLiteHtmlBrowserImpl::loadResource( int /*type*/, const QUrl& url )
 {
   QByteArray data;
 
