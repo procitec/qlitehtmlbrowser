@@ -1379,7 +1379,7 @@ void container_qt::draw_highlights( litehtml::uint_ptr hdc )
 {
   for ( auto it = m_search_results.begin(); it != m_search_results.end(); ++it )
   {
-    const auto         result = ( *it );
+    const auto result = ( *it );
     for ( auto it = result.fragments.begin(); it != result.fragments.end(); ++it )
     {
       litehtml::position pos = ( *it ).pos;

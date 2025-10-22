@@ -10,7 +10,7 @@ class SearchTest : public TestBase
   Q_OBJECT
 public:
   SearchTest()
-    : TestBase( qApp->arguments() ) {};
+    : TestBase( qApp->arguments() ){};
   virtual ~SearchTest() = default;
 
 private Q_SLOTS:

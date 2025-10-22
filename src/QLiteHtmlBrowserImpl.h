@@ -58,13 +58,13 @@ public:
   void backward();
   void reload();
 
-  int  backwardHistoryCount() const { return ( 1 < mBWHistStack.count() ) ? mBWHistStack.count() - 1 : 0; }
-  int  forwardHistoryCount() const { return ( 0 < mFWHistStack.count() ) ? mFWHistStack.count() : 0; }
+  int backwardHistoryCount() const { return ( 1 < mBWHistStack.count() ) ? mBWHistStack.count() - 1 : 0; }
+  int forwardHistoryCount() const { return ( 0 < mFWHistStack.count() ) ? mFWHistStack.count() : 0; }
 
   const QString& caption() const;
   void           print( QPagedPaintDevice* printer ) const;
 
-  int searchText( const QString& ); // search for given string and return number of found results
+  int  searchText( const QString& ); // search for given string and return number of found results
   void nextSearchResult();
   void previousSearchResult();
 

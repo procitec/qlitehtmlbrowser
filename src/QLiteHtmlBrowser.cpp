@@ -130,7 +130,6 @@ void QLiteHtmlBrowser::clearHistory()
   mImpl->clearHistory();
 }
 
-
 int QLiteHtmlBrowser::backwardHistoryCount() const
 {
   return mImpl->backwardHistoryCount();

@@ -407,7 +407,6 @@ void QLiteHtmlBrowserImpl::setOpenExternalLinks( bool open )
   }
 }
 
-
 void QLiteHtmlBrowserImpl::forward()
 {
   if ( !mFWHistStack.isEmpty() )

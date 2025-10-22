@@ -206,9 +206,9 @@ void TestBrowser::export2pdf()
 }
 void TestBrowser::searchText( const QString& text )
 {
-    auto found = mBrowser->searchText( text );
-    mPreviousSearchResult->setEnabled( found > 0 );
-    mNextSearchResult->setEnabled( found > 0 );
+  auto found = mBrowser->searchText( text );
+  mPreviousSearchResult->setEnabled( found > 0 );
+  mNextSearchResult->setEnabled( found > 0 );
 }
 
 void TestBrowser::previousSearchResult()

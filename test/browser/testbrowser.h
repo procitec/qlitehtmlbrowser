@@ -43,10 +43,10 @@ private:
   QHelpBrowser* mBrowser;
   QMenuBar      mMenu;
   QDir          mLastDirectory;
-  QLineEdit*    mUrl = nullptr;
+  QLineEdit*    mUrl        = nullptr;
   QLineEdit*    mSearchText = nullptr;
   QToolBar      mToolBar;
-  QHelpEngine*  mHelpEngine = nullptr;
+  QHelpEngine*  mHelpEngine           = nullptr;
   QAction*      mNextSearchResult     = nullptr;
   QAction*      mPreviousSearchResult = nullptr;
 };

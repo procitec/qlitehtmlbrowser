@@ -126,24 +126,24 @@ private:
     litehtml::position        bounding_box; // bounding box over all elements
   };
 
-  int                                  search_text( litehtml::document::ptr doc, const std::string& search_term, bool case_sensitive = true );
-  bool                                 next_search_result();
-  bool                                 previous_search_result();
-  const TextSearchResult*              get_current_result() const;
-  void                                 highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const std::string& text );
-  void                                 draw_highlights( litehtml::uint_ptr hdc );
-  void                                 clear_highlights() { m_search_results.clear(); }
-  std::string                          normalizeWhitespace( const std::string& text );
-  void                                 searchTextInDocument( litehtml::document::ptr        doc,
-                                                             const std::string&             search_term,
-                                                             std::vector<TextSearchResult>& results,
-                                                             bool                           case_sensitive = true );
-  void                                 collectTextFragments( litehtml::element::ptr el, std::vector<TextFragment>& fragments, std::string& fullText );
-  litehtml::position                   calculatePreciseBoundingBox( const std::vector<TextFragment>& allFragments,
-                                                                    int                              searchStart,
-                                                                    int                              searchEnd,
-                                                                    std::vector<TextFragment>&       matchedFragments );
-  void                                 scrollToSearchResult( const TextSearchResult* );
+  int                     search_text( litehtml::document::ptr doc, const std::string& search_term, bool case_sensitive = true );
+  bool                    next_search_result();
+  bool                    previous_search_result();
+  const TextSearchResult* get_current_result() const;
+  void                    highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const std::string& text );
+  void                    draw_highlights( litehtml::uint_ptr hdc );
+  void                    clear_highlights() { m_search_results.clear(); }
+  std::string             normalizeWhitespace( const std::string& text );
+  void                    searchTextInDocument( litehtml::document::ptr        doc,
+                                                const std::string&             search_term,
+                                                std::vector<TextSearchResult>& results,
+                                                bool                           case_sensitive = true );
+  void                    collectTextFragments( litehtml::element::ptr el, std::vector<TextFragment>& fragments, std::string& fullText );
+  litehtml::position      calculatePreciseBoundingBox( const std::vector<TextFragment>& allFragments,
+                                                       int                              searchStart,
+                                                       int                              searchEnd,
+                                                       std::vector<TextFragment>&       matchedFragments );
+  void                    scrollToSearchResult( const TextSearchResult* );
 
   std::shared_ptr<litehtml::document> mDocument;
   QByteArray                          mDocumentSource;
@@ -163,7 +163,7 @@ private:
   QString                             mMasterCSS;
   QString                             mUserCSS;
   QStack<litehtml::position>          mClipStack;
-  litehtml::position                  mClip = {};
+  litehtml::position                  mClip                  = {};
   std::vector<TextSearchResult>       m_search_results       = {};
   int                                 m_current_result_index = -1;
   const QColor                        mHighlightColor        = QColor( 255, 255, 0, 30 );
