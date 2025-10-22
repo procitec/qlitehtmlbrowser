@@ -908,6 +908,7 @@ void container_qt::setScale( double scale )
   auto relV = ( 0 < verticalScrollBar()->maximum() ) ? static_cast<float>( verticalScrollBar()->value() ) / verticalScrollBar()->maximum() : 0.0;
   mScale    = std::clamp( scale, mMinScale, mMaxScale );
   render();
+  searchText( mSearchTerm );
   horizontalScrollBar()->setValue( std::floor( relH * horizontalScrollBar()->maximum() ) );
   verticalScrollBar()->setValue( std::floor( relV * verticalScrollBar()->maximum() ) );
 }
@@ -997,6 +998,20 @@ int container_qt::scaled( int i ) const
 int container_qt::inv_scaled( int i ) const
 {
   return std::floor( i * mScale );
+}
+
+QSize container_qt::inv_scaled( const QSize& size ) const
+{
+  return QSize( std::floor( size.width() * mScale ), std::floor( size.height() * mScale ) );
+}
+
+QPoint container_qt::inv_scaled( const QPoint& point ) const
+{
+  return QPoint( std::floor( point.x() * mScale ), std::floor( point.y() * mScale ) );
+}
+QRect container_qt::inv_scaled( const QRect& rect ) const
+{
+  return QRect( inv_scaled( rect.topLeft() ), inv_scaled( rect.size() ) );
 }
 
 void container_qt::mouseMoveEvent( QMouseEvent* e )
@@ -1104,7 +1119,8 @@ void container_qt::print( QPagedPaintDevice* paintDevice )
 
 int container_qt::searchText( const QString& text )
 {
-  search_text( mDocument, text.toStdString(), true );
+  mSearchTerm = text;
+  search_text( mDocument, mSearchTerm.toStdString(), true );
 
   viewport()->update();
   auto* result = get_current_result();
@@ -1388,7 +1404,7 @@ void container_qt::highlight_text_at_position( litehtml::uint_ptr hdc, const lit
 
   auto scroll_pos = -scrollBarPos();
 
-  p->drawRect( pos.x + scroll_pos.x(), pos.y + scroll_pos.y(), pos.width, pos.height );
+  p->drawRect( ( QRect( pos.x + scroll_pos.x(), pos.y + scroll_pos.y(), pos.width, pos.height ) ) );
 
   p->restore();
 }

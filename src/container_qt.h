@@ -94,8 +94,11 @@ private:
   QRect                  scaled( const QRect& rect ) const;
   QPoint                 scaled( const QPoint& point ) const;
   int                    scaled( int i ) const;
+  QPoint                 inv_scaled( const QPoint& point ) const;
   int                    inv_scaled( int i ) const;
+  QSize                  inv_scaled( const QSize& size ) const;
   QPixmap                load_image_data( const QUrl& url );
+  QRect                  inv_scaled( const QRect& rect ) const;
   QPixmap                load_pixmap( const QUrl& url );
   QUrl                   resolveUrl( const char* src, const char* baseurl ) const;
   void                   render();
@@ -164,4 +167,5 @@ private:
   std::vector<TextSearchResult>       m_search_results       = {};
   int                                 m_current_result_index = -1;
   const QColor                        mHighlightColor        = QColor( 255, 255, 0, 30 );
+  QString                             mSearchTerm;
 };
