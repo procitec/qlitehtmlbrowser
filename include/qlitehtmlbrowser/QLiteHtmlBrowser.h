@@ -128,8 +128,6 @@ public:
   bool    isBackwardAvailable() const;
   bool    isForwardAvailable() const;
   void    clearHistory();
-  QString historyTitle( int ) const;
-  QUrl    historyUrl( int ) const;
   int     backwardHistoryCount() const;
   int     forwardHistoryCount() const;
 
@@ -141,8 +139,8 @@ public:
 
   /// search text in document
   int searchText( const QString& );
-  void nextSearchResult();
-  void previousSearchResult();
+  void scrollToNextSearchResult();
+  void scrollToPreviousSearchResult();
 
 public Q_SLOTS:
   /// set URL to given url. The URL may be an url to local file, QtHelp, http etc.

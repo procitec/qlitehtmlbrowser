@@ -130,15 +130,6 @@ void QLiteHtmlBrowser::clearHistory()
   mImpl->clearHistory();
 }
 
-QString QLiteHtmlBrowser::historyTitle( int idx ) const
-{
-  return mImpl->historyTitle( idx );
-}
-
-QUrl QLiteHtmlBrowser::historyUrl( int idx ) const
-{
-  return mImpl->historyUrl( idx );
-}
 
 int QLiteHtmlBrowser::backwardHistoryCount() const
 {
@@ -178,12 +169,12 @@ int QLiteHtmlBrowser::searchText( const QString& text )
   return mImpl->searchText( text );
 }
 
-void QLiteHtmlBrowser::nextSearchResult()
+void QLiteHtmlBrowser::scrollToNextSearchResult()
 {
   mImpl->nextSearchResult();
 }
 
-void QLiteHtmlBrowser::previousSearchResult()
+void QLiteHtmlBrowser::scrollToPreviousSearchResult()
 {
   mImpl->previousSearchResult();
 }

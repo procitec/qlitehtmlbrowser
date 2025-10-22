@@ -107,28 +107,40 @@ private:
   MousePos               convertMousePos( const QMouseEvent* event );
 
 private:
-  // Struktur für gefundene Texttreffer mit Position
-  struct TextSearchResult
+  struct TextFragment
   {
-    std::string            matched_text; // Der gefundene Text
-    litehtml::position     element_pos;  // Position des Elements
-    int                    char_offset;  // Zeichenoffset im Textknoten
-    litehtml::element::ptr element;      // Zeiger auf das Element
+    std::string            text;
+    litehtml::element::ptr element;
+    litehtml::position     pos;
+    int                    start_offset; // Offset in element text
+    int                    end_offset;   // end Offset in element text
   };
 
-  void                                 search_text_in_element( litehtml::element::ptr         el,
-                                                               const std::string&             search_term,
-                                                               std::vector<TextSearchResult>& results,
-                                                               bool                           case_sensitive = true );
+  struct TextSearchResult
+  {
+    std::string               matched_text;
+    std::vector<TextFragment> fragments;    // may contains multiple elements
+    litehtml::position        bounding_box; // bounding box over all elements
+  };
+
   int                                  search_text( litehtml::document::ptr doc, const std::string& search_term, bool case_sensitive = true );
   bool                                 next_search_result();
   bool                                 previous_search_result();
   const TextSearchResult*              get_current_result() const;
-  const std::vector<TextSearchResult>& get_all_results() const { return m_search_results; }
-  // void                                 draw_current_highlight( litehtml::uint_ptr hdc );
   void                                 highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const std::string& text );
   void                                 draw_highlights( litehtml::uint_ptr hdc );
   void                                 clear_highlights() { m_search_results.clear(); }
+  std::string                          normalizeWhitespace( const std::string& text );
+  void                                 searchTextInDocument( litehtml::document::ptr        doc,
+                                                             const std::string&             search_term,
+                                                             std::vector<TextSearchResult>& results,
+                                                             bool                           case_sensitive = true );
+  void                                 collectTextFragments( litehtml::element::ptr el, std::vector<TextFragment>& fragments, std::string& fullText );
+  litehtml::position                   calculatePreciseBoundingBox( const std::vector<TextFragment>& allFragments,
+                                                                    int                              searchStart,
+                                                                    int                              searchEnd,
+                                                                    std::vector<TextFragment>&       matchedFragments );
+  void                                 scrollToSearchResult( const TextSearchResult* );
 
   std::shared_ptr<litehtml::document> mDocument;
   QByteArray                          mDocumentSource;

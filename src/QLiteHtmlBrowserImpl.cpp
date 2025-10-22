@@ -407,12 +407,6 @@ void QLiteHtmlBrowserImpl::setOpenExternalLinks( bool open )
   }
 }
 
-QUrl QLiteHtmlBrowserImpl::historyUrl( int ) const
-{
-  // todo: implementation
-  qWarning() << "not implemented yet";
-  return {};
-}
 
 void QLiteHtmlBrowserImpl::forward()
 {

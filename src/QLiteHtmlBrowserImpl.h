@@ -58,10 +58,6 @@ public:
   void backward();
   void reload();
 
-  // todo from there is the title?
-  QString historyTitle( int ) const { return {}; }
-
-  QUrl historyUrl( int ) const;
   int  backwardHistoryCount() const { return ( 1 < mBWHistStack.count() ) ? mBWHistStack.count() - 1 : 0; }
   int  forwardHistoryCount() const { return ( 0 < mFWHistStack.count() ) ? mFWHistStack.count() : 0; }
 

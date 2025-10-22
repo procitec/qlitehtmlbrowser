@@ -70,21 +70,12 @@ TestBrowser::TestBrowser()
 
   mSearchText = new QLineEdit( this );
   mToolBar.addWidget( mSearchText );
-  connect( mSearchText, &QLineEdit::editingFinished, this,
+  connect( mSearchText, &QLineEdit::returnPressed, this,
            [this]()
            {
-             if ( mSearchText )
+             if ( mSearchText != nullptr )
              {
-               auto text = mSearchText->text();
-               if ( !text.isEmpty() )
-               {
-                 searchText( mSearchText->text() );
-               }
-               else
-               {
-                 mPreviousSearchResult->setEnabled( false );
-                 mNextSearchResult->setEnabled( false );
-               }
+               searchText( mSearchText->text() );
              }
            } );
 
@@ -215,20 +206,17 @@ void TestBrowser::export2pdf()
 }
 void TestBrowser::searchText( const QString& text )
 {
-  if ( !text.isEmpty() )
-  {
     auto found = mBrowser->searchText( text );
-    mPreviousSearchResult->setEnabled( found );
-    mNextSearchResult->setEnabled( found );
-  }
+    mPreviousSearchResult->setEnabled( found > 0 );
+    mNextSearchResult->setEnabled( found > 0 );
 }
 
 void TestBrowser::previousSearchResult()
 {
-  mBrowser->previousSearchResult();
+  mBrowser->scrollToPreviousSearchResult();
 }
 
 void TestBrowser::nextSearchResult()
 {
-  mBrowser->nextSearchResult();
+  mBrowser->scrollToNextSearchResult();
 }
