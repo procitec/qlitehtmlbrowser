@@ -8,6 +8,8 @@
 // #include <QtPrintSupport/QPrinter>
 #include <QtGui/QPainter>
 #include <QtGui/QPdfWriter>
+#include <QtCore/QDebug>
+#include <QtWidgets/QStyle>
 
 TestBrowser::TestBrowser()
 {
@@ -65,6 +67,38 @@ TestBrowser::TestBrowser()
                mUrl->setText( url.toString() );
              }
            } );
+
+  mSearchText = new QLineEdit( this );
+  mToolBar.addWidget( mSearchText );
+  connect( mSearchText, &QLineEdit::editingFinished, this,
+           [this]()
+           {
+             if ( mSearchText )
+             {
+               auto text = mSearchText->text();
+               if ( !text.isEmpty() )
+               {
+                 searchText( mSearchText->text() );
+               }
+               else
+               {
+                 mPreviousSearchResult->setEnabled( false );
+                 mNextSearchResult->setEnabled( false );
+               }
+             }
+           } );
+
+  // Vorheriges mit Standard-Icon (Pfeil nach oben)
+  mPreviousSearchResult = new QAction( style()->standardIcon( QStyle::SP_ArrowUp ), "Vorheriges", this );
+  connect( mPreviousSearchResult, &QAction::triggered, this, [this]() { previousSearchResult(); } );
+  mPreviousSearchResult->setEnabled( false );
+  mToolBar.addAction( mPreviousSearchResult );
+
+  mNextSearchResult = new QAction( style()->standardIcon( QStyle::SP_ArrowDown ), "Nächstes", this );
+  mNextSearchResult->setEnabled( false );
+  connect( mNextSearchResult, &QAction::triggered, this, [this]() { nextSearchResult(); } );
+
+  mToolBar.addAction( mNextSearchResult );
 
   setMenuBar( &mMenu );
   addToolBar( Qt::TopToolBarArea, &mToolBar );
@@ -178,4 +212,23 @@ void TestBrowser::export2pdf()
     }
   }
 #endif
+}
+void TestBrowser::searchText( const QString& text )
+{
+  if ( !text.isEmpty() )
+  {
+    auto found = mBrowser->searchText( text );
+    mPreviousSearchResult->setEnabled( found );
+    mNextSearchResult->setEnabled( found );
+  }
+}
+
+void TestBrowser::previousSearchResult()
+{
+  mBrowser->previousSearchResult();
+}
+
+void TestBrowser::nextSearchResult()
+{
+  mBrowser->nextSearchResult();
 }

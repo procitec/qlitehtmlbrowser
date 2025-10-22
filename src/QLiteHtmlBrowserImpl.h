@@ -68,6 +68,10 @@ public:
   const QString& caption() const;
   void           print( QPagedPaintDevice* printer ) const;
 
+  int searchText( const QString& ); // search for given string and return number of found results
+  void nextSearchResult();
+  void previousSearchResult();
+
 protected:
   void changeEvent( QEvent* ) override;
   void mousePressEvent( QMouseEvent* ) override;

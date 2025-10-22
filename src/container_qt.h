@@ -31,6 +31,9 @@ public:
   void           setOpenExternalLinks( bool open ) { mOpenExternLinks = open; }
   const QString& caption() const { return mCaption; }
   void           print( QPagedPaintDevice* paintDevice );
+  int            searchText( const QString& text );
+  void           scrollToNextSearchResult();
+  void           scrollToPreviousSearchResult();
 
 protected:
   void paintEvent( QPaintEvent* ) override;
@@ -73,7 +76,6 @@ protected:
 
   void get_media_features( litehtml::media_features& media ) const override;
   void get_language( litehtml::string& language, litehtml::string& culture ) const override;
-
   void resizeEvent( QResizeEvent* event ) override;
   bool event( QEvent* event ) override;
 
@@ -105,6 +107,29 @@ private:
   MousePos               convertMousePos( const QMouseEvent* event );
 
 private:
+  // Struktur für gefundene Texttreffer mit Position
+  struct TextSearchResult
+  {
+    std::string            matched_text; // Der gefundene Text
+    litehtml::position     element_pos;  // Position des Elements
+    int                    char_offset;  // Zeichenoffset im Textknoten
+    litehtml::element::ptr element;      // Zeiger auf das Element
+  };
+
+  void                                 search_text_in_element( litehtml::element::ptr         el,
+                                                               const std::string&             search_term,
+                                                               std::vector<TextSearchResult>& results,
+                                                               bool                           case_sensitive = true );
+  int                                  search_text( litehtml::document::ptr doc, const std::string& search_term, bool case_sensitive = true );
+  bool                                 next_search_result();
+  bool                                 previous_search_result();
+  const TextSearchResult*              get_current_result() const;
+  const std::vector<TextSearchResult>& get_all_results() const { return m_search_results; }
+  // void                                 draw_current_highlight( litehtml::uint_ptr hdc );
+  void                                 highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const std::string& text );
+  void                                 draw_highlights( litehtml::uint_ptr hdc );
+  void                                 clear_highlights() { m_search_results.clear(); }
+
   std::shared_ptr<litehtml::document> mDocument;
   QByteArray                          mDocumentSource;
   QUrl                                mBaseUrl;
@@ -124,4 +149,7 @@ private:
   QString                             mUserCSS;
   QStack<litehtml::position>          mClipStack;
   litehtml::position                  mClip = {};
+  std::vector<TextSearchResult>       m_search_results       = {};
+  int                                 m_current_result_index = -1;
+  const QColor                        mHighlightColor        = QColor( 255, 255, 0, 30 );
 };

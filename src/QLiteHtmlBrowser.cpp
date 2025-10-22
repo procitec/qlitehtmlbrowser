@@ -172,3 +172,18 @@ void QLiteHtmlBrowser::print( QPagedPaintDevice* printer ) const
     mImpl->print( printer );
   }
 }
+
+int QLiteHtmlBrowser::searchText( const QString& text )
+{
+  return mImpl->searchText( text );
+}
+
+void QLiteHtmlBrowser::nextSearchResult()
+{
+  mImpl->nextSearchResult();
+}
+
+void QLiteHtmlBrowser::previousSearchResult()
+{
+  mImpl->previousSearchResult();
+}

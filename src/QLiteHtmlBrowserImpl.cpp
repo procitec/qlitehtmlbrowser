@@ -455,3 +455,30 @@ void QLiteHtmlBrowserImpl::print( QPagedPaintDevice* printer ) const
     mContainer->print( printer );
   }
 }
+
+int QLiteHtmlBrowserImpl::searchText( const QString& phrase )
+{
+  auto ret = 0;
+  if ( mContainer && !phrase.isEmpty() )
+  {
+    ret = mContainer->searchText( phrase );
+  }
+
+  return ret;
+}
+
+void QLiteHtmlBrowserImpl::nextSearchResult()
+{
+  if ( mContainer )
+  {
+    mContainer->scrollToNextSearchResult();
+  }
+}
+
+void QLiteHtmlBrowserImpl::previousSearchResult()
+{
+  if ( mContainer )
+  {
+    mContainer->scrollToPreviousSearchResult();
+  }
+}

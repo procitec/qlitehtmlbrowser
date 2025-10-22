@@ -139,6 +139,11 @@ public:
   /// print document into paged paint device like a printer or pdf
   void print( QPagedPaintDevice* printer ) const;
 
+  /// search text in document
+  int searchText( const QString& );
+  void nextSearchResult();
+  void previousSearchResult();
+
 public Q_SLOTS:
   /// set URL to given url. The URL may be an url to local file, QtHelp, http etc.
   /// The URL could contain an anchor element. Currently parameters to URL like

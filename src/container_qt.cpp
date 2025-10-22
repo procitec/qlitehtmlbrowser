@@ -30,6 +30,44 @@ static const auto CSS_GENERIC_FONT_TO_QFONT_STYLEHINT = QMap<QString, QFont::Sty
                                                                                          { "ui-sans-serif", QFont::StyleHint::SansSerif },
                                                                                          { "ui-monospace", QFont::StyleHint::Monospace } };
 
+#include <iostream>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <litehtml.h>
+
+//   // Textsuche durchführen (case-sensitive)
+//   std::string search_term = "Beispiel";
+//   int result_count = container.search_text(doc, search_term, true);
+
+//   std::cout << "Gefunden: " << result_count << " Vorkommen von '"
+//             << search_term << "'" << std::endl;
+
+//   // Durch alle Ergebnisse iterieren
+//   const auto& all_results = container.get_all_results();
+//   for (size_t i = 0; i < all_results.size(); ++i) {
+//     const auto& result = all_results[i];
+//     std::cout << "Treffer " << (i + 1) << ":" << std::endl;
+//     std::cout << "  Text: '" << result.matched_text << "'" << std::endl;
+//     std::cout << "  Position: x=" << result.element_pos.x
+//               << ", y=" << result.element_pos.y << std::endl;
+//     std::cout << "  Größe: " << result.element_pos.width
+//               << "x" << result.element_pos.height << std::endl;
+//     std::cout << "  Offset: " << result.char_offset << std::endl;
+//   }
+
+//   // Navigation durch Suchergebnisse
+//   container.next_search_result();
+//   const TextSearchResult* current = container.get_current_result();
+//   if (current) {
+//     std::cout << "\nAktueller Treffer an Position: ("
+//               << current->element_pos.x << ", "
+//               << current->element_pos.y << ")" << std::endl;
+//   }
+
+//   return 0;
+// }
+
 container_qt::container_qt( QWidget* parent )
   : QAbstractScrollArea( parent )
 {
@@ -123,7 +161,10 @@ void container_qt::paintEvent( QPaintEvent* event )
       auto                     margins    = viewport()->contentsMargins();
       auto                     scroll_pos = -scrollBarPos();
 
-      mDocument->draw( reinterpret_cast<litehtml::uint_ptr>( &p ), margins.left() + scroll_pos.x(), margins.top() + scroll_pos.y(), &clipRect );
+      auto hdc = reinterpret_cast<litehtml::uint_ptr>( &p );
+
+      mDocument->draw( hdc, margins.left() + scroll_pos.x(), margins.top() + scroll_pos.y(), &clipRect );
+      draw_highlights( hdc );
     }
   }
 }
@@ -1007,7 +1048,12 @@ void container_qt::mousePressEvent( QMouseEvent* e )
         e->accept();
       }
       else
+      {
+        auto elem = mDocument->get_over_element();
+        qDebug() << elem->get_placement().x << elem->get_tagName();
+
         e->ignore();
+      }
     }
     else
       e->ignore();
@@ -1043,6 +1089,8 @@ void container_qt::print( QPagedPaintDevice* paintDevice )
 
   set_clip( clipRect, litehtml::border_radiuses() );
 
+  clear_highlights();
+
   for ( auto page = 0; page < number_of_pages; page++ )
   {
     mDocument->draw( reinterpret_cast<litehtml::uint_ptr>( &painter ), 0, -page * ( scaled_printable_page_height ), &clipRect );
@@ -1052,4 +1100,207 @@ void container_qt::print( QPagedPaintDevice* paintDevice )
     }
   }
   del_clip();
+}
+
+int container_qt::searchText( const QString& text )
+{
+  search_text( mDocument, text.toStdString(), true );
+
+  // for ( auto& result : m_search_results )
+  // {
+  //   std::string ftxt;
+  //   result.element->get_text( ftxt );
+  //   qDebug() << "found" << qPrintable( ftxt.c_str() ) << "at (" << result.element_pos.top() << result.element_pos.left() << ")";
+  // }
+
+  auto* result = get_current_result();
+
+  if ( result )
+  {
+    horizontalScrollBar()->setValue( result->element_pos.left() );
+    verticalScrollBar()->setValue( result->element_pos.top() );
+    update();
+  }
+
+  return m_search_results.size();
+}
+
+// Rekursive Funktion zur Textsuche im DOM-Baum
+void container_qt::search_text_in_element( litehtml::element::ptr         el,
+                                           const std::string&             search_term,
+                                           std::vector<TextSearchResult>& results,
+                                           bool                           case_sensitive )
+{
+  if ( !el )
+    return;
+
+  // Text des aktuellen Elements holen
+  std::string text;
+  el->get_text( text );
+  if ( el->is_text() && !text.empty() )
+  {
+    std::string element_text( text );
+    std::string search_str = search_term;
+
+    // Bei case-insensitive Suche beide Strings in Kleinbuchstaben umwandeln
+    if ( !case_sensitive )
+    {
+      std::transform( element_text.begin(), element_text.end(), element_text.begin(), ::tolower );
+      std::transform( search_str.begin(), search_str.end(), search_str.begin(), ::tolower );
+    }
+
+    // Alle Vorkommen im Text finden
+    size_t pos = 0;
+    while ( ( pos = element_text.find( search_str, pos ) ) != std::string::npos )
+    {
+      TextSearchResult result;
+      result.matched_text = text.substr( pos, pos + search_term.length() ); // Original-Text (mit Groß-/Kleinschreibung)
+      result.element      = el;
+      result.char_offset  = static_cast<int>( pos );
+      result.element_pos  = el->get_placement(); // Absolute Position im Dokument
+
+      results.push_back( result );
+      pos += search_term.length(); // Weiter nach dem Fund suchen
+    }
+  }
+
+  // Rekursiv durch alle Kindelemente gehen
+  for ( auto it = el->children().begin(); it != el->children().end(); ++it )
+  {
+    search_text_in_element( ( *it ), search_term, results, case_sensitive );
+  }
+}
+
+// Textsuche durchführen
+int container_qt::search_text( litehtml::document::ptr doc, const std::string& search_term, bool case_sensitive )
+{
+  m_search_results.clear();
+  m_current_result_index = -1;
+
+  if ( !doc || search_term.empty() )
+  {
+    return 0;
+  }
+
+  // Suche vom Root-Element starten
+  search_text_in_element( doc->root(), search_term, m_search_results, case_sensitive );
+
+  if ( !m_search_results.empty() )
+  {
+    m_current_result_index = 0;
+  }
+
+  return static_cast<int>( m_search_results.size() );
+}
+
+// Zum nächsten Suchergebnis springen
+bool container_qt::next_search_result()
+{
+  if ( m_search_results.empty() )
+    return false;
+
+  m_current_result_index++;
+  if ( m_current_result_index >= static_cast<int>( m_search_results.size() ) )
+  {
+    m_current_result_index = 0; // Wrap-around
+  }
+  return true;
+}
+
+// Zum vorherigen Suchergebnis springen
+bool container_qt::previous_search_result()
+{
+  if ( m_search_results.empty() )
+    return false;
+
+  m_current_result_index--;
+  if ( m_current_result_index < 0 )
+  {
+    m_current_result_index = static_cast<int>( m_search_results.size() ) - 1; // Wrap-around
+  }
+  return true;
+}
+
+// Aktuelles Suchergebnis mit Position holen
+const container_qt::TextSearchResult* container_qt::get_current_result() const
+{
+  if ( m_current_result_index >= 0 && m_current_result_index < static_cast<int>( m_search_results.size() ) )
+  {
+    return &m_search_results[m_current_result_index];
+  }
+  return nullptr;
+}
+
+void container_qt::draw_highlights( litehtml::uint_ptr hdc )
+{
+  for ( auto it = m_search_results.begin(); it != m_search_results.end(); ++it )
+  {
+    const auto         result = ( *it );
+    litehtml::position pos    = result.element_pos;
+    highlight_text_at_position( hdc, pos, result.matched_text );
+  }
+}
+
+// // highlight current search result
+// void container_qt::draw_current_highlight( litehtml::uint_ptr hdc )
+// {
+//   const TextSearchResult* result = get_current_result();
+//   if ( !result )
+//     return;
+
+//   // position of found text
+//   litehtml::position pos = result->element_pos;
+
+//   highlight_text_at_position( hdc, pos, result->matched_text );
+// }
+
+// draw highlighted text at position
+void container_qt::highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const std::string& text )
+{
+
+  qDebug() << "Highlighting text '" << QString::fromStdString( text ) << "' at position (" << pos.x << ", " << pos.y << ") with size " << pos.width
+           << "x" << pos.height;
+
+  QPainter* p( reinterpret_cast<QPainter*>( hdc ) );
+  p->save();
+  applyClip( p );
+
+  p->setPen( Qt::NoPen );
+  p->setBrush( mHighlightColor );
+
+  auto scroll_pos = -scrollBarPos();
+
+  p->drawRect( pos.x + scroll_pos.x(), pos.y + scroll_pos.y(), pos.width, pos.height );
+
+  p->restore();
+}
+
+void container_qt::scrollToNextSearchResult()
+{
+  if ( next_search_result() )
+  {
+    const auto* result = get_current_result();
+
+    if ( result != nullptr )
+    {
+      // force repaint to show highlighted text
+      horizontalScrollBar()->setValue( result->element_pos.left() );
+      verticalScrollBar()->setValue( result->element_pos.top() );
+    }
+  }
+}
+
+void container_qt::scrollToPreviousSearchResult()
+{
+  if ( previous_search_result() )
+  {
+    const auto* result = get_current_result();
+
+    if ( result != nullptr )
+    {
+      // force repaint to show highlighted text
+      horizontalScrollBar()->setValue( result->element_pos.left() );
+      verticalScrollBar()->setValue( result->element_pos.top() );
+    }
+  }
 }
