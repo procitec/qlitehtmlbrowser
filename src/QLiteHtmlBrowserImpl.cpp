@@ -453,7 +453,7 @@ void QLiteHtmlBrowserImpl::print( QPagedPaintDevice* printer ) const
 int QLiteHtmlBrowserImpl::searchText( const QString& phrase )
 {
   auto ret = 0;
-  if ( mContainer && !phrase.isEmpty() )
+  if ( mContainer )
   {
     ret = mContainer->searchText( phrase );
   }
