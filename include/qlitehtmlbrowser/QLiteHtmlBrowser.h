@@ -125,11 +125,11 @@ public:
   /// set file system paths where relative urls or resources are resolved
   void setSearchPaths( const QStringList& );
 
-  bool    isBackwardAvailable() const;
-  bool    isForwardAvailable() const;
-  void    clearHistory();
-  int     backwardHistoryCount() const;
-  int     forwardHistoryCount() const;
+  bool isBackwardAvailable() const;
+  bool isForwardAvailable() const;
+  void clearHistory();
+  int  backwardHistoryCount() const;
+  int  forwardHistoryCount() const;
 
   /// return title for url if available, else returns empty string
   const QString& caption() const;
@@ -138,7 +138,7 @@ public:
   void print( QPagedPaintDevice* printer ) const;
 
   /// search text in document
-  int searchText( const QString& );
+  int  searchText( const QString& );
   void scrollToNextSearchResult();
   void scrollToPreviousSearchResult();
 
