@@ -5,13 +5,13 @@
 
 class QLiteHtmlBrowser;
 
-class SearchTest : public TestBase
+class FindTest : public TestBase
 {
   Q_OBJECT
 public:
-  SearchTest()
+  FindTest()
     : TestBase( qApp->arguments() ){};
-  virtual ~SearchTest() = default;
+  virtual ~FindTest() = default;
 
 private Q_SLOTS:
   void init() { TestBase::init(); }
@@ -21,9 +21,9 @@ private Q_SLOTS:
     mWnd.reset();
     mWnd = nullptr;
   }
-  void test_search_single_word();
-  void test_search_phrase();
-  void test_search_phrase_multi_element();
+  void test_find_single_word();
+  void test_find_phrase();
+  void test_find_phrase_multi_element();
 
 private:
   QLiteHtmlBrowser*            createMainWindow( const QSize& );

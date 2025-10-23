@@ -163,19 +163,19 @@ void QLiteHtmlBrowser::print( QPagedPaintDevice* printer ) const
   }
 }
 
-int QLiteHtmlBrowser::searchText( const QString& text )
+int QLiteHtmlBrowser::findText( const QString& text )
 {
-  return mImpl->searchText( text );
+  return mImpl->findText( text );
 }
 
-void QLiteHtmlBrowser::scrollToNextSearchResult()
+void QLiteHtmlBrowser::findNextMatch()
 {
-  mImpl->nextSearchResult();
+  mImpl->nextFindMatch();
 }
 
-void QLiteHtmlBrowser::scrollToPreviousSearchResult()
+void QLiteHtmlBrowser::findPreviousMatch()
 {
-  mImpl->previousSearchResult();
+  mImpl->previousFindMatch();
 }
 
 QColor QLiteHtmlBrowser::highlightColor() const

@@ -64,9 +64,9 @@ public:
   const QString& caption() const;
   void           print( QPagedPaintDevice* printer ) const;
 
-  int    searchText( const QString& ); // search for given string and return number of found results
-  void   nextSearchResult();
-  void   previousSearchResult();
+  int    findText( const QString& ); // search for given string and return number of found matches
+  void   nextFindMatch();
+  void   previousFindMatch();
   QColor highlightColor() const;
   void   setHighlightColor( QColor color );
 

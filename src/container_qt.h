@@ -31,9 +31,9 @@ public:
   void           setOpenExternalLinks( bool open ) { mOpenExternLinks = open; }
   const QString& caption() const { return mCaption; }
   void           print( QPagedPaintDevice* paintDevice );
-  int            searchText( const QString& text );
-  void           scrollToNextSearchResult();
-  void           scrollToPreviousSearchResult();
+  int            findText( const QString& text );
+  void           findNextMatch();
+  void           findPreviousMatch();
   void           setHighlightColor( const QColor& color ) { mHighlightColor = color; }
   QColor         highlightColor() const { return mHighlightColor; }
 
@@ -121,31 +121,31 @@ private:
     int                    end_offset;   // end Offset in element text
   };
 
-  struct TextSearchResult
+  struct TextFindMatch
   {
     std::string               matched_text;
     std::vector<TextFragment> fragments;    // may contains multiple elements
     litehtml::position        bounding_box; // bounding box over all elements
   };
 
-  int                     search_text( litehtml::document::ptr doc, const std::string& search_term, bool case_sensitive = true );
-  bool                    next_search_result();
-  bool                    previous_search_result();
-  const TextSearchResult* get_current_result() const;
-  void                    highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const std::string& text );
-  void                    draw_highlights( litehtml::uint_ptr hdc );
-  void                    clear_highlights() { m_search_results.clear(); }
-  std::string             normalizeWhitespace( const std::string& text );
-  void                    searchTextInDocument( litehtml::document::ptr        doc,
-                                                const std::string&             search_term,
-                                                std::vector<TextSearchResult>& results,
-                                                bool                           case_sensitive = true );
-  void                    collectTextFragments( litehtml::element::ptr el, std::vector<TextFragment>& fragments, std::string& fullText );
-  litehtml::position      calculatePreciseBoundingBox( const std::vector<TextFragment>& allFragments,
+  int                  find_text( litehtml::document::ptr doc, const std::string& search_term, bool case_sensitive = true );
+  bool                 find_next_match();
+  bool                 find_previous_match();
+  const TextFindMatch* find_current_match() const;
+  void                 highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const std::string& text );
+  void                 draw_highlights( litehtml::uint_ptr hdc );
+  void                 clear_highlights() { mFindMatches.clear(); }
+  std::string          normalizeWhitespace( const std::string& text );
+  void                 find_text_in_document( litehtml::document::ptr     doc,
+                                              const std::string&          search_term,
+                                              std::vector<TextFindMatch>& matches,
+                                              bool                        case_sensitive = true );
+  void                 collect_text_fragments( litehtml::element::ptr el, std::vector<TextFragment>& fragments, std::string& fullText );
+  litehtml::position   calculate_precise_bounding_box( const std::vector<TextFragment>& allFragments,
                                                        int                              searchStart,
                                                        int                              searchEnd,
                                                        std::vector<TextFragment>&       matchedFragments );
-  void                    scrollToSearchResult( const TextSearchResult* );
+  void                 scroll_to_find_match( const TextFindMatch* );
 
   std::shared_ptr<litehtml::document> mDocument;
   QByteArray                          mDocumentSource;
@@ -166,8 +166,8 @@ private:
   QString                             mUserCSS;
   QStack<litehtml::position>          mClipStack;
   litehtml::position                  mClip                  = {};
-  std::vector<TextSearchResult>       m_search_results       = {};
-  int                                 m_current_result_index = -1;
+  std::vector<TextFindMatch>          mFindMatches           = {};
+  int                                 mFindCurrentMatchIndex = -1;
   QColor                              mHighlightColor        = QColor( 255, 255, 0, 30 );
-  QString                             mSearchTerm;
+  QString                             mFindText;
 };

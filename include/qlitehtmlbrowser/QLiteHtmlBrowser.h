@@ -139,10 +139,12 @@ public:
   /// print document into paged paint device like a printer or pdf
   void print( QPagedPaintDevice* printer ) const;
 
-  /// search text in document
-  int    searchText( const QString& );
-  void   scrollToNextSearchResult();
-  void   scrollToPreviousSearchResult();
+  /// find text in document
+  int  findText( const QString& );
+  void findNextMatch();
+  void findPreviousMatch();
+
+  /// configure interface for highlight color, i.e. to highlight found text
   QColor highlightColor() const;
   void   setHighlightColor( QColor color );
 

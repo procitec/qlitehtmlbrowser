@@ -12,7 +12,7 @@ set( test_names
     test_html_content
     test_css_content
     test_history
-    test_search
+    test_find
 )
 
 set( runpath "$<TARGET_FILE_DIR:QLiteHtmlBrowser>;$<TARGET_FILE_DIR:Qt${QT_VERSION_MAJOR}::Widgets>")

@@ -68,28 +68,28 @@ TestBrowser::TestBrowser()
              }
            } );
 
-  mSearchText = new QLineEdit( this );
-  mToolBar.addWidget( mSearchText );
-  connect( mSearchText, &QLineEdit::returnPressed, this,
+  mFindText = new QLineEdit( this );
+  mToolBar.addWidget( mFindText );
+  connect( mFindText, &QLineEdit::returnPressed, this,
            [this]()
            {
-             if ( mSearchText != nullptr )
+             if ( mFindText != nullptr )
              {
-               searchText( mSearchText->text() );
+               findText( mFindText->text() );
              }
            } );
 
   // Vorheriges mit Standard-Icon (Pfeil nach oben)
-  mPreviousSearchResult = new QAction( style()->standardIcon( QStyle::SP_ArrowUp ), "Vorheriges", this );
-  connect( mPreviousSearchResult, &QAction::triggered, this, [this]() { previousSearchResult(); } );
-  mPreviousSearchResult->setEnabled( false );
-  mToolBar.addAction( mPreviousSearchResult );
+  mPreviousFindMatch = new QAction( style()->standardIcon( QStyle::SP_ArrowUp ), "Vorheriges", this );
+  connect( mPreviousFindMatch, &QAction::triggered, this, [this]() { previousFindMatch(); } );
+  mPreviousFindMatch->setEnabled( false );
+  mToolBar.addAction( mPreviousFindMatch );
 
-  mNextSearchResult = new QAction( style()->standardIcon( QStyle::SP_ArrowDown ), "Nächstes", this );
-  mNextSearchResult->setEnabled( false );
-  connect( mNextSearchResult, &QAction::triggered, this, [this]() { nextSearchResult(); } );
+  mNextFindMatch = new QAction( style()->standardIcon( QStyle::SP_ArrowDown ), "Nächstes", this );
+  mNextFindMatch->setEnabled( false );
+  connect( mNextFindMatch, &QAction::triggered, this, [this]() { nextFindMatch(); } );
 
-  mToolBar.addAction( mNextSearchResult );
+  mToolBar.addAction( mNextFindMatch );
 
   setMenuBar( &mMenu );
   addToolBar( Qt::TopToolBarArea, &mToolBar );
@@ -204,19 +204,19 @@ void TestBrowser::export2pdf()
   }
 #endif
 }
-void TestBrowser::searchText( const QString& text )
+void TestBrowser::findText( const QString& text )
 {
-  auto found = mBrowser->searchText( text );
-  mPreviousSearchResult->setEnabled( found > 0 );
-  mNextSearchResult->setEnabled( found > 0 );
+  auto found = mBrowser->findText( text );
+  mPreviousFindMatch->setEnabled( found > 0 );
+  mNextFindMatch->setEnabled( found > 0 );
 }
 
-void TestBrowser::previousSearchResult()
+void TestBrowser::previousFindMatch()
 {
-  mBrowser->scrollToPreviousSearchResult();
+  mBrowser->findPreviousMatch();
 }
 
-void TestBrowser::nextSearchResult()
+void TestBrowser::nextFindMatch()
 {
-  mBrowser->scrollToNextSearchResult();
+  mBrowser->findNextMatch();
 }

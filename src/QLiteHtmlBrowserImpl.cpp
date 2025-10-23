@@ -467,29 +467,29 @@ void QLiteHtmlBrowserImpl::print( QPagedPaintDevice* printer ) const
   }
 }
 
-int QLiteHtmlBrowserImpl::searchText( const QString& phrase )
+int QLiteHtmlBrowserImpl::findText( const QString& phrase )
 {
   auto ret = 0;
   if ( mContainer )
   {
-    ret = mContainer->searchText( phrase );
+    ret = mContainer->findText( phrase );
   }
 
   return ret;
 }
 
-void QLiteHtmlBrowserImpl::nextSearchResult()
+void QLiteHtmlBrowserImpl::nextFindMatch()
 {
   if ( mContainer )
   {
-    mContainer->scrollToNextSearchResult();
+    mContainer->findNextMatch();
   }
 }
 
-void QLiteHtmlBrowserImpl::previousSearchResult()
+void QLiteHtmlBrowserImpl::previousFindMatch()
 {
   if ( mContainer )
   {
-    mContainer->scrollToPreviousSearchResult();
+    mContainer->findPreviousMatch();
   }
 }

@@ -30,43 +30,10 @@ static const auto CSS_GENERIC_FONT_TO_QFONT_STYLEHINT = QMap<QString, QFont::Sty
                                                                                          { "ui-sans-serif", QFont::StyleHint::SansSerif },
                                                                                          { "ui-monospace", QFont::StyleHint::Monospace } };
 
-#include <iostream>
 #include <string>
 #include <vector>
 #include <algorithm>
 #include <litehtml.h>
-
-//   // Textsuche durchführen (case-sensitive)
-//   std::string search_term = "Beispiel";
-//   int result_count = container.search_text(doc, search_term, true);
-
-//   std::cout << "Gefunden: " << result_count << " Vorkommen von '"
-//             << search_term << "'" << std::endl;
-
-//   // Durch alle Ergebnisse iterieren
-//   const auto& all_results = container.get_all_results();
-//   for (size_t i = 0; i < all_results.size(); ++i) {
-//     const auto& result = all_results[i];
-//     std::cout << "Treffer " << (i + 1) << ":" << std::endl;
-//     std::cout << "  Text: '" << result.matched_text << "'" << std::endl;
-//     std::cout << "  Position: x=" << result.element_pos.x
-//               << ", y=" << result.element_pos.y << std::endl;
-//     std::cout << "  Größe: " << result.element_pos.width
-//               << "x" << result.element_pos.height << std::endl;
-//     std::cout << "  Offset: " << result.char_offset << std::endl;
-//   }
-
-//   // Navigation durch Suchergebnisse
-//   container.next_search_result();
-//   const TextSearchResult* current = container.get_current_result();
-//   if (current) {
-//     std::cout << "\nAktueller Treffer an Position: ("
-//               << current->element_pos.x << ", "
-//               << current->element_pos.y << ")" << std::endl;
-//   }
-
-//   return 0;
-// }
 
 container_qt::container_qt( QWidget* parent )
   : QAbstractScrollArea( parent )
@@ -621,7 +588,7 @@ Qt::PenStyle container_qt::toPenStyle( const litehtml::border_style& style ) con
   }
   return p;
 }
-void container_qt::draw_borders( litehtml::uint_ptr hdc, const litehtml::borders& borders, const litehtml::position& draw_pos, bool root )
+void container_qt::draw_borders( litehtml::uint_ptr hdc, const litehtml::borders& borders, const litehtml::position& draw_pos, bool /*root*/ )
 {
   QPainter* p( reinterpret_cast<QPainter*>( hdc ) );
   p->save();
@@ -787,8 +754,8 @@ void container_qt::set_base_url( const char* base_url )
   mBaseUrl = base_url;
 }
 
-void container_qt::link( const std::shared_ptr<litehtml::document>& doc, const litehtml::element::ptr& el ) {}
-void container_qt::on_anchor_click( const char* url, const litehtml::element::ptr& el )
+void container_qt::link( const std::shared_ptr<litehtml::document>& /*doc*/, const litehtml::element::ptr& /*el*/ ) {}
+void container_qt::on_anchor_click( const char* url, const litehtml::element::ptr& /*el*/ )
 {
   if ( mDocument )
   {
@@ -868,7 +835,7 @@ void container_qt::import_css( litehtml::string& text, const litehtml::string& u
     text = QString::fromUtf8( content.constData() ).toStdString();
   }
 }
-void container_qt::set_clip( const litehtml::position& pos, const litehtml::border_radiuses& bdr_radius /*,bool valid_x, bool valid_y */ )
+void container_qt::set_clip( const litehtml::position& pos, const litehtml::border_radiuses& /*bdr_radius*/ /*,bool valid_x, bool valid_y */ )
 {
   mClipStack.push( pos );
   mClip = pos;
@@ -895,8 +862,9 @@ void container_qt::get_client_rect( litehtml::position& client ) const
   client.y      = contentsMargins().top();
 }
 
-std::shared_ptr<litehtml::element>
-container_qt::create_element( const char* tag_name, const litehtml::string_map& attributes, const std::shared_ptr<litehtml::document>& doc )
+std::shared_ptr<litehtml::element> container_qt::create_element( const char* /*tag_name*/,
+                                                                 const litehtml::string_map& /*attributes*/,
+                                                                 const std::shared_ptr<litehtml::document>& /*doc*/ )
 {
   return {};
 }
@@ -908,7 +876,7 @@ void container_qt::setScale( double scale )
   auto relV = ( 0 < verticalScrollBar()->maximum() ) ? static_cast<float>( verticalScrollBar()->value() ) / verticalScrollBar()->maximum() : 0.0;
   mScale    = std::clamp( scale, mMinScale, mMaxScale );
   render();
-  searchText( mSearchTerm );
+  findText( mFindText );
   horizontalScrollBar()->setValue( std::floor( relH * horizontalScrollBar()->maximum() ) );
   verticalScrollBar()->setValue( std::floor( relV * verticalScrollBar()->maximum() ) );
 }
@@ -1117,48 +1085,48 @@ void container_qt::print( QPagedPaintDevice* paintDevice )
   del_clip();
 }
 
-int container_qt::searchText( const QString& text )
+int container_qt::findText( const QString& text )
 {
-  mSearchTerm = text;
-  search_text( mDocument, mSearchTerm.toStdString(), true );
+  mFindText = text;
+  find_text( mDocument, mFindText.toStdString(), true );
 
   viewport()->update();
-  auto* result = get_current_result();
-  if ( result )
+  auto* match = find_current_match();
+  if ( match )
   {
-    scrollToSearchResult( result );
+    scroll_to_find_match( match );
   }
 
-  return m_search_results.size();
+  return mFindMatches.size();
 }
 
 // normalize Whitespace: multiple whitespaces to one
 std::string container_qt::normalizeWhitespace( const std::string& text )
 {
-  std::string result;
+  std::string normalized;
   bool        lastWasSpace = false;
 
   for ( char c : text )
   {
     if ( std::isspace( static_cast<unsigned char>( c ) ) )
     {
-      if ( !lastWasSpace && !result.empty() )
+      if ( !lastWasSpace && !normalized.empty() )
       {
-        result += ' ';
+        normalized += ' ';
         lastWasSpace = true;
       }
     }
     else
     {
-      result += c;
+      normalized += c;
       lastWasSpace = false;
     }
   }
 
-  return result;
+  return normalized;
 }
 
-void container_qt::collectTextFragments( litehtml::element::ptr el, std::vector<TextFragment>& fragments, std::string& fullText )
+void container_qt::collect_text_fragments( litehtml::element::ptr el, std::vector<TextFragment>& fragments, std::string& fullText )
 {
   if ( !el )
     return;
@@ -1188,15 +1156,15 @@ void container_qt::collectTextFragments( litehtml::element::ptr el, std::vector<
 
   for ( auto it = el->children().begin(); it != el->children().end(); ++it )
   {
-    collectTextFragments( ( *it ), fragments, fullText );
+    collect_text_fragments( ( *it ), fragments, fullText );
   }
 }
 
 // calculate bounding box for all elements found in search
-litehtml::position container_qt::calculatePreciseBoundingBox( const std::vector<TextFragment>& allFragments,
-                                                              int                              searchStart,
-                                                              int                              searchEnd,
-                                                              std::vector<TextFragment>&       matchedFragments )
+litehtml::position container_qt::calculate_precise_bounding_box( const std::vector<TextFragment>& allFragments,
+                                                                 int                              searchStart,
+                                                                 int                              searchEnd,
+                                                                 std::vector<TextFragment>&       matchedFragments )
 {
   litehtml::position boundingBox   = { 0, 0, 0, 0 };
   bool               firstFragment = true;
@@ -1270,10 +1238,10 @@ litehtml::position container_qt::calculatePreciseBoundingBox( const std::vector<
 }
 
 // search document for Text including multiword phrases
-void container_qt::searchTextInDocument( litehtml::document::ptr        doc,
-                                         const std::string&             search_term,
-                                         std::vector<TextSearchResult>& results,
-                                         bool                           case_sensitive )
+void container_qt::find_text_in_document( litehtml::document::ptr     doc,
+                                          const std::string&          search_term,
+                                          std::vector<TextFindMatch>& matches,
+                                          bool                        case_sensitive )
 {
   if ( !doc || search_term.empty() )
     return;
@@ -1281,44 +1249,44 @@ void container_qt::searchTextInDocument( litehtml::document::ptr        doc,
   // Sammle alle Text-Fragmente mit Positionen
   std::vector<TextFragment> fragments;
   std::string               fullText;
-  collectTextFragments( doc->root(), fragments, fullText );
+  collect_text_fragments( doc->root(), fragments, fullText );
 
   // Normalisiere Text für Suche
   std::string normalizedFullText   = normalizeWhitespace( fullText );
   std::string normalizedSearchTerm = normalizeWhitespace( search_term );
 
-  std::string searchText = normalizedFullText;
-  std::string searchFor  = normalizedSearchTerm;
+  std::string findText  = normalizedFullText;
+  std::string searchFor = normalizedSearchTerm;
 
   if ( !case_sensitive )
   {
-    std::transform( searchText.begin(), searchText.end(), searchText.begin(), ::tolower );
+    std::transform( findText.begin(), findText.end(), findText.begin(), ::tolower );
     std::transform( searchFor.begin(), searchFor.end(), searchFor.begin(), ::tolower );
   }
 
   // Alle Vorkommen finden
   size_t pos = 0;
-  while ( ( pos = searchText.find( searchFor, pos ) ) != std::string::npos )
+  while ( ( pos = findText.find( searchFor, pos ) ) != std::string::npos )
   {
-    TextSearchResult result;
-    result.matched_text = normalizedFullText.substr( pos, searchFor.length() );
+    TextFindMatch match;
+    match.matched_text = normalizedFullText.substr( pos, searchFor.length() );
 
     int searchStart = static_cast<int>( pos );
     int searchEnd   = static_cast<int>( pos + searchFor.length() );
 
     // Berechne präzise Bounding Box
-    result.bounding_box = calculatePreciseBoundingBox( fragments, searchStart, searchEnd, result.fragments );
+    match.bounding_box = calculate_precise_bounding_box( fragments, searchStart, searchEnd, match.fragments );
 
-    results.push_back( result );
+    matches.push_back( match );
     pos += searchFor.length();
   }
 }
 
 // Textsuche durchführen
-int container_qt::search_text( litehtml::document::ptr doc, const std::string& search_term, bool case_sensitive )
+int container_qt::find_text( litehtml::document::ptr doc, const std::string& search_term, bool case_sensitive )
 {
-  m_search_results.clear();
-  m_current_result_index = -1;
+  mFindMatches.clear();
+  mFindCurrentMatchIndex = -1;
 
   if ( !doc || search_term.empty() )
   {
@@ -1326,64 +1294,63 @@ int container_qt::search_text( litehtml::document::ptr doc, const std::string& s
   }
 
   // Suche vom Root-Element starten
-  // search_text_in_element( doc->root(), search_term, m_search_results, case_sensitive );
-  searchTextInDocument( mDocument, search_term, m_search_results, case_sensitive );
+  find_text_in_document( mDocument, search_term, mFindMatches, case_sensitive );
 
-  if ( !m_search_results.empty() )
+  if ( !mFindMatches.empty() )
   {
-    m_current_result_index = 0;
+    mFindCurrentMatchIndex = 0;
   }
 
-  return static_cast<int>( m_search_results.size() );
+  return static_cast<int>( mFindMatches.size() );
 }
 
 // Zum nächsten Suchergebnis springen
-bool container_qt::next_search_result()
+bool container_qt::find_next_match()
 {
-  if ( m_search_results.empty() )
+  if ( mFindMatches.empty() )
     return false;
 
-  m_current_result_index++;
-  if ( m_current_result_index >= static_cast<int>( m_search_results.size() ) )
+  mFindCurrentMatchIndex++;
+  if ( mFindCurrentMatchIndex >= static_cast<int>( mFindMatches.size() ) )
   {
-    m_current_result_index = 0; // Wrap-around
+    mFindCurrentMatchIndex = 0; // Wrap-around
   }
   return true;
 }
 
 // Zum vorherigen Suchergebnis springen
-bool container_qt::previous_search_result()
+bool container_qt::find_previous_match()
 {
-  if ( m_search_results.empty() )
+  if ( mFindMatches.empty() )
     return false;
 
-  m_current_result_index--;
-  if ( m_current_result_index < 0 )
+  mFindCurrentMatchIndex--;
+  if ( mFindCurrentMatchIndex < 0 )
   {
-    m_current_result_index = static_cast<int>( m_search_results.size() ) - 1; // Wrap-around
+    mFindCurrentMatchIndex = static_cast<int>( mFindMatches.size() ) - 1; // Wrap-around
   }
   return true;
 }
 
 // Aktuelles Suchergebnis mit Position holen
-const container_qt::TextSearchResult* container_qt::get_current_result() const
+const container_qt::TextFindMatch* container_qt::find_current_match() const
 {
-  if ( m_current_result_index >= 0 && m_current_result_index < static_cast<int>( m_search_results.size() ) )
+  if ( mFindCurrentMatchIndex >= 0 && mFindCurrentMatchIndex < static_cast<int>( mFindMatches.size() ) )
   {
-    return &m_search_results[m_current_result_index];
+    return &mFindMatches[mFindCurrentMatchIndex];
   }
   return nullptr;
 }
 
 void container_qt::draw_highlights( litehtml::uint_ptr hdc )
 {
-  for ( auto it = m_search_results.begin(); it != m_search_results.end(); ++it )
+  for ( auto it = mFindMatches.begin(); it != mFindMatches.end(); ++it )
   {
-    const auto result = ( *it );
-    for ( auto it = result.fragments.begin(); it != result.fragments.end(); ++it )
+    const auto match = ( *it );
+    for ( auto it = match.fragments.begin(); it != match.fragments.end(); ++it )
     {
       litehtml::position pos = ( *it ).pos;
-      highlight_text_at_position( hdc, pos, result.matched_text );
+      highlight_text_at_position( hdc, pos, match.matched_text );
     }
   }
 }
@@ -1409,30 +1376,30 @@ void container_qt::highlight_text_at_position( litehtml::uint_ptr hdc, const lit
   p->restore();
 }
 
-void container_qt::scrollToNextSearchResult()
+void container_qt::findNextMatch()
 {
-  if ( next_search_result() )
+  if ( find_next_match() )
   {
-    const auto* result = get_current_result();
-    scrollToSearchResult( result );
+    const auto* match = find_current_match();
+    scroll_to_find_match( match );
   }
 }
 
-void container_qt::scrollToPreviousSearchResult()
+void container_qt::findPreviousMatch()
 {
-  if ( previous_search_result() )
+  if ( find_previous_match() )
   {
-    const auto* result = get_current_result();
-    scrollToSearchResult( result );
+    const auto* match = find_current_match();
+    scroll_to_find_match( match );
   }
 }
 
-void container_qt::scrollToSearchResult( const TextSearchResult* result )
+void container_qt::scroll_to_find_match( const TextFindMatch* match )
 {
-  if ( !result )
+  if ( !match )
   {
     return;
   }
-  horizontalScrollBar()->setValue( result->bounding_box.left() );
-  verticalScrollBar()->setValue( result->bounding_box.top() );
+  horizontalScrollBar()->setValue( match->bounding_box.left() );
+  verticalScrollBar()->setValue( match->bounding_box.top() );
 }
