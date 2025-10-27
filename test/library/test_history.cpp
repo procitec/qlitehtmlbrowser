@@ -32,10 +32,6 @@ void HistoryTest::test_creation()
   QCOMPARE( browser->backwardHistoryCount(), 0 );
   QCOMPARE( browser->isBackwardAvailable(), false );
   QCOMPARE( browser->isForwardAvailable(), false );
-  for ( int idx = -3; idx < 3; idx++ )
-  {
-    QCOMPARE( browser->historyUrl( idx ), QUrl() );
-  }
   // no url set, should not crash
   browser->home();
 }
@@ -49,10 +45,6 @@ void HistoryTest::test_home()
   QCOMPARE( browser->backwardHistoryCount(), 0 );
   QCOMPARE( browser->isBackwardAvailable(), false );
   QCOMPARE( browser->isForwardAvailable(), false );
-  for ( int idx = -3; idx < 3; idx++ )
-  {
-    QCOMPARE( browser->historyUrl( idx ), QUrl() );
-  }
 }
 
 void HistoryTest::test_history()

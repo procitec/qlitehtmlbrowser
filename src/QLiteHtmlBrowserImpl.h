@@ -58,15 +58,17 @@ public:
   void backward();
   void reload();
 
-  // todo from there is the title?
-  QString historyTitle( int ) const { return {}; }
-
-  QUrl historyUrl( int ) const;
-  int  backwardHistoryCount() const { return ( 1 < mBWHistStack.count() ) ? mBWHistStack.count() - 1 : 0; }
-  int  forwardHistoryCount() const { return ( 0 < mFWHistStack.count() ) ? mFWHistStack.count() : 0; }
+  int backwardHistoryCount() const { return ( 1 < mBWHistStack.count() ) ? mBWHistStack.count() - 1 : 0; }
+  int forwardHistoryCount() const { return ( 0 < mFWHistStack.count() ) ? mFWHistStack.count() : 0; }
 
   const QString& caption() const;
   void           print( QPagedPaintDevice* printer ) const;
+
+  int    findText( const QString& ); // search for given string and return number of found matches
+  void   nextFindMatch();
+  void   previousFindMatch();
+  QColor highlightColor() const;
+  void   setHighlightColor( QColor color );
 
 protected:
   void changeEvent( QEvent* ) override;

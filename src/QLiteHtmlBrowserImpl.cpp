@@ -62,6 +62,24 @@ void QLiteHtmlBrowserImpl::setCSS( const QString& css )
   applyCSS();
 }
 
+void QLiteHtmlBrowserImpl::setHighlightColor( QColor color )
+{
+  if ( mContainer )
+  {
+    mContainer->setHighlightColor( color );
+  }
+}
+
+QColor QLiteHtmlBrowserImpl::highlightColor() const
+{
+  QColor color;
+  if ( mContainer )
+  {
+    color = mContainer->highlightColor();
+  }
+  return color;
+}
+
 QString QLiteHtmlBrowserImpl::readResourceCss( const QString& resource ) const
 {
   QString css;
@@ -270,7 +288,7 @@ double QLiteHtmlBrowserImpl::scale() const
   return scale;
 }
 
-QByteArray QLiteHtmlBrowserImpl::loadResource( int type, const QUrl& url )
+QByteArray QLiteHtmlBrowserImpl::loadResource( int /*type*/, const QUrl& url )
 {
   QByteArray data;
 
@@ -407,13 +425,6 @@ void QLiteHtmlBrowserImpl::setOpenExternalLinks( bool open )
   }
 }
 
-QUrl QLiteHtmlBrowserImpl::historyUrl( int ) const
-{
-  // todo: implementation
-  qWarning() << "not implemented yet";
-  return {};
-}
-
 void QLiteHtmlBrowserImpl::forward()
 {
   if ( !mFWHistStack.isEmpty() )
@@ -453,5 +464,32 @@ void QLiteHtmlBrowserImpl::print( QPagedPaintDevice* printer ) const
   if ( mContainer && printer )
   {
     mContainer->print( printer );
+  }
+}
+
+int QLiteHtmlBrowserImpl::findText( const QString& phrase )
+{
+  auto ret = 0;
+  if ( mContainer )
+  {
+    ret = mContainer->findText( phrase );
+  }
+
+  return ret;
+}
+
+void QLiteHtmlBrowserImpl::nextFindMatch()
+{
+  if ( mContainer )
+  {
+    mContainer->findNextMatch();
+  }
+}
+
+void QLiteHtmlBrowserImpl::previousFindMatch()
+{
+  if ( mContainer )
+  {
+    mContainer->findPreviousMatch();
   }
 }

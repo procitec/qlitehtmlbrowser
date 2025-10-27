@@ -123,7 +123,10 @@ void container_qt::paintEvent( QPaintEvent* event )
       auto                     margins    = viewport()->contentsMargins();
       auto                     scroll_pos = -scrollBarPos();
 
-      mDocument->draw( reinterpret_cast<litehtml::uint_ptr>( &p ), margins.left() + scroll_pos.x(), margins.top() + scroll_pos.y(), &clipRect );
+      auto hdc = reinterpret_cast<litehtml::uint_ptr>( &p );
+
+      mDocument->draw( hdc, margins.left() + scroll_pos.x(), margins.top() + scroll_pos.y(), &clipRect );
+      draw_highlights( hdc );
     }
   }
 }
@@ -580,7 +583,7 @@ Qt::PenStyle container_qt::toPenStyle( const litehtml::border_style& style ) con
   }
   return p;
 }
-void container_qt::draw_borders( litehtml::uint_ptr hdc, const litehtml::borders& borders, const litehtml::position& draw_pos, bool root )
+void container_qt::draw_borders( litehtml::uint_ptr hdc, const litehtml::borders& borders, const litehtml::position& draw_pos, bool /*root*/ )
 {
   QPainter* p( reinterpret_cast<QPainter*>( hdc ) );
   p->save();
@@ -746,8 +749,8 @@ void container_qt::set_base_url( const char* base_url )
   mBaseUrl = base_url;
 }
 
-void container_qt::link( const std::shared_ptr<litehtml::document>& doc, const litehtml::element::ptr& el ) {}
-void container_qt::on_anchor_click( const char* url, const litehtml::element::ptr& el )
+void container_qt::link( const std::shared_ptr<litehtml::document>& /*doc*/, const litehtml::element::ptr& /*el*/ ) {}
+void container_qt::on_anchor_click( const char* url, const litehtml::element::ptr& /*el*/ )
 {
   if ( mDocument )
   {
@@ -827,7 +830,7 @@ void container_qt::import_css( litehtml::string& text, const litehtml::string& u
     text = QString::fromUtf8( content.constData() ).toStdString();
   }
 }
-void container_qt::set_clip( const litehtml::position& pos, const litehtml::border_radiuses& bdr_radius /*,bool valid_x, bool valid_y */ )
+void container_qt::set_clip( const litehtml::position& pos, const litehtml::border_radiuses& /*bdr_radius*/ /*,bool valid_x, bool valid_y */ )
 {
   mClipStack.push( pos );
   mClip = pos;
@@ -854,8 +857,9 @@ void container_qt::get_client_rect( litehtml::position& client ) const
   client.y      = contentsMargins().top();
 }
 
-std::shared_ptr<litehtml::element>
-container_qt::create_element( const char* tag_name, const litehtml::string_map& attributes, const std::shared_ptr<litehtml::document>& doc )
+std::shared_ptr<litehtml::element> container_qt::create_element( const char* /*tag_name*/,
+                                                                 const litehtml::string_map& /*attributes*/,
+                                                                 const std::shared_ptr<litehtml::document>& /*doc*/ )
 {
   return {};
 }
@@ -867,6 +871,7 @@ void container_qt::setScale( double scale )
   auto relV = ( 0 < verticalScrollBar()->maximum() ) ? static_cast<float>( verticalScrollBar()->value() ) / verticalScrollBar()->maximum() : 0.0;
   mScale    = std::clamp( scale, mMinScale, mMaxScale );
   render();
+  findText( mFindText );
   horizontalScrollBar()->setValue( std::floor( relH * horizontalScrollBar()->maximum() ) );
   verticalScrollBar()->setValue( std::floor( relV * verticalScrollBar()->maximum() ) );
 }
@@ -958,6 +963,20 @@ int container_qt::inv_scaled( int i ) const
   return std::floor( i * mScale );
 }
 
+QSize container_qt::inv_scaled( const QSize& size ) const
+{
+  return QSize( std::floor( size.width() * mScale ), std::floor( size.height() * mScale ) );
+}
+
+QPoint container_qt::inv_scaled( const QPoint& point ) const
+{
+  return QPoint( std::floor( point.x() * mScale ), std::floor( point.y() * mScale ) );
+}
+QRect container_qt::inv_scaled( const QRect& rect ) const
+{
+  return QRect( inv_scaled( rect.topLeft() ), inv_scaled( rect.size() ) );
+}
+
 void container_qt::mouseMoveEvent( QMouseEvent* e )
 {
 
@@ -1006,8 +1025,13 @@ void container_qt::mousePressEvent( QMouseEvent* e )
         // something changed, redraw of boxes required;
         e->accept();
       }
-      else
-        e->ignore();
+      // else
+      // {
+      //   auto elem = mDocument->get_over_element();
+      //   qDebug() << elem->get_placement().x << elem->get_tagName();
+
+      //   e->ignore();
+      // }
     }
     else
       e->ignore();
@@ -1043,6 +1067,8 @@ void container_qt::print( QPagedPaintDevice* paintDevice )
 
   set_clip( clipRect, litehtml::border_radiuses() );
 
+  clear_highlights();
+
   for ( auto page = 0; page < number_of_pages; page++ )
   {
     mDocument->draw( reinterpret_cast<litehtml::uint_ptr>( &painter ), 0, -page * ( scaled_printable_page_height ), &clipRect );
@@ -1052,4 +1078,323 @@ void container_qt::print( QPagedPaintDevice* paintDevice )
     }
   }
   del_clip();
+}
+
+int container_qt::findText( const QString& text )
+{
+  mFindText = text;
+  find_text( mDocument, mFindText.toStdString(), true );
+
+  viewport()->update();
+  auto* match = find_current_match();
+  if ( match )
+  {
+    scroll_to_find_match( match );
+  }
+
+  return mFindMatches.size();
+}
+
+// normalize Whitespace: multiple whitespaces to one
+std::string container_qt::normalizeWhitespace( const std::string& text )
+{
+  std::string normalized;
+  bool        lastWasSpace = false;
+
+  for ( char c : text )
+  {
+    if ( std::isspace( static_cast<unsigned char>( c ) ) )
+    {
+      if ( !lastWasSpace && !normalized.empty() )
+      {
+        normalized += ' ';
+        lastWasSpace = true;
+      }
+    }
+    else
+    {
+      normalized += c;
+      lastWasSpace = false;
+    }
+  }
+
+  return normalized;
+}
+
+void container_qt::collect_text_fragments( litehtml::element::ptr el, std::vector<TextFragment>& fragments, std::string& fullText )
+{
+  if ( !el )
+    return;
+
+  std::string text;
+  el->get_text( text );
+  if ( !text.empty() && el->is_text() )
+  {
+    TextFragment fragment;
+    fragment.text         = text;
+    fragment.element      = el;
+    fragment.pos          = el->get_placement();
+    fragment.start_offset = static_cast<int>( fullText.length() );
+
+    std::string normalized = normalizeWhitespace( text );
+    fullText += normalized;
+
+    fragment.end_offset = static_cast<int>( fullText.length() );
+    fragments.push_back( fragment );
+
+    // Leerzeichen zwischen Elementen
+    if ( !fullText.empty() && !std::isspace( fullText.back() ) )
+    {
+      fullText += ' ';
+    }
+  }
+
+  for ( auto it = el->children().begin(); it != el->children().end(); ++it )
+  {
+    collect_text_fragments( ( *it ), fragments, fullText );
+  }
+}
+
+// calculate bounding box for all elements found in search
+litehtml::position container_qt::calculate_precise_bounding_box( const std::vector<TextFragment>& allFragments,
+                                                                 int                              searchStart,
+                                                                 int                              searchEnd,
+                                                                 std::vector<TextFragment>&       matchedFragments )
+{
+  litehtml::position boundingBox   = { 0, 0, 0, 0 };
+  bool               firstFragment = true;
+
+  for ( const auto& fragment : allFragments )
+  {
+    // check if this fragment is part of the search
+    int overlapStart = std::max( searchStart, fragment.start_offset );
+    int overlapEnd   = std::min( searchEnd, fragment.end_offset );
+
+    if ( overlapStart < overlapEnd )
+    {
+      // yes this fragment is part of the search
+      TextFragment matchedFragment = fragment;
+
+      // offsets relative to start
+      int fragmentTextStart = overlapStart - fragment.start_offset;
+      int fragmentTextEnd   = overlapEnd - fragment.start_offset;
+
+      matchedFragment.start_offset = fragmentTextStart;
+      matchedFragment.end_offset   = fragmentTextEnd;
+
+      // calculate width of text
+      // Importnat: use text_width from document_container
+      std::string matchedText = fragment.text.substr( fragmentTextStart, fragmentTextEnd - fragmentTextStart );
+
+      // estimated position (kann mit text_width verfeinert werden)
+      litehtml::position fragmentPos = fragment.pos;
+
+      // for more precise positioning text_width would be helpfull
+      // int textWidthBefore = container->text_width(
+      //     fragment.text.substr(0, fragmentTextStart).c_str(),
+      //     font
+      // );
+      // fragmentPos.x += textWidthBefore;
+      // fragmentPos.width = container->text_width(matchedText.c_str(), font);
+
+      // simplified approximation
+      if ( fragment.text.length() > 0 )
+      {
+        float charWidth = static_cast<float>( fragment.pos.width ) / static_cast<float>( fragment.text.length() );
+        fragmentPos.x += static_cast<int>( charWidth * fragmentTextStart );
+        fragmentPos.width = static_cast<int>( charWidth * matchedText.length() );
+      }
+
+      matchedFragments.push_back( matchedFragment );
+
+      // extend Bounding Box
+      if ( firstFragment )
+      {
+        boundingBox   = fragmentPos;
+        firstFragment = false;
+      }
+      else
+      {
+        // Min/Max for containing Box
+        int minX = std::min( boundingBox.x, fragmentPos.x );
+        int minY = std::min( boundingBox.y, fragmentPos.y );
+        int maxX = std::max( boundingBox.x + boundingBox.width, fragmentPos.x + fragmentPos.width );
+        int maxY = std::max( boundingBox.y + boundingBox.height, fragmentPos.y + fragmentPos.height );
+
+        boundingBox.x      = minX;
+        boundingBox.y      = minY;
+        boundingBox.width  = maxX - minX;
+        boundingBox.height = maxY - minY;
+      }
+    }
+  }
+
+  return boundingBox;
+}
+
+// search document for Text including multiword phrases
+void container_qt::find_text_in_document( litehtml::document::ptr     doc,
+                                          const std::string&          search_term,
+                                          std::vector<TextFindMatch>& matches,
+                                          bool                        case_sensitive )
+{
+  if ( !doc || search_term.empty() )
+    return;
+
+  // Sammle alle Text-Fragmente mit Positionen
+  std::vector<TextFragment> fragments;
+  std::string               fullText;
+  collect_text_fragments( doc->root(), fragments, fullText );
+
+  // Normalisiere Text für Suche
+  std::string normalizedFullText   = normalizeWhitespace( fullText );
+  std::string normalizedSearchTerm = normalizeWhitespace( search_term );
+
+  std::string findText  = normalizedFullText;
+  std::string searchFor = normalizedSearchTerm;
+
+  if ( !case_sensitive )
+  {
+    std::transform( findText.begin(), findText.end(), findText.begin(), ::tolower );
+    std::transform( searchFor.begin(), searchFor.end(), searchFor.begin(), ::tolower );
+  }
+
+  // Alle Vorkommen finden
+  size_t pos = 0;
+  while ( ( pos = findText.find( searchFor, pos ) ) != std::string::npos )
+  {
+    TextFindMatch match;
+    match.matched_text = normalizedFullText.substr( pos, searchFor.length() );
+
+    int searchStart = static_cast<int>( pos );
+    int searchEnd   = static_cast<int>( pos + searchFor.length() );
+
+    // Berechne präzise Bounding Box
+    match.bounding_box = calculate_precise_bounding_box( fragments, searchStart, searchEnd, match.fragments );
+
+    matches.push_back( match );
+    pos += searchFor.length();
+  }
+}
+
+// Textsuche durchführen
+int container_qt::find_text( litehtml::document::ptr doc, const std::string& search_term, bool case_sensitive )
+{
+  mFindMatches.clear();
+  mFindCurrentMatchIndex = -1;
+
+  if ( !doc || search_term.empty() )
+  {
+    return 0;
+  }
+
+  // Suche vom Root-Element starten
+  find_text_in_document( mDocument, search_term, mFindMatches, case_sensitive );
+
+  if ( !mFindMatches.empty() )
+  {
+    mFindCurrentMatchIndex = 0;
+  }
+
+  return static_cast<int>( mFindMatches.size() );
+}
+
+// Zum nächsten Suchergebnis springen
+bool container_qt::find_next_match()
+{
+  if ( mFindMatches.empty() )
+    return false;
+
+  mFindCurrentMatchIndex++;
+  if ( mFindCurrentMatchIndex >= static_cast<int>( mFindMatches.size() ) )
+  {
+    mFindCurrentMatchIndex = 0; // Wrap-around
+  }
+  return true;
+}
+
+// Zum vorherigen Suchergebnis springen
+bool container_qt::find_previous_match()
+{
+  if ( mFindMatches.empty() )
+    return false;
+
+  mFindCurrentMatchIndex--;
+  if ( mFindCurrentMatchIndex < 0 )
+  {
+    mFindCurrentMatchIndex = static_cast<int>( mFindMatches.size() ) - 1; // Wrap-around
+  }
+  return true;
+}
+
+// Aktuelles Suchergebnis mit Position holen
+const container_qt::TextFindMatch* container_qt::find_current_match() const
+{
+  if ( mFindCurrentMatchIndex >= 0 && mFindCurrentMatchIndex < static_cast<int>( mFindMatches.size() ) )
+  {
+    return &mFindMatches[mFindCurrentMatchIndex];
+  }
+  return nullptr;
+}
+
+void container_qt::draw_highlights( litehtml::uint_ptr hdc )
+{
+  for ( auto it = mFindMatches.begin(); it != mFindMatches.end(); ++it )
+  {
+    const auto match = ( *it );
+    for ( auto it = match.fragments.begin(); it != match.fragments.end(); ++it )
+    {
+      litehtml::position pos = ( *it ).pos;
+      highlight_text_at_position( hdc, pos, match.matched_text );
+    }
+  }
+}
+
+// draw highlighted text at position
+void container_qt::highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const std::string& text )
+{
+
+  qDebug() << "Highlighting text '" << QString::fromStdString( text ) << "' at position (" << pos.x << ", " << pos.y << ") with size " << pos.width
+           << "x" << pos.height;
+
+  QPainter* p( reinterpret_cast<QPainter*>( hdc ) );
+  p->save();
+  applyClip( p );
+
+  p->setPen( Qt::NoPen );
+  p->setBrush( mHighlightColor );
+
+  auto scroll_pos = -scrollBarPos();
+
+  p->drawRect( ( QRect( pos.x + scroll_pos.x(), pos.y + scroll_pos.y(), pos.width, pos.height ) ) );
+
+  p->restore();
+}
+
+void container_qt::findNextMatch()
+{
+  if ( find_next_match() )
+  {
+    const auto* match = find_current_match();
+    scroll_to_find_match( match );
+  }
+}
+
+void container_qt::findPreviousMatch()
+{
+  if ( find_previous_match() )
+  {
+    const auto* match = find_current_match();
+    scroll_to_find_match( match );
+  }
+}
+
+void container_qt::scroll_to_find_match( const TextFindMatch* match )
+{
+  if ( !match )
+  {
+    return;
+  }
+  horizontalScrollBar()->setValue( match->bounding_box.left() );
+  verticalScrollBar()->setValue( match->bounding_box.top() );
 }

@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.2.0
+
+- [#20](https://github.com/procitec/qlitehtmlbrowser/issues/20): Feature Search Text
+
 ## v2.1.0
 
 - re-add support for Qt 5

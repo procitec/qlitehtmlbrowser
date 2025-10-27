@@ -130,16 +130,6 @@ void QLiteHtmlBrowser::clearHistory()
   mImpl->clearHistory();
 }
 
-QString QLiteHtmlBrowser::historyTitle( int idx ) const
-{
-  return mImpl->historyTitle( idx );
-}
-
-QUrl QLiteHtmlBrowser::historyUrl( int idx ) const
-{
-  return mImpl->historyUrl( idx );
-}
-
 int QLiteHtmlBrowser::backwardHistoryCount() const
 {
   return mImpl->backwardHistoryCount();
@@ -171,4 +161,28 @@ void QLiteHtmlBrowser::print( QPagedPaintDevice* printer ) const
   {
     mImpl->print( printer );
   }
+}
+
+int QLiteHtmlBrowser::findText( const QString& text )
+{
+  return mImpl->findText( text );
+}
+
+void QLiteHtmlBrowser::findNextMatch()
+{
+  mImpl->nextFindMatch();
+}
+
+void QLiteHtmlBrowser::findPreviousMatch()
+{
+  mImpl->previousFindMatch();
+}
+
+QColor QLiteHtmlBrowser::highlightColor() const
+{
+  return mImpl->highlightColor();
+}
+void QLiteHtmlBrowser::setHighlightColor( QColor color )
+{
+  mImpl->setHighlightColor( color );
 }

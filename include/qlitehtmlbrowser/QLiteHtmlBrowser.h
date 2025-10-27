@@ -45,6 +45,8 @@ class QLITEHTMLBROWSER_EXPORT QLiteHtmlBrowser : public QWidget
   /// Set additional paths to resolve relative urls or resources. These paths are considered
   /// if the url could not get resolved against the given base url.
   Q_PROPERTY( QStringList searchPaths READ searchPaths WRITE setSearchPaths )
+  /// configure highlight color e.g. for search results
+  Q_PROPERTY( QColor highlightColor READ highlightColor WRITE setHighlightColor DESIGNABLE true )
 
 public:
   /// identifier for the type of resource that should get loaded as hint
@@ -125,19 +127,33 @@ public:
   /// set file system paths where relative urls or resources are resolved
   void setSearchPaths( const QStringList& );
 
-  bool    isBackwardAvailable() const;
-  bool    isForwardAvailable() const;
-  void    clearHistory();
-  QString historyTitle( int ) const;
-  QUrl    historyUrl( int ) const;
-  int     backwardHistoryCount() const;
-  int     forwardHistoryCount() const;
+  /// return true if history stack can go backward
+  bool isBackwardAvailable() const;
+  /// return true if history stack go go forward
+  bool isForwardAvailable() const;
+  /// clear the history
+  void clearHistory();
+  /// number of pages in history stack backwards
+  int backwardHistoryCount() const;
+  /// number of pages in history stack forwards
+  int forwardHistoryCount() const;
 
   /// return title for url if available, else returns empty string
   const QString& caption() const;
 
   /// print document into paged paint device like a printer or pdf
   void print( QPagedPaintDevice* printer ) const;
+
+  /// find text in document
+  int findText( const QString& );
+  ///  move to next match
+  void findNextMatch();
+  /// move to previous match
+  void findPreviousMatch();
+
+  /// configure interface for highlight color, i.e. to highlight found text
+  QColor highlightColor() const;
+  void   setHighlightColor( QColor color );
 
 public Q_SLOTS:
   /// set URL to given url. The URL may be an url to local file, QtHelp, http etc.
@@ -148,7 +164,9 @@ public Q_SLOTS:
   virtual void setSource( const QUrl& name );
   void         setSource( const QUrl& url, ResourceType type );
 
+  /// go backward in history stack
   virtual void backward();
+  /// go forward in history stack
   virtual void forward();
 
   /// home url is the first url set via setSource for this instance.
@@ -160,18 +178,12 @@ public Q_SLOTS:
 
 protected:
 Q_SIGNALS:
-  //  void backwardAvailable(bool);
-  //  void forwardAvailable(bool);
-  //  void historyChanged();
 
   /// emitted when the url changed due to user interaction, e.g. link activation, @see setOpenLinks
   void sourceChanged( const QUrl& );
 
   /// send when an anchor is clicked in the document, even if link is not activated, @see setOpenLinks
   void anchorClicked( const QUrl& );
-
-  // selection, copy, paste etc currently not implemented
-  //  void highlighted(const QUrl &);
 
 private:
   QLiteHtmlBrowserImpl* mImpl = nullptr;

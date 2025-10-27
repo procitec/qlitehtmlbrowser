@@ -8,6 +8,8 @@
 // #include <QtPrintSupport/QPrinter>
 #include <QtGui/QPainter>
 #include <QtGui/QPdfWriter>
+#include <QtCore/QDebug>
+#include <QtWidgets/QStyle>
 
 TestBrowser::TestBrowser()
 {
@@ -65,6 +67,29 @@ TestBrowser::TestBrowser()
                mUrl->setText( url.toString() );
              }
            } );
+
+  mFindText = new QLineEdit( this );
+  mToolBar.addWidget( mFindText );
+  connect( mFindText, &QLineEdit::returnPressed, this,
+           [this]()
+           {
+             if ( mFindText != nullptr )
+             {
+               findText( mFindText->text() );
+             }
+           } );
+
+  // Vorheriges mit Standard-Icon (Pfeil nach oben)
+  mPreviousFindMatch = new QAction( style()->standardIcon( QStyle::SP_ArrowUp ), "Vorheriges", this );
+  connect( mPreviousFindMatch, &QAction::triggered, this, [this]() { previousFindMatch(); } );
+  mPreviousFindMatch->setEnabled( false );
+  mToolBar.addAction( mPreviousFindMatch );
+
+  mNextFindMatch = new QAction( style()->standardIcon( QStyle::SP_ArrowDown ), "Nächstes", this );
+  mNextFindMatch->setEnabled( false );
+  connect( mNextFindMatch, &QAction::triggered, this, [this]() { nextFindMatch(); } );
+
+  mToolBar.addAction( mNextFindMatch );
 
   setMenuBar( &mMenu );
   addToolBar( Qt::TopToolBarArea, &mToolBar );
@@ -178,4 +203,20 @@ void TestBrowser::export2pdf()
     }
   }
 #endif
+}
+void TestBrowser::findText( const QString& text )
+{
+  auto found = mBrowser->findText( text );
+  mPreviousFindMatch->setEnabled( found > 0 );
+  mNextFindMatch->setEnabled( found > 0 );
+}
+
+void TestBrowser::previousFindMatch()
+{
+  mBrowser->findPreviousMatch();
+}
+
+void TestBrowser::nextFindMatch()
+{
+  mBrowser->findNextMatch();
 }

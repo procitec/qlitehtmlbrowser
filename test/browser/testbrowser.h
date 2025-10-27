@@ -35,12 +35,18 @@ protected:
   void openHelp();
   void loadHelp();
   void export2pdf();
+  void findText( const QString& text );
+  void nextFindMatch();
+  void previousFindMatch();
 
 private:
   QHelpBrowser* mBrowser;
   QMenuBar      mMenu;
   QDir          mLastDirectory;
-  QLineEdit*    mUrl = nullptr;
+  QLineEdit*    mUrl      = nullptr;
+  QLineEdit*    mFindText = nullptr;
   QToolBar      mToolBar;
-  QHelpEngine*  mHelpEngine = nullptr;
+  QHelpEngine*  mHelpEngine        = nullptr;
+  QAction*      mNextFindMatch     = nullptr;
+  QAction*      mPreviousFindMatch = nullptr;
 };

@@ -9,6 +9,9 @@
 #include <QtGui/QPagedPaintDevice>
 #include <QtCore/QStack>
 
+#include <string>
+#include <vector>
+
 class container_qt : public QAbstractScrollArea, protected litehtml::document_container
 {
   Q_OBJECT
@@ -31,6 +34,11 @@ public:
   void           setOpenExternalLinks( bool open ) { mOpenExternLinks = open; }
   const QString& caption() const { return mCaption; }
   void           print( QPagedPaintDevice* paintDevice );
+  int            findText( const QString& text );
+  void           findNextMatch();
+  void           findPreviousMatch();
+  void           setHighlightColor( const QColor& color ) { mHighlightColor = color; }
+  QColor         highlightColor() const { return mHighlightColor; }
 
 protected:
   void paintEvent( QPaintEvent* ) override;
@@ -73,7 +81,6 @@ protected:
 
   void get_media_features( litehtml::media_features& media ) const override;
   void get_language( litehtml::string& language, litehtml::string& culture ) const override;
-
   void resizeEvent( QResizeEvent* event ) override;
   bool event( QEvent* event ) override;
 
@@ -92,8 +99,11 @@ private:
   QRect                  scaled( const QRect& rect ) const;
   QPoint                 scaled( const QPoint& point ) const;
   int                    scaled( int i ) const;
+  QPoint                 inv_scaled( const QPoint& point ) const;
   int                    inv_scaled( int i ) const;
+  QSize                  inv_scaled( const QSize& size ) const;
   QPixmap                load_image_data( const QUrl& url );
+  QRect                  inv_scaled( const QRect& rect ) const;
   QPixmap                load_pixmap( const QUrl& url );
   QUrl                   resolveUrl( const char* src, const char* baseurl ) const;
   void                   render();
@@ -105,6 +115,41 @@ private:
   MousePos               convertMousePos( const QMouseEvent* event );
 
 private:
+  struct TextFragment
+  {
+    std::string            text;
+    litehtml::element::ptr element;
+    litehtml::position     pos;
+    int                    start_offset; // Offset in element text
+    int                    end_offset;   // end Offset in element text
+  };
+
+  struct TextFindMatch
+  {
+    std::string               matched_text;
+    std::vector<TextFragment> fragments;    // may contains multiple elements
+    litehtml::position        bounding_box; // bounding box over all elements
+  };
+
+  int                  find_text( litehtml::document::ptr doc, const std::string& search_term, bool case_sensitive = true );
+  bool                 find_next_match();
+  bool                 find_previous_match();
+  const TextFindMatch* find_current_match() const;
+  void                 highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const std::string& text );
+  void                 draw_highlights( litehtml::uint_ptr hdc );
+  void                 clear_highlights() { mFindMatches.clear(); }
+  std::string          normalizeWhitespace( const std::string& text );
+  void                 find_text_in_document( litehtml::document::ptr     doc,
+                                              const std::string&          search_term,
+                                              std::vector<TextFindMatch>& matches,
+                                              bool                        case_sensitive = true );
+  void                 collect_text_fragments( litehtml::element::ptr el, std::vector<TextFragment>& fragments, std::string& fullText );
+  litehtml::position   calculate_precise_bounding_box( const std::vector<TextFragment>& allFragments,
+                                                       int                              searchStart,
+                                                       int                              searchEnd,
+                                                       std::vector<TextFragment>&       matchedFragments );
+  void                 scroll_to_find_match( const TextFindMatch* );
+
   std::shared_ptr<litehtml::document> mDocument;
   QByteArray                          mDocumentSource;
   QUrl                                mBaseUrl;
@@ -123,5 +168,9 @@ private:
   QString                             mMasterCSS;
   QString                             mUserCSS;
   QStack<litehtml::position>          mClipStack;
-  litehtml::position                  mClip = {};
+  litehtml::position                  mClip                  = {};
+  std::vector<TextFindMatch>          mFindMatches           = {};
+  int                                 mFindCurrentMatchIndex = -1;
+  QColor                              mHighlightColor        = QColor( 255, 255, 0, 30 );
+  QString                             mFindText;
 };
