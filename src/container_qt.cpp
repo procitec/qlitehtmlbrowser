@@ -1030,13 +1030,13 @@ void container_qt::mousePressEvent( QMouseEvent* e )
         // something changed, redraw of boxes required;
         e->accept();
       }
-      else
-      {
-        auto elem = mDocument->get_over_element();
-        qDebug() << elem->get_placement().x << elem->get_tagName();
+      // else
+      // {
+      //   auto elem = mDocument->get_over_element();
+      //   qDebug() << elem->get_placement().x << elem->get_tagName();
 
-        e->ignore();
-      }
+      //   e->ignore();
+      // }
     }
     else
       e->ignore();

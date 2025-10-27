@@ -9,6 +9,9 @@
 #include <QtGui/QPagedPaintDevice>
 #include <QtCore/QStack>
 
+#include <string>
+#include <vector>
+
 class container_qt : public QAbstractScrollArea, protected litehtml::document_container
 {
   Q_OBJECT
