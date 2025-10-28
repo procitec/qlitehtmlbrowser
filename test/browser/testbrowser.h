@@ -6,7 +6,7 @@
 #include <QtWidgets/QToolBar>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QLabel>
-#include <QtWidgets/QAction>
+#include <QAction>
 #include <QtCore/QStringList>
 #include <QtCore/QDir>
 #include <QtHelp/QHelpEngine>
