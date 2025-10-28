@@ -78,6 +78,7 @@ Q_SIGNALS:
   /// emited when the url changed due to user interaction, e.g. link activation
   void urlChanged( const QUrl& );
   void anchorClicked( const QUrl& );
+  void scaled();
 
 private:
   class HistoryEntry

@@ -49,6 +49,7 @@ protected:
 
 Q_SIGNALS:
   void anchorClicked( const QUrl& );
+  void viewScaled();
 
 protected:
   litehtml::uint_ptr create_font(

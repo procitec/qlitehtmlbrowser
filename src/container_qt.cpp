@@ -873,6 +873,7 @@ void container_qt::setScale( double scale )
   findText( mFindText );
   horizontalScrollBar()->setValue( std::floor( relH * horizontalScrollBar()->maximum() ) );
   verticalScrollBar()->setValue( std::floor( relV * verticalScrollBar()->maximum() ) );
+  emit viewScaled();
 }
 
 void container_qt::get_media_features( litehtml::media_features& media ) const
