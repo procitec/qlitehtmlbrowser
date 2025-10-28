@@ -18,6 +18,7 @@ QLiteHtmlBrowser::QLiteHtmlBrowser( QWidget* parent )
 
   connect( mImpl, &QLiteHtmlBrowserImpl::urlChanged, this, &QLiteHtmlBrowser::sourceChanged );
   connect( mImpl, &QLiteHtmlBrowserImpl::anchorClicked, this, &QLiteHtmlBrowser::anchorClicked );
+  connect( mImpl, &QLiteHtmlBrowserImpl::scaleChanged, this, &QLiteHtmlBrowser::scaleChanged );
 }
 
 QUrl QLiteHtmlBrowser::source() const

@@ -10,6 +10,8 @@
 #include <QtGui/QPdfWriter>
 #include <QtCore/QDebug>
 #include <QtWidgets/QStyle>
+#include <QtWidgets/QStatusBar>
+#include <cmath>
 
 TestBrowser::TestBrowser()
 {
@@ -99,6 +101,14 @@ TestBrowser::TestBrowser()
   mHelpEngine         = new QHelpEngine( collectionFile );
   mHelpEngine->setupData();
   mBrowser->setHelpEnginge( mHelpEngine );
+
+  auto* statusbar = statusBar();
+  mScale          = new QLabel();
+  mScale->setText( mScaleText.arg( static_cast<int>( std::round( mBrowser->scale() * 100.0 ) ) ) );
+  statusbar->addPermanentWidget( mScale );
+
+  connect( mBrowser, &QHelpBrowser::scaleChanged, this,
+           [this]() { mScale->setText( mScaleText.arg( static_cast<int>( std::round( mBrowser->scale() * 100.0 ) ) ) ); } );
 }
 
 TestBrowser::~TestBrowser()

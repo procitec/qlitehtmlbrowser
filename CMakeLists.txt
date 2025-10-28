@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
 
-project( QLiteHtmlBrowser VERSION 2.2.0 )
+project( QLiteHtmlBrowser VERSION 2.2.1 )
 
 include(GNUInstallDirs)
 

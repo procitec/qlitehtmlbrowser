@@ -355,7 +355,7 @@ void container_qt::draw_list_marker( litehtml::uint_ptr hdc, const litehtml::lis
   {
     auto url   = resolveUrl( marker.image.c_str(), marker.baseurl );
     auto image = load_pixmap( url );
-    p->drawPixmap( /*scaled*/ ( QRect( marker.pos.x, marker.pos.y, marker.pos.width, marker.pos.height ) ), image );
+    p->drawPixmap( QRect( marker.pos.x, marker.pos.y, marker.pos.width, marker.pos.height ), image );
   }
   else
   {
@@ -537,7 +537,6 @@ void container_qt::draw_background( litehtml::uint_ptr hdc, const std::vector<li
         {
           // qDebug() << "draw_background: image" << bg.image_size.width << bg.image_size.height;
           // qDebug() << "draw_background: pixmap" << pm.width() << pm.height();
-          pm = pm.scaled( bg.image_size.width, bg.image_size.height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation );
           p->drawPixmap( QRect( bg.position_x, bg.position_y, bg.image_size.width, bg.image_size.height ), pm );
         }
         break;
@@ -874,6 +873,7 @@ void container_qt::setScale( double scale )
   findText( mFindText );
   horizontalScrollBar()->setValue( std::floor( relH * horizontalScrollBar()->maximum() ) );
   verticalScrollBar()->setValue( std::floor( relV * verticalScrollBar()->maximum() ) );
+  emit scaleChanged();
 }
 
 void container_qt::get_media_features( litehtml::media_features& media ) const

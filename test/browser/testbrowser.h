@@ -5,7 +5,9 @@
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QToolBar>
 #include <QtWidgets/QLineEdit>
+#include <QtWidgets/QLabel>
 #include <QAction>
+#include <QtCore/QStringList>
 #include <QtCore/QDir>
 #include <QtHelp/QHelpEngine>
 
@@ -49,4 +51,6 @@ private:
   QHelpEngine*  mHelpEngine        = nullptr;
   QAction*      mNextFindMatch     = nullptr;
   QAction*      mPreviousFindMatch = nullptr;
+  QLabel*       mScale             = nullptr;
+  QString       mScaleText         = tr( "Zoom: %1%" );
 };

@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.2.1
+
+- [#17](https://github.com/procitec/qlitehtmlbrowser/issues/17): Scale changed signal
+- [#22](https://github.com/procitec/qlitehtmlbrowser/issues/22): Scaling makes images blurry with css properties `width`
+
 ## v2.2.0
 
 - [#20](https://github.com/procitec/qlitehtmlbrowser/issues/20): Feature Search Text
