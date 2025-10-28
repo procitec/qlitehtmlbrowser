@@ -185,8 +185,8 @@ Q_SIGNALS:
   /// send when an anchor is clicked in the document, even if link is not activated, @see setOpenLinks
   void anchorClicked( const QUrl& );
 
-  /// send when scaled
-  void scaled();
+  /// send when scale changes
+  void scaleChanged();
 
 protected:
 private:

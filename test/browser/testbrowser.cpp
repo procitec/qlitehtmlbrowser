@@ -107,7 +107,7 @@ TestBrowser::TestBrowser()
   mScale->setText( mScaleText.arg( static_cast<int>( std::round( mBrowser->scale() * 100.0 ) ) ) );
   statusbar->addPermanentWidget( mScale );
 
-  connect( mBrowser, &QHelpBrowser::scaled, this,
+  connect( mBrowser, &QHelpBrowser::scaleChanged, this,
            [this]() { mScale->setText( mScaleText.arg( static_cast<int>( std::round( mBrowser->scale() * 100.0 ) ) ) ); } );
 }
 
