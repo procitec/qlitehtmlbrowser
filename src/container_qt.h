@@ -1,7 +1,7 @@
 #pragma once
 
 #include "litehtml.h"
-#include "TextHelpers.h"
+#include "DOMTextManager.h"
 #include "browserdefinitions.h"
 
 #include <QtWidgets/QAbstractScrollArea>
@@ -43,7 +43,7 @@ public:
 
   void                               copySelectionToClipboard();
   QString                            getSelectedText() const;
-  const TextHelpers::SelectionRange& getCurrentSelection() const;
+  const DOMTextManager::SelectionRange& getCurrentSelection() const;
   void                               clearSelection();
 
 protected:
@@ -130,21 +130,21 @@ private:
   int                               find_text( litehtml::document::ptr doc, const std::string& search_term, bool case_sensitive = true );
   bool                              find_next_match();
   bool                              find_previous_match();
-  const TextHelpers::TextFindMatch* find_current_match() const;
-  void                              highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const std::string& text );
+  const DOMTextManager::TextFindMatch* find_current_match() const;
+  void highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const DOMTextManager::TextFindMatch& match );
   void                              draw_highlights( litehtml::uint_ptr hdc );
   void                              clear_highlights() { mFindMatches.clear(); }
-  std::string                       normalizeWhitespace( const std::string& text );
-  void                              find_text_in_document( litehtml::document::ptr                  doc,
-                                                           const std::string&                       search_term,
-                                                           std::vector<TextHelpers::TextFindMatch>& matches,
-                                                           bool                                     case_sensitive = true );
-  void               collect_text_fragments( litehtml::element::ptr el, std::vector<TextHelpers::TextFragment>& fragments, std::string& fullText );
-  litehtml::position calculate_precise_bounding_box( const std::vector<TextHelpers::TextFragment>& allFragments,
-                                                     int                                           searchStart,
-                                                     int                                           searchEnd,
-                                                     std::vector<TextHelpers::TextFragment>&       matchedFragments );
-  void               scroll_to_find_match( const TextHelpers::TextFindMatch* );
+  // std::string                       normalizeWhitespace( const std::string& text );
+  //  void                              find_text_in_document( litehtml::document::ptr                  doc,
+  //                                                           const std::string&                       search_term,
+  //                                                           std::vector<DOMTextManager::TextFindMatch>& matches,
+  //                                                           bool                                     case_sensitive = true );
+  // void               collect_text_fragments( litehtml::element::ptr el, std::vector<DOMTextManager::TextFragment>& fragments, std::string& fullText
+  // ); litehtml::position calculate_precise_bounding_box( const std::vector<DOMTextManager::TextFragment>& allFragments,
+  //                                                    int                                           searchStart,
+  //                                                    int                                           searchEnd,
+  //                                                    std::vector<DOMTextManager::TextFragment>&       matchedFragments );
+  void scroll_to_find_match( const DOMTextManager::TextFindMatch* );
 
   std::shared_ptr<litehtml::document>     mDocument;
   QByteArray                              mDocumentSource;
@@ -165,15 +165,15 @@ private:
   QString                                 mUserCSS;
   QStack<litehtml::position>              mClipStack;
   litehtml::position                      mClip                  = {};
-  std::vector<TextHelpers::TextFindMatch> mFindMatches           = {};
+  std::vector<DOMTextManager::TextFindMatch> mFindMatches           = {};
   int                                     mFindCurrentMatchIndex = -1;
   QColor                                  mHighlightColor        = QColor( 255, 255, 0, 30 );
   QString                                 mFindText;
 
   // for selection
 
-  TextHelpers::DOMTextManager m_textManager;
-  TextHelpers::SelectionRange m_currentSelection;
+  DOMTextManager                 m_textManager;
+  DOMTextManager::SelectionRange m_currentSelection;
   bool                        m_isSelecting;
-  TextHelpers::TextPosition   m_selectionStart;
+  DOMTextManager::TextPosition   m_selectionStart;
 };

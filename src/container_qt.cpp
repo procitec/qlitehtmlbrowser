@@ -22,8 +22,6 @@
 #include <cmath>
 #include <string>
 
-using namespace TextHelpers;
-
 static const auto CSS_GENERIC_FONT_TO_QFONT_STYLEHINT = QMap<QString, QFont::StyleHint>{ { "serif", QFont::StyleHint::Serif },
                                                                                          { "sans-serif", QFont::StyleHint::SansSerif },
                                                                                          { "monospace", QFont::StyleHint::Monospace },
@@ -1001,7 +999,7 @@ void container_qt::mouseMoveEvent( QMouseEvent* e )
     }
     if ( m_isSelecting && m_selectionStart.isValid() )
     {
-      TextPosition currentPos = m_textManager.getPositionAtCoordinates( mousePos.client.x(), mousePos.client.y() );
+      DOMTextManager::TextPosition currentPos = m_textManager.getPositionAtCoordinates( mousePos.client.x(), mousePos.client.y() );
 
       if ( currentPos.isValid() )
       {
@@ -1038,7 +1036,7 @@ void container_qt::mouseReleaseEvent( QMouseEvent* e )
           qDebug() << getSelectedText();
           qDebug() << "================================\n";
           emit selectionChanged( getSelectedText() );
-          copySelectionToClipboard();
+          // copySelectionToClipboard();
         }
       }
       // else
@@ -1130,187 +1128,187 @@ int container_qt::findText( const QString& text )
   return mFindMatches.size();
 }
 
-// normalize Whitespace: multiple whitespaces to one
-std::string container_qt::normalizeWhitespace( const std::string& text )
-{
-  std::string normalized;
-  bool        lastWasSpace = false;
+// // normalize Whitespace: multiple whitespaces to one
+// std::string container_qt::normalizeWhitespace( const std::string& text )
+// {
+//   std::string normalized;
+//   bool        lastWasSpace = false;
 
-  for ( char c : text )
-  {
-    if ( std::isspace( static_cast<unsigned char>( c ) ) )
-    {
-      if ( !lastWasSpace && !normalized.empty() )
-      {
-        normalized += ' ';
-        lastWasSpace = true;
-      }
-    }
-    else
-    {
-      normalized += c;
-      lastWasSpace = false;
-    }
-  }
+//   for ( char c : text )
+//   {
+//     if ( std::isspace( static_cast<unsigned char>( c ) ) )
+//     {
+//       if ( !lastWasSpace && !normalized.empty() )
+//       {
+//         normalized += ' ';
+//         lastWasSpace = true;
+//       }
+//     }
+//     else
+//     {
+//       normalized += c;
+//       lastWasSpace = false;
+//     }
+//   }
 
-  return normalized;
-}
+//   return normalized;
+// }
 
-void container_qt::collect_text_fragments( litehtml::element::ptr el, std::vector<TextFragment>& fragments, std::string& fullText )
-{
-  if ( !el )
-    return;
+// void container_qt::collect_text_fragments( litehtml::element::ptr el, std::vector<TextFragment>& fragments, std::string& fullText )
+// {
+//   if ( !el )
+//     return;
 
-  std::string text;
-  el->get_text( text );
-  if ( !text.empty() && el->is_text() )
-  {
-    TextFragment fragment;
-    fragment.text              = text;
-    fragment.element           = el;
-    fragment.pos               = el->get_placement();
-    fragment.start_char_offset = static_cast<int>( fullText.length() );
+//   std::string text;
+//   el->get_text( text );
+//   if ( !text.empty() && el->is_text() )
+//   {
+//     TextFragment fragment;
+//     fragment.text              = text;
+//     fragment.element           = el;
+//     fragment.pos               = el->get_placement();
+//     fragment.start_char_offset = static_cast<int>( fullText.length() );
 
-    std::string normalized = normalizeWhitespace( text );
-    fullText += normalized;
+//     std::string normalized = normalizeWhitespace( text );
+//     fullText += normalized;
 
-    fragment.end_char_offset = static_cast<int>( fullText.length() );
-    fragments.push_back( fragment );
+//     fragment.end_char_offset = static_cast<int>( fullText.length() );
+//     fragments.push_back( fragment );
 
-    // Leerzeichen zwischen Elementen
-    if ( !fullText.empty() && !std::isspace( fullText.back() ) )
-    {
-      fullText += ' ';
-    }
-  }
+//     // Leerzeichen zwischen Elementen
+//     if ( !fullText.empty() && !std::isspace( fullText.back() ) )
+//     {
+//       fullText += ' ';
+//     }
+//   }
 
-  for ( auto it = el->children().begin(); it != el->children().end(); ++it )
-  {
-    collect_text_fragments( ( *it ), fragments, fullText );
-  }
-}
+//   for ( auto it = el->children().begin(); it != el->children().end(); ++it )
+//   {
+//     collect_text_fragments( ( *it ), fragments, fullText );
+//   }
+// }
 
-// calculate bounding box for all elements found in search
-litehtml::position container_qt::calculate_precise_bounding_box( const std::vector<TextFragment>& allFragments,
-                                                                 int                              searchStart,
-                                                                 int                              searchEnd,
-                                                                 std::vector<TextFragment>&       matchedFragments )
-{
-  litehtml::position boundingBox   = { 0, 0, 0, 0 };
-  bool               firstFragment = true;
+// // calculate bounding box for all elements found in search
+// litehtml::position container_qt::calculate_precise_bounding_box( const std::vector<TextFragment>& allFragments,
+//                                                                  int                              searchStart,
+//                                                                  int                              searchEnd,
+//                                                                  std::vector<TextFragment>&       matchedFragments )
+// {
+//   litehtml::position boundingBox   = { 0, 0, 0, 0 };
+//   bool               firstFragment = true;
 
-  for ( const auto& fragment : allFragments )
-  {
-    // check if this fragment is part of the search
-    int overlapStart = std::max( searchStart, fragment.start_char_offset );
-    int overlapEnd   = std::min( searchEnd, fragment.end_char_offset );
+//   for ( const auto& fragment : allFragments )
+//   {
+//     // check if this fragment is part of the search
+//     int overlapStart = std::max( searchStart, fragment.start_char_offset );
+//     int overlapEnd   = std::min( searchEnd, fragment.end_char_offset );
 
-    if ( overlapStart < overlapEnd )
-    {
-      // yes this fragment is part of the search
-      TextFragment matchedFragment = fragment;
+//     if ( overlapStart < overlapEnd )
+//     {
+//       // yes this fragment is part of the search
+//       TextFragment matchedFragment = fragment;
 
-      // offsets relative to start
-      int fragmentTextStart = overlapStart - fragment.start_char_offset;
-      int fragmentTextEnd   = overlapEnd - fragment.start_char_offset;
+//       // offsets relative to start
+//       int fragmentTextStart = overlapStart - fragment.start_char_offset;
+//       int fragmentTextEnd   = overlapEnd - fragment.start_char_offset;
 
-      matchedFragment.start_char_offset = fragmentTextStart;
-      matchedFragment.end_char_offset   = fragmentTextEnd;
+//       matchedFragment.start_char_offset = fragmentTextStart;
+//       matchedFragment.end_char_offset   = fragmentTextEnd;
 
-      // calculate width of text
-      // Importnat: use text_width from document_container
-      std::string matchedText = fragment.text.substr( fragmentTextStart, fragmentTextEnd - fragmentTextStart );
+//       // calculate width of text
+//       // Importnat: use text_width from document_container
+//       std::string matchedText = fragment.text.substr( fragmentTextStart, fragmentTextEnd - fragmentTextStart );
 
-      // estimated position (kann mit text_width verfeinert werden)
-      litehtml::position fragmentPos = fragment.pos;
+//       // estimated position (kann mit text_width verfeinert werden)
+//       litehtml::position fragmentPos = fragment.pos;
 
-      // for more precise positioning text_width would be helpfull
-      // int textWidthBefore = container->text_width(
-      //     fragment.text.substr(0, fragmentTextStart).c_str(),
-      //     font
-      // );
-      // fragmentPos.x += textWidthBefore;
-      // fragmentPos.width = container->text_width(matchedText.c_str(), font);
+//       // for more precise positioning text_width would be helpfull
+//       // int textWidthBefore = container->text_width(
+//       //     fragment.text.substr(0, fragmentTextStart).c_str(),
+//       //     font
+//       // );
+//       // fragmentPos.x += textWidthBefore;
+//       // fragmentPos.width = container->text_width(matchedText.c_str(), font);
 
-      // simplified approximation
-      if ( fragment.text.length() > 0 )
-      {
-        float charWidth = static_cast<float>( fragment.pos.width ) / static_cast<float>( fragment.text.length() );
-        fragmentPos.x += static_cast<int>( charWidth * fragmentTextStart );
-        fragmentPos.width = static_cast<int>( charWidth * matchedText.length() );
-      }
+//       // simplified approximation
+//       if ( fragment.text.length() > 0 )
+//       {
+//         float charWidth = static_cast<float>( fragment.pos.width ) / static_cast<float>( fragment.text.length() );
+//         fragmentPos.x += static_cast<int>( charWidth * fragmentTextStart );
+//         fragmentPos.width = static_cast<int>( charWidth * matchedText.length() );
+//       }
 
-      matchedFragments.push_back( matchedFragment );
+//       matchedFragments.push_back( matchedFragment );
 
-      // extend Bounding Box
-      if ( firstFragment )
-      {
-        boundingBox   = fragmentPos;
-        firstFragment = false;
-      }
-      else
-      {
-        // Min/Max for containing Box
-        int minX = std::min( boundingBox.x, fragmentPos.x );
-        int minY = std::min( boundingBox.y, fragmentPos.y );
-        int maxX = std::max( boundingBox.x + boundingBox.width, fragmentPos.x + fragmentPos.width );
-        int maxY = std::max( boundingBox.y + boundingBox.height, fragmentPos.y + fragmentPos.height );
+//       // extend Bounding Box
+//       if ( firstFragment )
+//       {
+//         boundingBox   = fragmentPos;
+//         firstFragment = false;
+//       }
+//       else
+//       {
+//         // Min/Max for containing Box
+//         int minX = std::min( boundingBox.x, fragmentPos.x );
+//         int minY = std::min( boundingBox.y, fragmentPos.y );
+//         int maxX = std::max( boundingBox.x + boundingBox.width, fragmentPos.x + fragmentPos.width );
+//         int maxY = std::max( boundingBox.y + boundingBox.height, fragmentPos.y + fragmentPos.height );
 
-        boundingBox.x      = minX;
-        boundingBox.y      = minY;
-        boundingBox.width  = maxX - minX;
-        boundingBox.height = maxY - minY;
-      }
-    }
-  }
+//         boundingBox.x      = minX;
+//         boundingBox.y      = minY;
+//         boundingBox.width  = maxX - minX;
+//         boundingBox.height = maxY - minY;
+//       }
+//     }
+//   }
 
-  return boundingBox;
-}
+//   return boundingBox;
+// }
 
-// search document for Text including multiword phrases
-void container_qt::find_text_in_document( litehtml::document::ptr     doc,
-                                          const std::string&          search_term,
-                                          std::vector<TextFindMatch>& matches,
-                                          bool                        case_sensitive )
-{
-  if ( !doc || search_term.empty() )
-    return;
+// // search document for Text including multiword phrases
+// void container_qt::find_text_in_document( litehtml::document::ptr     doc,
+//                                           const std::string&          search_term,
+//                                           std::vector<TextFindMatch>& matches,
+//                                           bool                        case_sensitive )
+// {
+//   if ( !doc || search_term.empty() )
+//     return;
 
-  // Sammle alle Text-Fragmente mit Positionen
-  std::vector<TextFragment> fragments;
-  std::string               fullText;
-  collect_text_fragments( doc->root(), fragments, fullText );
+//   // Sammle alle Text-Fragmente mit Positionen
+//   std::vector<TextFragment> fragments;
+//   std::string               fullText;
+//   collect_text_fragments( doc->root(), fragments, fullText );
 
-  // Normalisiere Text für Suche
-  std::string normalizedFullText   = normalizeWhitespace( fullText );
-  std::string normalizedSearchTerm = normalizeWhitespace( search_term );
+//   // Normalisiere Text für Suche
+//   std::string normalizedFullText   = normalizeWhitespace( fullText );
+//   std::string normalizedSearchTerm = normalizeWhitespace( search_term );
 
-  std::string findText  = normalizedFullText;
-  std::string searchFor = normalizedSearchTerm;
+//   std::string findText  = normalizedFullText;
+//   std::string searchFor = normalizedSearchTerm;
 
-  if ( !case_sensitive )
-  {
-    std::transform( findText.begin(), findText.end(), findText.begin(), ::tolower );
-    std::transform( searchFor.begin(), searchFor.end(), searchFor.begin(), ::tolower );
-  }
+//   if ( !case_sensitive )
+//   {
+//     std::transform( findText.begin(), findText.end(), findText.begin(), ::tolower );
+//     std::transform( searchFor.begin(), searchFor.end(), searchFor.begin(), ::tolower );
+//   }
 
-  // Alle Vorkommen finden
-  size_t pos = 0;
-  while ( ( pos = findText.find( searchFor, pos ) ) != std::string::npos )
-  {
-    TextFindMatch match;
-    match.matched_text = normalizedFullText.substr( pos, searchFor.length() );
+//   // Alle Vorkommen finden
+//   size_t pos = 0;
+//   while ( ( pos = findText.find( searchFor, pos ) ) != std::string::npos )
+//   {
+//     TextFindMatch match;
+//     match.matched_text = normalizedFullText.substr( pos, searchFor.length() );
 
-    int searchStart = static_cast<int>( pos );
-    int searchEnd   = static_cast<int>( pos + searchFor.length() );
+//     int searchStart = static_cast<int>( pos );
+//     int searchEnd   = static_cast<int>( pos + searchFor.length() );
 
-    // Berechne präzise Bounding Box
-    match.bounding_box = calculate_precise_bounding_box( fragments, searchStart, searchEnd, match.fragments );
+//     // Berechne präzise Bounding Box
+//     match.bounding_box = calculate_precise_bounding_box( fragments, searchStart, searchEnd, match.fragments );
 
-    matches.push_back( match );
-    pos += searchFor.length();
-  }
-}
+//     matches.push_back( match );
+//     pos += searchFor.length();
+//   }
+// }
 
 // Textsuche durchführen
 int container_qt::find_text( litehtml::document::ptr doc, const std::string& search_term, bool case_sensitive )
@@ -1323,8 +1321,7 @@ int container_qt::find_text( litehtml::document::ptr doc, const std::string& sea
     return 0;
   }
 
-  // Suche vom Root-Element starten
-  find_text_in_document( mDocument, search_term, mFindMatches, case_sensitive );
+  mFindMatches = m_textManager.findText( search_term, case_sensitive );
 
   if ( !mFindMatches.empty() )
   {
@@ -1363,7 +1360,7 @@ bool container_qt::find_previous_match()
 }
 
 // Aktuelles Suchergebnis mit Position holen
-const TextHelpers::TextFindMatch* container_qt::find_current_match() const
+const DOMTextManager::TextFindMatch* container_qt::find_current_match() const
 {
   if ( mFindCurrentMatchIndex >= 0 && mFindCurrentMatchIndex < static_cast<int>( mFindMatches.size() ) )
   {
@@ -1380,17 +1377,17 @@ void container_qt::draw_highlights( litehtml::uint_ptr hdc )
     for ( auto it = match.fragments.begin(); it != match.fragments.end(); ++it )
     {
       litehtml::position pos = ( *it ).pos;
-      highlight_text_at_position( hdc, pos, match.matched_text );
+      highlight_text_at_position( hdc, pos, match );
     }
   }
 }
 
 // draw highlighted text at position
-void container_qt::highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const std::string& text )
+void container_qt::highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const DOMTextManager::TextFindMatch& match )
 {
 
-  qDebug() << "Highlighting text '" << QString::fromStdString( text ) << "' at position (" << pos.x << ", " << pos.y << ") with size " << pos.width
-           << "x" << pos.height;
+  qDebug() << "Highlighting text '" << QString::fromStdString( match.matched_text ) << "' at position (" << pos.x << ", " << pos.y << ") with size "
+           << pos.width << "x" << pos.height;
 
   QPainter* p( reinterpret_cast<QPainter*>( hdc ) );
   p->save();
@@ -1402,6 +1399,10 @@ void container_qt::highlight_text_at_position( litehtml::uint_ptr hdc, const lit
   auto scroll_pos = -scrollBarPos();
 
   p->drawRect( ( QRect( pos.x + scroll_pos.x(), pos.y + scroll_pos.y(), pos.width, pos.height ) ) );
+
+  // p->setPen( QPen( Qt::green, 3, Qt::DotLine ) );
+  // p->setBrush( Qt::NoBrush );
+  // p->drawRect( match.bounding_box.x + scroll_pos.x(), match.bounding_box.y + scroll_pos.y(), match.bounding_box.width, match.bounding_box.height );
 
   p->restore();
 }
@@ -1424,7 +1425,7 @@ void container_qt::findPreviousMatch()
   }
 }
 
-void container_qt::scroll_to_find_match( const TextFindMatch* match )
+void container_qt::scroll_to_find_match( const DOMTextManager::TextFindMatch* match )
 {
   if ( !match )
   {
@@ -1488,7 +1489,7 @@ QString container_qt::getSelectedText() const
   return result;
 }
 
-const SelectionRange& container_qt::getCurrentSelection() const
+const DOMTextManager::SelectionRange& container_qt::getCurrentSelection() const
 {
   return m_currentSelection;
 }

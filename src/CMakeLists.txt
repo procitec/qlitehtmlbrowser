@@ -22,7 +22,7 @@ target_sources(QLiteHtmlBrowser
         QLiteHtmlBrowser.cpp
         QLiteHtmlBrowserImpl.cpp
         QLiteHtmlBrowserImpl.h
-        TextHelpers.h
+        DOMTextManager.h
         container_qt.cpp
         container_qt.h
         browserdefinitions.h
