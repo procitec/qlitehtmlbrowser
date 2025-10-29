@@ -1,6 +1,7 @@
 #pragma once
 
 #include "litehtml.h"
+#include "TextHelpers.h"
 #include "browserdefinitions.h"
 
 #include <QtWidgets/QAbstractScrollArea>
@@ -40,6 +41,11 @@ public:
   void           setHighlightColor( const QColor& color ) { mHighlightColor = color; }
   QColor         highlightColor() const { return mHighlightColor; }
 
+  void                               copySelectionToClipboard();
+  QString                            getSelectedText() const;
+  const TextHelpers::SelectionRange& getCurrentSelection() const;
+  void                               clearSelection();
+
 protected:
   void paintEvent( QPaintEvent* ) override;
   void wheelEvent( QWheelEvent* ) override;
@@ -50,6 +56,7 @@ protected:
 Q_SIGNALS:
   void anchorClicked( const QUrl& );
   void scaleChanged();
+  void selectionChanged( const QString& selectedText );
 
 protected:
   litehtml::uint_ptr create_font(
@@ -84,8 +91,12 @@ protected:
   void get_language( litehtml::string& language, litehtml::string& culture ) const override;
   void resizeEvent( QResizeEvent* event ) override;
   bool event( QEvent* event ) override;
+  void keyPressEvent( QKeyEvent* event ) override;
 
 private:
+  // selection
+  void drawSelection( QPainter& painter );
+
   void applyClip( QPainter* p );
   bool checkClipRect( QPainter* p, const QRect& rect ) const;
 
@@ -116,62 +127,53 @@ private:
   MousePos               convertMousePos( const QMouseEvent* event );
 
 private:
-  struct TextFragment
-  {
-    std::string            text;
-    litehtml::element::ptr element;
-    litehtml::position     pos;
-    int                    start_offset; // Offset in element text
-    int                    end_offset;   // end Offset in element text
-  };
+  int                               find_text( litehtml::document::ptr doc, const std::string& search_term, bool case_sensitive = true );
+  bool                              find_next_match();
+  bool                              find_previous_match();
+  const TextHelpers::TextFindMatch* find_current_match() const;
+  void                              highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const std::string& text );
+  void                              draw_highlights( litehtml::uint_ptr hdc );
+  void                              clear_highlights() { mFindMatches.clear(); }
+  std::string                       normalizeWhitespace( const std::string& text );
+  void                              find_text_in_document( litehtml::document::ptr                  doc,
+                                                           const std::string&                       search_term,
+                                                           std::vector<TextHelpers::TextFindMatch>& matches,
+                                                           bool                                     case_sensitive = true );
+  void               collect_text_fragments( litehtml::element::ptr el, std::vector<TextHelpers::TextFragment>& fragments, std::string& fullText );
+  litehtml::position calculate_precise_bounding_box( const std::vector<TextHelpers::TextFragment>& allFragments,
+                                                     int                                           searchStart,
+                                                     int                                           searchEnd,
+                                                     std::vector<TextHelpers::TextFragment>&       matchedFragments );
+  void               scroll_to_find_match( const TextHelpers::TextFindMatch* );
 
-  struct TextFindMatch
-  {
-    std::string               matched_text;
-    std::vector<TextFragment> fragments;    // may contains multiple elements
-    litehtml::position        bounding_box; // bounding box over all elements
-  };
+  std::shared_ptr<litehtml::document>     mDocument;
+  QByteArray                              mDocumentSource;
+  QUrl                                    mBaseUrl;
+  QUrl                                    mSourceUrl;
+  int                                     mFontSize           = 12;
+  double                                  mScale              = 1.0;
+  double                                  mMinScale           = 0.1;
+  double                                  mMaxScale           = 4.0;
+  QHash<QUrl, QPixmap>                    mPixmapCache        = {};
+  Browser::ResourceHandlerType            mResourceHandler    = {};
+  bool                                    mOpenLinks          = true;
+  bool                                    mOpenExternLinks    = false;
+  QByteArray                              mFontInfo           = {};
+  QString                                 mCaption            = {};
+  Browser::UrlResolveHandlerType          mUrlResolverHandler = {};
+  QString                                 mMasterCSS;
+  QString                                 mUserCSS;
+  QStack<litehtml::position>              mClipStack;
+  litehtml::position                      mClip                  = {};
+  std::vector<TextHelpers::TextFindMatch> mFindMatches           = {};
+  int                                     mFindCurrentMatchIndex = -1;
+  QColor                                  mHighlightColor        = QColor( 255, 255, 0, 30 );
+  QString                                 mFindText;
 
-  int                  find_text( litehtml::document::ptr doc, const std::string& search_term, bool case_sensitive = true );
-  bool                 find_next_match();
-  bool                 find_previous_match();
-  const TextFindMatch* find_current_match() const;
-  void                 highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const std::string& text );
-  void                 draw_highlights( litehtml::uint_ptr hdc );
-  void                 clear_highlights() { mFindMatches.clear(); }
-  std::string          normalizeWhitespace( const std::string& text );
-  void                 find_text_in_document( litehtml::document::ptr     doc,
-                                              const std::string&          search_term,
-                                              std::vector<TextFindMatch>& matches,
-                                              bool                        case_sensitive = true );
-  void                 collect_text_fragments( litehtml::element::ptr el, std::vector<TextFragment>& fragments, std::string& fullText );
-  litehtml::position   calculate_precise_bounding_box( const std::vector<TextFragment>& allFragments,
-                                                       int                              searchStart,
-                                                       int                              searchEnd,
-                                                       std::vector<TextFragment>&       matchedFragments );
-  void                 scroll_to_find_match( const TextFindMatch* );
+  // for selection
 
-  std::shared_ptr<litehtml::document> mDocument;
-  QByteArray                          mDocumentSource;
-  QUrl                                mBaseUrl;
-  QUrl                                mSourceUrl;
-  int                                 mFontSize           = 12;
-  double                              mScale              = 1.0;
-  double                              mMinScale           = 0.1;
-  double                              mMaxScale           = 4.0;
-  QHash<QUrl, QPixmap>                mPixmapCache        = {};
-  Browser::ResourceHandlerType        mResourceHandler    = {};
-  bool                                mOpenLinks          = true;
-  bool                                mOpenExternLinks    = false;
-  QByteArray                          mFontInfo           = {};
-  QString                             mCaption            = {};
-  Browser::UrlResolveHandlerType      mUrlResolverHandler = {};
-  QString                             mMasterCSS;
-  QString                             mUserCSS;
-  QStack<litehtml::position>          mClipStack;
-  litehtml::position                  mClip                  = {};
-  std::vector<TextFindMatch>          mFindMatches           = {};
-  int                                 mFindCurrentMatchIndex = -1;
-  QColor                              mHighlightColor        = QColor( 255, 255, 0, 30 );
-  QString                             mFindText;
+  TextHelpers::DOMTextManager m_textManager;
+  TextHelpers::SelectionRange m_currentSelection;
+  bool                        m_isSelecting;
+  TextHelpers::TextPosition   m_selectionStart;
 };

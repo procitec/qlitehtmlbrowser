@@ -16,10 +16,13 @@
 #include <QtWidgets/QApplication>
 #include <QtGui/QScreen>
 #include <QtCore/QTextBoundaryFinder>
+#include <QClipboard>
 
 #include <algorithm>
 #include <cmath>
 #include <string>
+
+using namespace TextHelpers;
 
 static const auto CSS_GENERIC_FONT_TO_QFONT_STYLEHINT = QMap<QString, QFont::StyleHint>{ { "serif", QFont::StyleHint::Serif },
                                                                                          { "sans-serif", QFont::StyleHint::SansSerif },
@@ -46,6 +49,7 @@ container_qt::container_qt( QWidget* parent )
   connect( shortcut, &QShortcut::activated, this, [this]() { setScale( 1.0 ); } );
 
   setMouseTracking( true );
+  setFocusPolicy( Qt::StrongFocus );
 }
 
 void container_qt::setCSS( const QString& master_css, const QString& user_css )
@@ -72,7 +76,10 @@ void container_qt::setHtml( const QString& html, const QUrl& source_url )
       mDocumentSource, this, mMasterCSS.isEmpty() ? litehtml::master_css : mMasterCSS.toUtf8().constData(), mUserCSS.toUtf8().constData() );
     verticalScrollBar()->setValue( 0 );
     horizontalScrollBar()->setValue( 0 );
+
+    m_currentSelection.clear();
     render();
+    m_textManager.buildFromDocument( mDocument );
 
     auto frag = source_url.fragment();
     if ( !frag.isEmpty() )
@@ -127,6 +134,10 @@ void container_qt::paintEvent( QPaintEvent* event )
 
       mDocument->draw( hdc, margins.left() + scroll_pos.x(), margins.top() + scroll_pos.y(), &clipRect );
       draw_highlights( hdc );
+      if ( !m_currentSelection.isEmpty() )
+      {
+        drawSelection( p );
+      }
     }
   }
 }
@@ -979,7 +990,6 @@ QRect container_qt::inv_scaled( const QRect& rect ) const
 
 void container_qt::mouseMoveEvent( QMouseEvent* e )
 {
-
   if ( e && mDocument )
   {
 
@@ -989,6 +999,17 @@ void container_qt::mouseMoveEvent( QMouseEvent* e )
     {
       // something changed, redraw of boxes required;
     }
+    if ( m_isSelecting && m_selectionStart.isValid() )
+    {
+      TextPosition currentPos = m_textManager.getPositionAtCoordinates( mousePos.client.x(), mousePos.client.y() );
+
+      if ( currentPos.isValid() )
+      {
+        m_currentSelection = m_textManager.getSelectionBetween( m_selectionStart, currentPos );
+        update();
+      }
+    }
+
     //  bool litehtml::document::on_mouse_leave( position::vector& redraw_boxes );
   }
 }
@@ -1005,8 +1026,23 @@ void container_qt::mouseReleaseEvent( QMouseEvent* e )
         // something changed, redraw of boxes required;
         e->accept();
       }
-      else
-        e->ignore();
+      if ( e->button() == Qt::LeftButton )
+      {
+        qDebug() << "selection finished";
+        m_isSelecting = false;
+
+        if ( !m_currentSelection.isEmpty() )
+        {
+          qDebug() << "selection got selected text with " << getSelectedText().count() << "fragments";
+          qDebug() << "\n=== Selektierter Text ===";
+          qDebug() << getSelectedText();
+          qDebug() << "================================\n";
+          emit selectionChanged( getSelectedText() );
+          copySelectionToClipboard();
+        }
+      }
+      // else
+      //   e->ignore();
     }
     else
       e->ignore();
@@ -1023,15 +1059,14 @@ void container_qt::mousePressEvent( QMouseEvent* e )
       if ( mDocument->on_lbutton_down( mousePos.html.x(), mousePos.html.y(), mousePos.client.x(), mousePos.client.y(), redraw_boxes ) )
       {
         // something changed, redraw of boxes required;
-        e->accept();
       }
-      // else
-      // {
-      //   auto elem = mDocument->get_over_element();
-      //   qDebug() << elem->get_placement().x << elem->get_tagName();
 
-      //   e->ignore();
-      // }
+      m_isSelecting    = true;
+      m_selectionStart = m_textManager.getPositionAtCoordinates( mousePos.client.x(), mousePos.client.y() );
+      qDebug() << "selection started with" << QPoint( m_selectionStart.element_pos.x, m_selectionStart.element_pos.y );
+      m_currentSelection.clear();
+      e->accept();
+      update();
     }
     else
       e->ignore();
@@ -1131,15 +1166,15 @@ void container_qt::collect_text_fragments( litehtml::element::ptr el, std::vecto
   if ( !text.empty() && el->is_text() )
   {
     TextFragment fragment;
-    fragment.text         = text;
-    fragment.element      = el;
-    fragment.pos          = el->get_placement();
-    fragment.start_offset = static_cast<int>( fullText.length() );
+    fragment.text              = text;
+    fragment.element           = el;
+    fragment.pos               = el->get_placement();
+    fragment.start_char_offset = static_cast<int>( fullText.length() );
 
     std::string normalized = normalizeWhitespace( text );
     fullText += normalized;
 
-    fragment.end_offset = static_cast<int>( fullText.length() );
+    fragment.end_char_offset = static_cast<int>( fullText.length() );
     fragments.push_back( fragment );
 
     // Leerzeichen zwischen Elementen
@@ -1167,8 +1202,8 @@ litehtml::position container_qt::calculate_precise_bounding_box( const std::vect
   for ( const auto& fragment : allFragments )
   {
     // check if this fragment is part of the search
-    int overlapStart = std::max( searchStart, fragment.start_offset );
-    int overlapEnd   = std::min( searchEnd, fragment.end_offset );
+    int overlapStart = std::max( searchStart, fragment.start_char_offset );
+    int overlapEnd   = std::min( searchEnd, fragment.end_char_offset );
 
     if ( overlapStart < overlapEnd )
     {
@@ -1176,11 +1211,11 @@ litehtml::position container_qt::calculate_precise_bounding_box( const std::vect
       TextFragment matchedFragment = fragment;
 
       // offsets relative to start
-      int fragmentTextStart = overlapStart - fragment.start_offset;
-      int fragmentTextEnd   = overlapEnd - fragment.start_offset;
+      int fragmentTextStart = overlapStart - fragment.start_char_offset;
+      int fragmentTextEnd   = overlapEnd - fragment.start_char_offset;
 
-      matchedFragment.start_offset = fragmentTextStart;
-      matchedFragment.end_offset   = fragmentTextEnd;
+      matchedFragment.start_char_offset = fragmentTextStart;
+      matchedFragment.end_char_offset   = fragmentTextEnd;
 
       // calculate width of text
       // Importnat: use text_width from document_container
@@ -1328,7 +1363,7 @@ bool container_qt::find_previous_match()
 }
 
 // Aktuelles Suchergebnis mit Position holen
-const container_qt::TextFindMatch* container_qt::find_current_match() const
+const TextHelpers::TextFindMatch* container_qt::find_current_match() const
 {
   if ( mFindCurrentMatchIndex >= 0 && mFindCurrentMatchIndex < static_cast<int>( mFindMatches.size() ) )
   {
@@ -1397,4 +1432,123 @@ void container_qt::scroll_to_find_match( const TextFindMatch* match )
   }
   horizontalScrollBar()->setValue( match->bounding_box.left() );
   verticalScrollBar()->setValue( match->bounding_box.top() );
+}
+
+void container_qt::copySelectionToClipboard()
+{
+  if ( m_currentSelection.isEmpty() )
+  {
+    return;
+  }
+
+  QString selectedText = getSelectedText();
+  if ( !selectedText.isEmpty() )
+  {
+    QClipboard* clipboard = QApplication::clipboard();
+    clipboard->setText( selectedText );
+  }
+}
+
+// Gibt selektierten Text zurück
+QString container_qt::getSelectedText() const
+{
+  if ( m_currentSelection.isEmpty() )
+  {
+    return QString();
+  }
+
+  QString result;
+  // for ( const auto& fragment : m_currentSelection.fragments )
+  // {
+  //   QString fragmentText =
+  //     QString::fromStdString( fragment.text.substr( fragment.start_char_offset, fragment.end_char_offset - fragment.start_char_offset ) );
+  //   result += fragmentText;
+  // }
+
+  for ( size_t i = 0; i < m_currentSelection.fragments.size(); ++i )
+  {
+    const auto& fragment = m_currentSelection.fragments[i];
+
+    if ( fragment.end_char_offset > fragment.start_char_offset )
+    {
+      QString fragmentText =
+        QString::fromStdString( fragment.text.substr( fragment.start_char_offset, fragment.end_char_offset - fragment.start_char_offset ) );
+      result += fragmentText;
+
+      // Leerzeichen zwischen Fragmenten hinzufügen (außer beim letzten)
+      if ( i < m_currentSelection.fragments.size() - 1 )
+      {
+        result += " ";
+      }
+    }
+  }
+
+  return result;
+
+  return result;
+}
+
+const SelectionRange& container_qt::getCurrentSelection() const
+{
+  return m_currentSelection;
+}
+
+void container_qt::clearSelection()
+{
+  m_currentSelection.clear();
+  update();
+}
+
+void container_qt::keyPressEvent( QKeyEvent* event )
+{
+  // Strg+C zum Kopieren
+  if ( event->matches( QKeySequence::Copy ) )
+  {
+    copySelectionToClipboard();
+  }
+  // Escape zum Abbrechen der Selektion
+  else if ( event->key() == Qt::Key_Escape )
+  {
+    clearSelection();
+  }
+
+  QWidget::keyPressEvent( event );
+}
+
+void container_qt::drawSelection( QPainter& painter )
+{
+  qDebug() << "container_qt::drawSelection";
+  // Farben für Selektion (Windows-Style)
+  QColor selectionColor( 0, 120, 215, 100 ); // Blau mit Transparenz
+  QColor borderColor( 0, 120, 215, 180 );
+
+  painter.save();
+  painter.setPen( Qt::NoPen );
+  painter.setBrush( selectionColor );
+
+  // Zeichne Rechtecke für alle Fragmente
+  for ( const auto& fragment : m_currentSelection.fragments )
+  {
+    const auto& pos = fragment.pos;
+
+    // Berechne präzise Breite basierend auf Zeichen-Offsets
+    float charWidth = 0.0f;
+    if ( pos.width > 0 && fragment.text.length() > 0 )
+    {
+      charWidth = static_cast<float>( pos.width ) / static_cast<float>( fragment.text.length() );
+    }
+
+    int startX = pos.x + static_cast<int>( charWidth * fragment.start_char_offset );
+    int width  = static_cast<int>( charWidth * ( fragment.end_char_offset - fragment.start_char_offset ) );
+
+    QRect selectionRect( startX, pos.y, width, pos.height );
+    painter.fillRect( selectionRect, selectionColor );
+
+    // Optional: Rahmen zeichnen
+    painter.setPen( QPen( borderColor, 1 ) );
+    painter.drawRect( selectionRect );
+    painter.setPen( Qt::NoPen );
+  }
+
+  painter.restore();
 }

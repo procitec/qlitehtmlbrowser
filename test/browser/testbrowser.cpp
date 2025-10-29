@@ -107,8 +107,16 @@ TestBrowser::TestBrowser()
   mScale->setText( mScaleText.arg( static_cast<int>( std::round( mBrowser->scale() * 100.0 ) ) ) );
   statusbar->addPermanentWidget( mScale );
 
+  mSelection = new QLabel();
+  mSelection->setText( QString() );
+
+  statusbar->addWidget( mSelection );
+
   connect( mBrowser, &QHelpBrowser::scaleChanged, this,
            [this]() { mScale->setText( mScaleText.arg( static_cast<int>( std::round( mBrowser->scale() * 100.0 ) ) ) ); } );
+
+  connect( mBrowser, &QHelpBrowser::selectionChanged, this,
+           [this]( const QString& text ) { mSelection->setText( mSelectionText.arg( text.length() ) ); } );
 }
 
 TestBrowser::~TestBrowser()

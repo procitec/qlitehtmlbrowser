@@ -79,6 +79,7 @@ Q_SIGNALS:
   void urlChanged( const QUrl& );
   void anchorClicked( const QUrl& );
   void scaleChanged();
+  void selectionChanged( const QString& selectedText );
 
 private:
   class HistoryEntry

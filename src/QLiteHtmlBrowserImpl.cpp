@@ -25,6 +25,7 @@ QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
   shortcut = new QShortcut( QKeySequence{ QKeySequence::Back }, this );
   connect( shortcut, &QShortcut::activated, this, &QLiteHtmlBrowserImpl::backward );
   connect( mContainer, &container_qt::scaleChanged, this, &QLiteHtmlBrowserImpl::scaleChanged );
+  connect( mContainer, &container_qt::selectionChanged, this, &QLiteHtmlBrowserImpl::selectionChanged );
 
   auto* layout = new QVBoxLayout;
   layout->setContentsMargins( 0, 0, 0, 0 );

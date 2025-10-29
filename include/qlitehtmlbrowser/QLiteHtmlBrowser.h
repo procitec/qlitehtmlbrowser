@@ -188,6 +188,9 @@ Q_SIGNALS:
   /// send when scale changes
   void scaleChanged();
 
+  /// send when selection changes
+  void selectionChanged( const QString& selectedText );
+
 protected:
 private:
   QLiteHtmlBrowserImpl* mImpl = nullptr;
