@@ -999,11 +999,12 @@ void container_qt::mouseMoveEvent( QMouseEvent* e )
     }
     if ( m_isSelecting && m_selectionStart.isValid() )
     {
+      e->accept();
       TextManager::TextPosition currentPos = m_textManager.getPositionAtCoordinates( mousePos.html.x(), mousePos.html.y() );
-
       if ( currentPos.isValid() )
       {
         m_currentSelection = m_textManager.getSelectionBetween( m_selectionStart, currentPos );
+        emit selectionChanged();
         viewport()->update();
       }
     }
@@ -1026,7 +1027,17 @@ void container_qt::mouseReleaseEvent( QMouseEvent* e )
       }
       if ( e->button() == Qt::LeftButton )
       {
+        e->accept();
         m_isSelecting = false;
+
+        // update selection position from this mouse pos
+        TextManager::TextPosition currentPos = m_textManager.getPositionAtCoordinates( mousePos.html.x(), mousePos.html.y() );
+
+        if ( currentPos.isValid() )
+        {
+          m_currentSelection = m_textManager.getSelectionBetween( m_selectionStart, currentPos );
+          viewport()->update();
+        }
 
         if ( !m_currentSelection.isEmpty() )
         {
@@ -1057,13 +1068,13 @@ void container_qt::mousePressEvent( QMouseEvent* e )
       {
         // something changed, redraw of boxes required;
       }
+      m_currentSelection.clear();
 
       m_isSelecting    = true;
       m_selectionStart = m_textManager.getPositionAtCoordinates( mousePos.html.x(), mousePos.html.y() );
       // qDebug() << "selection started with" << QPoint( m_selectionStart.element_pos.x, m_selectionStart.element_pos.y );
-      m_currentSelection.clear();
       e->accept();
-      update();
+      viewport()->update();
     }
     else
       e->ignore();
@@ -1468,7 +1479,7 @@ QString container_qt::selectedText() const
 void container_qt::clearSelection()
 {
   m_currentSelection.clear();
-  update();
+  viewport()->update();
 }
 
 void container_qt::keyPressEvent( QKeyEvent* event )

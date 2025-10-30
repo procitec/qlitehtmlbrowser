@@ -5,7 +5,7 @@
 
 class TextManager
 {
-public:
+private:
   struct TextFragment
   {
     std::string            text;
@@ -24,15 +24,7 @@ public:
     bool hasValidPosition() const { return pos.width > 0 && pos.height > 0; }
   };
 
-  struct TextFindMatch
-  {
-    std::string               matched_text;
-    std::vector<TextFragment> fragments;
-    litehtml::position        bounding_box;
-
-    bool isEmpty() const { return fragments.empty(); }
-  };
-
+public:
   struct TextPosition
   {
     litehtml::element::ptr element;
@@ -48,6 +40,15 @@ public:
       return char_offset < other.char_offset;
     }
     bool isValid() const { return element && element_pos.width > 0 && element_pos.height > 0; }
+  };
+
+  struct TextFindMatch
+  {
+    std::string               matched_text;
+    std::vector<TextFragment> fragments;
+    litehtml::position        bounding_box;
+
+    bool isEmpty() const { return fragments.empty(); }
   };
 
   struct SelectionRange
