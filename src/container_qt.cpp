@@ -1003,8 +1003,9 @@ void container_qt::mouseMoveEvent( QMouseEvent* e )
 
       if ( currentPos.isValid() )
       {
+        qDebug() << "selection is valid";
         m_currentSelection = m_textManager.getSelectionBetween( m_selectionStart, currentPos );
-        update();
+        viewport()->update();
       }
     }
 
@@ -1031,11 +1032,11 @@ void container_qt::mouseReleaseEvent( QMouseEvent* e )
 
         if ( !m_currentSelection.isEmpty() )
         {
-          qDebug() << "selection got selected text with " << getSelectedText().count() << "fragments";
+          qDebug() << "selection got selected text with " << selectedText().count() << "fragments";
           qDebug() << "\n=== Selektierter Text ===";
-          qDebug() << getSelectedText();
+          qDebug() << selectedText();
           qDebug() << "================================\n";
-          emit selectionChanged( getSelectedText() );
+          emit selectionChanged();
           // copySelectionToClipboard();
         }
       }
@@ -1442,16 +1443,16 @@ void container_qt::copySelectionToClipboard()
     return;
   }
 
-  QString selectedText = getSelectedText();
-  if ( !selectedText.isEmpty() )
+  QString text = selectedText();
+  if ( !text.isEmpty() )
   {
     QClipboard* clipboard = QApplication::clipboard();
-    clipboard->setText( selectedText );
+    clipboard->setText( text );
   }
 }
 
 // Gibt selektierten Text zurück
-QString container_qt::getSelectedText() const
+QString container_qt::selectedText() const
 {
   if ( m_currentSelection.isEmpty() )
   {
@@ -1489,10 +1490,10 @@ QString container_qt::getSelectedText() const
   return result;
 }
 
-const DOMTextManager::SelectionRange& container_qt::getCurrentSelection() const
-{
-  return m_currentSelection;
-}
+// const DOMTextManager::SelectionRange& container_qt::getCurrentSelection() const
+// {
+//   return m_currentSelection;
+// }
 
 void container_qt::clearSelection()
 {
@@ -1520,12 +1521,10 @@ void container_qt::drawSelection( QPainter& painter )
 {
   qDebug() << "container_qt::drawSelection";
   // Farben für Selektion (Windows-Style)
-  QColor selectionColor( 0, 120, 215, 100 ); // Blau mit Transparenz
-  QColor borderColor( 0, 120, 215, 180 );
 
   painter.save();
   painter.setPen( Qt::NoPen );
-  painter.setBrush( selectionColor );
+  painter.setBrush( mSelectionColor );
 
   // Zeichne Rechtecke für alle Fragmente
   for ( const auto& fragment : m_currentSelection.fragments )
@@ -1542,13 +1541,15 @@ void container_qt::drawSelection( QPainter& painter )
     int startX = pos.x + static_cast<int>( charWidth * fragment.start_char_offset );
     int width  = static_cast<int>( charWidth * ( fragment.end_char_offset - fragment.start_char_offset ) );
 
-    QRect selectionRect( startX, pos.y, width, pos.height );
-    painter.fillRect( selectionRect, selectionColor );
+    auto scroll_pos = -scrollBarPos();
 
-    // Optional: Rahmen zeichnen
-    painter.setPen( QPen( borderColor, 1 ) );
-    painter.drawRect( selectionRect );
-    painter.setPen( Qt::NoPen );
+    QRect selectionRect( startX + scroll_pos.x(), pos.y + scroll_pos.y(), width, pos.height );
+    painter.fillRect( selectionRect, mSelectionColor );
+
+    // // Optional: Rahmen zeichnen
+    // painter.setPen( QPen( borderColor, 1 ) );
+    // painter.drawRect( selectionRect );
+    // painter.setPen( Qt::NoPen );
   }
 
   painter.restore();

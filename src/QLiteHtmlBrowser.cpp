@@ -19,6 +19,7 @@ QLiteHtmlBrowser::QLiteHtmlBrowser( QWidget* parent )
   connect( mImpl, &QLiteHtmlBrowserImpl::urlChanged, this, &QLiteHtmlBrowser::sourceChanged );
   connect( mImpl, &QLiteHtmlBrowserImpl::anchorClicked, this, &QLiteHtmlBrowser::anchorClicked );
   connect( mImpl, &QLiteHtmlBrowserImpl::scaleChanged, this, &QLiteHtmlBrowser::scaleChanged );
+  connect( mImpl, &QLiteHtmlBrowserImpl::selectionChanged, this, &QLiteHtmlBrowser::selectionChanged );
 }
 
 QUrl QLiteHtmlBrowser::source() const
@@ -186,4 +187,9 @@ QColor QLiteHtmlBrowser::highlightColor() const
 void QLiteHtmlBrowser::setHighlightColor( QColor color )
 {
   mImpl->setHighlightColor( color );
+}
+
+QString QLiteHtmlBrowser::selectedText() const
+{
+  return mImpl->selectedText();
 }

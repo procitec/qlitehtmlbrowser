@@ -41,10 +41,7 @@ public:
   void           setHighlightColor( const QColor& color ) { mHighlightColor = color; }
   QColor         highlightColor() const { return mHighlightColor; }
 
-  void                               copySelectionToClipboard();
-  QString                            getSelectedText() const;
-  const DOMTextManager::SelectionRange& getCurrentSelection() const;
-  void                               clearSelection();
+  QString selectedText() const;
 
 protected:
   void paintEvent( QPaintEvent* ) override;
@@ -56,7 +53,7 @@ protected:
 Q_SIGNALS:
   void anchorClicked( const QUrl& );
   void scaleChanged();
-  void selectionChanged( const QString& selectedText );
+  void selectionChanged();
 
 protected:
   litehtml::uint_ptr create_font(
@@ -92,6 +89,9 @@ protected:
   void resizeEvent( QResizeEvent* event ) override;
   bool event( QEvent* event ) override;
   void keyPressEvent( QKeyEvent* event ) override;
+  // const DOMTextManager::SelectionRange& getCurrentSelection() const;
+  void copySelectionToClipboard();
+  void clearSelection();
 
 private:
   // selection
@@ -167,8 +167,9 @@ private:
   litehtml::position                      mClip                  = {};
   std::vector<DOMTextManager::TextFindMatch> mFindMatches           = {};
   int                                     mFindCurrentMatchIndex = -1;
-  QColor                                  mHighlightColor        = QColor( 255, 255, 0, 30 );
-  QString                                 mFindText;
+  QColor                                     mHighlightColor        = QColor( 255, 255, 0, 30 );
+  QColor                                     mSelectionColor        = QColor( 0, 120, 215, 100 );
+  QString                                    mFindText;
 
   // for selection
 

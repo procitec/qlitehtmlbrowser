@@ -155,6 +155,8 @@ public:
   QColor highlightColor() const;
   void   setHighlightColor( QColor color );
 
+  QString selectedText() const;
+
 public Q_SLOTS:
   /// set URL to given url. The URL may be an url to local file, QtHelp, http etc.
   /// The URL could contain an anchor element. Currently parameters to URL like
@@ -189,7 +191,7 @@ Q_SIGNALS:
   void scaleChanged();
 
   /// send when selection changes
-  void selectionChanged( const QString& selectedText );
+  void selectionChanged();
 
 protected:
 private:

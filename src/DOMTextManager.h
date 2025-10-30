@@ -78,16 +78,16 @@ public:
     {
       collectTextFragments( doc->root() );
 
-      qDebug() << "\n=== Gesammelte Text-Fragmente ===";
-      qDebug() << "Anzahl Fragmente:" << m_fragments.size();
-      for ( size_t i = 0; i < m_fragments.size(); ++i )
-      {
-        const auto& frag = m_fragments[i];
-        qDebug() << "Fragment" << i << ":"
-                 << "Text:" << QString::fromStdString( frag.text ).left( 30 ) << "| Leaf:" << frag.is_leaf << "| Pos:" << frag.pos.x << frag.pos.y
-                 << "| Size:" << frag.pos.width << "x" << frag.pos.height << "| Valid:" << frag.hasValidPosition();
-      }
-      qDebug() << "================================\n";
+      // qDebug() << "\n=== Gesammelte Text-Fragmente ===";
+      // qDebug() << "Anzahl Fragmente:" << m_fragments.size();
+      // for ( size_t i = 0; i < m_fragments.size(); ++i )
+      // {
+      //   const auto& frag = m_fragments[i];
+      //   qDebug() << "Fragment" << i << ":"
+      //            << "Text:" << QString::fromStdString( frag.text ).left( 30 ) << "| Leaf:" << frag.is_leaf << "| Pos:" << frag.pos.x << frag.pos.y
+      //            << "| Size:" << frag.pos.width << "x" << frag.pos.height << "| Valid:" << frag.hasValidPosition();
+      // }
+      // qDebug() << "================================\n";
     }
   }
 
@@ -98,7 +98,7 @@ public:
     TextFragment* bestMatch    = nullptr;
     int           smallestArea = INT_MAX;
 
-    qDebug() << "\n>>> Suche Element bei:" << x << y;
+    // qDebug() << "\n>>> Suche Element bei:" << x << y;
 
     // Suche das kleinste Element, das den Punkt enthält (spezifischstes Element)
     for ( auto& fragment : m_fragments )
@@ -117,8 +117,8 @@ public:
 
         int area = pos.width * pos.height;
 
-        qDebug() << "  Kandidat:" << QString::fromStdString( fragment.text ).left( 20 ) << "| Box:" << pos.x << pos.y << pos.width << pos.height
-                 << "| Area:" << area;
+        // qDebug() << "  Kandidat:" << QString::fromStdString( fragment.text ).left( 20 ) << "| Box:" << pos.x << pos.y << pos.width << pos.height
+        //          << "| Area:" << area;
 
         // Wähle das kleinste umschließende Element
         if ( area < smallestArea )
@@ -223,7 +223,7 @@ public:
       }
     }
 
-    qDebug() << "Selektion umfasst" << selection.fragments.size() << "Fragmente";
+    // qDebug() << "Selektion umfasst" << selection.fragments.size() << "Fragmente";
 
     return selection;
   }
@@ -336,8 +336,8 @@ private:
 
         m_fragments.push_back( fragment );
 
-        qDebug() << "Leaf-Fragment:" << QString::fromStdString( fragment.text ).left( 30 ) << "| Pos:" << pos.x << pos.y << "| Size:" << pos.width
-                 << "x" << pos.height;
+        // qDebug() << "Leaf-Fragment:" << QString::fromStdString( fragment.text ).left( 30 ) << "| Pos:" << pos.x << pos.y << "| Size:" << pos.width
+        //          << "x" << pos.height;
       }
     }
 
@@ -353,11 +353,11 @@ private:
     litehtml::position boundingBox   = { 0, 0, 0, 0 };
     bool               firstFragment = true;
 
-    qDebug() << "\n=== Berechne Bounding Box ===";
-    qDebug() << "Suchbereich: global offset" << searchStart << "bis" << searchEnd;
-    qDebug() << "Gesuchter Text:"
-             << QString::fromStdString(
-                  m_fullText.substr( searchStart, std::min( (size_t)( searchEnd - searchStart ), m_fullText.length() - searchStart ) ) );
+    // qDebug() << "\n=== Berechne Bounding Box ===";
+    // qDebug() << "Suchbereich: global offset" << searchStart << "bis" << searchEnd;
+    // qDebug() << "Gesuchter Text:"
+    // << QString::fromStdString(
+    //      m_fullText.substr( searchStart, std::min( (size_t)( searchEnd - searchStart ), m_fullText.length() - searchStart ) ) );
 
     for ( const auto& fragment : m_fragments )
     {
@@ -412,9 +412,10 @@ private:
 
         matchedFragments.push_back( matchedFragment );
 
-        qDebug() << "Fragment gefunden:" << QString::fromStdString( fragment.text.substr( localStart, localEnd - localStart ) )
-                 << "| Local:" << localStart << "-" << localEnd << "| Pos:" << adjustedPos.x << adjustedPos.y << "| Size:" << adjustedPos.width << "x"
-                 << adjustedPos.height;
+        // qDebug() << "Fragment gefunden:" << QString::fromStdString( fragment.text.substr( localStart, localEnd - localStart ) )
+        //          << "| Local:" << localStart << "-" << localEnd << "| Pos:" << adjustedPos.x << adjustedPos.y << "| Size:" << adjustedPos.width <<
+        //          "x"
+        //          << adjustedPos.height;
 
         // Bounding Box erweitern
         if ( firstFragment )
@@ -437,8 +438,8 @@ private:
       }
     }
 
-    qDebug() << "Finale Bounding Box:" << boundingBox.x << boundingBox.y << boundingBox.width << "x" << boundingBox.height;
-    qDebug() << "=========================\n";
+    // qDebug() << "Finale Bounding Box:" << boundingBox.x << boundingBox.y << boundingBox.width << "x" << boundingBox.height;
+    // qDebug() << "=========================\n";
 
     return boundingBox;
   }

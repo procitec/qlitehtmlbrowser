@@ -495,3 +495,12 @@ void QLiteHtmlBrowserImpl::previousFindMatch()
     mContainer->findPreviousMatch();
   }
 }
+QString QLiteHtmlBrowserImpl::selectedText() const
+{
+  QString text;
+  if ( mContainer )
+  {
+    text = mContainer->selectedText();
+  }
+  return text;
+}
