@@ -74,7 +74,7 @@ void FindTest::test_find_phrase_multi_element()
   auto base = QString{ TEST_SOURCE_DIR } + "/search/";
 
   browser->setSource( QUrl::fromLocalFile( base + "/LongGermanText.html" ) );
-  auto found = browser->findText( QStringLiteral( "schließt ab. Absatz 48" ) );
+  auto found = browser->findText( QStringLiteral( "schließt ab.Absatz 48" ) );
   qApp->processEvents();
   QCOMPARE( found, 1 );
 }
