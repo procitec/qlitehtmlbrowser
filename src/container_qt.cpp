@@ -999,7 +999,7 @@ void container_qt::mouseMoveEvent( QMouseEvent* e )
     }
     if ( m_isSelecting && m_selectionStart.isValid() )
     {
-      DOMTextManager::TextPosition currentPos = m_textManager.getPositionAtCoordinates( mousePos.html.x(), mousePos.html.y() );
+      TextManager::TextPosition currentPos = m_textManager.getPositionAtCoordinates( mousePos.html.x(), mousePos.html.y() );
 
       if ( currentPos.isValid() )
       {
@@ -1359,7 +1359,7 @@ bool container_qt::find_previous_match()
 }
 
 // Aktuelles Suchergebnis mit Position holen
-const DOMTextManager::TextFindMatch* container_qt::find_current_match() const
+const TextManager::TextFindMatch* container_qt::find_current_match() const
 {
   if ( mFindCurrentMatchIndex >= 0 && mFindCurrentMatchIndex < static_cast<int>( mFindMatches.size() ) )
   {
@@ -1382,7 +1382,7 @@ void container_qt::draw_highlights( litehtml::uint_ptr hdc )
 }
 
 // draw highlighted text at position
-void container_qt::highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const DOMTextManager::TextFindMatch& match )
+void container_qt::highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const TextManager::TextFindMatch& match )
 {
 
   qDebug() << "Highlighting text '" << QString::fromStdString( match.matched_text ) << "' at position (" << pos.x << ", " << pos.y << ") with size "
@@ -1424,7 +1424,7 @@ void container_qt::findPreviousMatch()
   }
 }
 
-void container_qt::scroll_to_find_match( const DOMTextManager::TextFindMatch* match )
+void container_qt::scroll_to_find_match( const TextManager::TextFindMatch* match )
 {
   if ( !match )
   {
@@ -1457,35 +1457,7 @@ QString container_qt::selectedText() const
     return QString();
   }
 
-  QString result;
-  // for ( const auto& fragment : m_currentSelection.fragments )
-  // {
-  //   QString fragmentText =
-  //     QString::fromStdString( fragment.text.substr( fragment.start_char_offset, fragment.end_char_offset - fragment.start_char_offset ) );
-  //   result += fragmentText;
-  // }
-
-  for ( size_t i = 0; i < m_currentSelection.fragments.size(); ++i )
-  {
-    const auto& fragment = m_currentSelection.fragments[i];
-
-    if ( fragment.end_char_offset > fragment.start_char_offset )
-    {
-      QString fragmentText =
-        QString::fromStdString( fragment.text.substr( fragment.start_char_offset, fragment.end_char_offset - fragment.start_char_offset ) );
-      result += fragmentText;
-
-      // // Leerzeichen zwischen Fragmenten hinzufügen (außer beim letzten)
-      // if ( i < m_currentSelection.fragments.size() - 1 )
-      // {
-      //   result += " ";
-      // }
-    }
-  }
-
-  return result;
-
-  return result;
+  return QString::fromStdString( m_textManager.selectedText( m_currentSelection ) );
 }
 
 // const DOMTextManager::SelectionRange& container_qt::getCurrentSelection() const
