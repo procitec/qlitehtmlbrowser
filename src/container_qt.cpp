@@ -999,11 +999,10 @@ void container_qt::mouseMoveEvent( QMouseEvent* e )
     }
     if ( m_isSelecting && m_selectionStart.isValid() )
     {
-      DOMTextManager::TextPosition currentPos = m_textManager.getPositionAtCoordinates( mousePos.client.x(), mousePos.client.y() );
+      DOMTextManager::TextPosition currentPos = m_textManager.getPositionAtCoordinates( mousePos.html.x(), mousePos.html.y() );
 
       if ( currentPos.isValid() )
       {
-        qDebug() << "selection is valid";
         m_currentSelection = m_textManager.getSelectionBetween( m_selectionStart, currentPos );
         viewport()->update();
       }
@@ -1020,14 +1019,13 @@ void container_qt::mouseReleaseEvent( QMouseEvent* e )
     {
       litehtml::position::vector redraw_boxes;
       const auto                 mousePos = convertMousePos( e );
-      if ( mDocument->on_lbutton_up( mousePos.html.x(), mousePos.html.y(), mousePos.client.x(), mousePos.client.y(), redraw_boxes ) )
+      if ( mDocument->on_lbutton_up( mousePos.html.x(), mousePos.html.y(), mousePos.html.x(), mousePos.html.y(), redraw_boxes ) )
       {
         // something changed, redraw of boxes required;
         e->accept();
       }
       if ( e->button() == Qt::LeftButton )
       {
-        qDebug() << "selection finished";
         m_isSelecting = false;
 
         if ( !m_currentSelection.isEmpty() )
@@ -1061,8 +1059,8 @@ void container_qt::mousePressEvent( QMouseEvent* e )
       }
 
       m_isSelecting    = true;
-      m_selectionStart = m_textManager.getPositionAtCoordinates( mousePos.client.x(), mousePos.client.y() );
-      qDebug() << "selection started with" << QPoint( m_selectionStart.element_pos.x, m_selectionStart.element_pos.y );
+      m_selectionStart = m_textManager.getPositionAtCoordinates( mousePos.html.x(), mousePos.html.y() );
+      // qDebug() << "selection started with" << QPoint( m_selectionStart.element_pos.x, m_selectionStart.element_pos.y );
       m_currentSelection.clear();
       e->accept();
       update();
@@ -1477,11 +1475,11 @@ QString container_qt::selectedText() const
         QString::fromStdString( fragment.text.substr( fragment.start_char_offset, fragment.end_char_offset - fragment.start_char_offset ) );
       result += fragmentText;
 
-      // Leerzeichen zwischen Fragmenten hinzufügen (außer beim letzten)
-      if ( i < m_currentSelection.fragments.size() - 1 )
-      {
-        result += " ";
-      }
+      // // Leerzeichen zwischen Fragmenten hinzufügen (außer beim letzten)
+      // if ( i < m_currentSelection.fragments.size() - 1 )
+      // {
+      //   result += " ";
+      // }
     }
   }
 
@@ -1519,9 +1517,6 @@ void container_qt::keyPressEvent( QKeyEvent* event )
 
 void container_qt::drawSelection( QPainter& painter )
 {
-  qDebug() << "container_qt::drawSelection";
-  // Farben für Selektion (Windows-Style)
-
   painter.save();
   painter.setPen( Qt::NoPen );
   painter.setBrush( mSelectionColor );

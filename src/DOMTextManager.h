@@ -23,8 +23,8 @@ public:
   struct TextFindMatch
   {
     std::string               matched_text;
-    std::vector<TextFragment> fragments;    // may contains multiple elements
-    litehtml::position        bounding_box; // bounding box over all elements
+    std::vector<TextFragment> fragments;
+    litehtml::position        bounding_box;
 
     bool isEmpty() const { return fragments.empty(); }
   };
@@ -32,20 +32,18 @@ public:
   struct TextPosition
   {
     litehtml::element::ptr element;
-    int                    char_offset; // Zeichenposition im Element-Text
+    int                    char_offset = 0;
     litehtml::position     element_pos;
 
     bool operator<( const TextPosition& other ) const
     {
-      // Vergleich basierend auf Position im Dokument
       if ( element_pos.y != other.element_pos.y )
-      {
         return element_pos.y < other.element_pos.y;
-      }
-      return element_pos.x < other.element_pos.x;
+      if ( element_pos.x != other.element_pos.x )
+        return element_pos.x < other.element_pos.x;
+      return char_offset < other.char_offset;
     }
-
-    bool isValid() const { return element != nullptr; }
+    bool isValid() const { return element && element_pos.width > 0 && element_pos.height > 0; }
   };
 
   struct SelectionRange
@@ -77,6 +75,14 @@ public:
     if ( doc && doc->root() )
     {
       collectTextFragments( doc->root() );
+      if ( !m_fullText.empty() && m_fullText.back() == ' ' )
+      {
+        m_fullText.pop_back();
+      }
+
+      // qDebug() << "\n=== DOM Text Manager initialisiert ===";
+      // qDebug() << "Fragmente gesammelt:" << m_fragments.size();
+      // qDebug() << "Gesamttext-Länge:" << m_fullText.length();
 
       // qDebug() << "\n=== Gesammelte Text-Fragmente ===";
       // qDebug() << "Anzahl Fragmente:" << m_fragments.size();
@@ -91,19 +97,14 @@ public:
     }
   }
 
-  // Findet die Text-Position basierend auf Pixel-Koordinaten
   TextPosition getPositionAtCoordinates( int x, int y )
   {
     TextPosition  result;
     TextFragment* bestMatch    = nullptr;
     int           smallestArea = INT_MAX;
 
-    // qDebug() << "\n>>> Suche Element bei:" << x << y;
-
-    // Suche das kleinste Element, das den Punkt enthält (spezifischstes Element)
     for ( auto& fragment : m_fragments )
     {
-      // Nur Leaf-Nodes und Elemente mit gültiger Position prüfen
       if ( !fragment.is_leaf || !fragment.hasValidPosition() )
       {
         continue;
@@ -111,16 +112,11 @@ public:
 
       const auto& pos = fragment.pos;
 
-      // Prüfe ob Punkt im Element liegt
       if ( x >= pos.x && x <= pos.x + pos.width && y >= pos.y && y <= pos.y + pos.height )
       {
 
         int area = pos.width * pos.height;
 
-        // qDebug() << "  Kandidat:" << QString::fromStdString( fragment.text ).left( 20 ) << "| Box:" << pos.x << pos.y << pos.width << pos.height
-        //          << "| Area:" << area;
-
-        // Wähle das kleinste umschließende Element
         if ( area < smallestArea )
         {
           smallestArea = area;
@@ -134,7 +130,6 @@ public:
       result.element     = bestMatch->element;
       result.element_pos = bestMatch->pos;
 
-      // Berechne Zeichen-Offset basierend auf x-Position
       const auto& pos = bestMatch->pos;
       if ( pos.width > 0 && bestMatch->text.length() > 0 )
       {
@@ -146,12 +141,6 @@ public:
       {
         result.char_offset = 0;
       }
-
-      qDebug() << ">>> TREFFER:" << QString::fromStdString( bestMatch->text ).left( 30 ) << "| Offset:" << result.char_offset;
-    }
-    else
-    {
-      qDebug() << ">>> KEIN TREFFER!";
     }
 
     return result;
@@ -169,7 +158,6 @@ public:
       return selection;
     }
 
-    // Sicherstellen dass start vor end liegt
     TextPosition actualStart = start;
     TextPosition actualEnd   = end;
     if ( end < start )
@@ -179,7 +167,6 @@ public:
 
     bool inSelection = false;
 
-    // Nur durch Leaf-Nodes iterieren
     for ( const auto& fragment : m_fragments )
     {
       if ( !fragment.is_leaf || !fragment.hasValidPosition() )
@@ -214,6 +201,16 @@ public:
         selectedFragment.start_char_offset = startOffset;
         selectedFragment.end_char_offset   = endOffset;
 
+        // WICHTIG: Position anpassen
+        litehtml::position adjustedPos = fragment.pos;
+        if ( fragment.text.length() > 0 && fragment.pos.width > 0 )
+        {
+          float charWidth   = static_cast<float>( fragment.pos.width ) / static_cast<float>( fragment.text.length() );
+          adjustedPos.x     = fragment.pos.x + static_cast<int>( charWidth * startOffset );
+          adjustedPos.width = static_cast<int>( charWidth * ( endOffset - startOffset ) );
+        }
+        selectedFragment.pos = adjustedPos;
+
         selection.fragments.push_back( selectedFragment );
 
         if ( isEndFragment )
@@ -223,28 +220,19 @@ public:
       }
     }
 
-    // qDebug() << "Selektion umfasst" << selection.fragments.size() << "Fragmente";
-
     return selection;
   }
-
-  const std::vector<TextFragment>& getFragments() const { return m_fragments; }
 
   std::vector<TextFindMatch> findText( const std::string& search_term, bool case_sensitive = true )
   {
     std::vector<TextFindMatch> results;
-
     if ( search_term.empty() || m_fullText.empty() )
     {
       return results;
     }
 
-    // Normalisiere Text
-    std::string normalizedFullText   = ( m_fullText );
-    std::string normalizedSearchTerm = normalizeWhitespace( search_term );
-
-    std::string searchText = normalizedFullText;
-    std::string searchFor  = normalizedSearchTerm;
+    std::string searchText = m_fullText;
+    std::string searchFor  = search_term;
 
     if ( !case_sensitive )
     {
@@ -252,55 +240,34 @@ public:
       std::transform( searchFor.begin(), searchFor.end(), searchFor.begin(), ::tolower );
     }
 
+    qDebug() << "\n=== Suche ===";
+    qDebug() << "Suchbegriff:" << QString::fromStdString( searchFor );
+    qDebug() << "Durchsuche m_fullText (RAW):" << QString::fromStdString( searchText ).left( 100 );
+
     // Alle Vorkommen finden
     size_t pos = 0;
     while ( ( pos = searchText.find( searchFor, pos ) ) != std::string::npos )
     {
       TextFindMatch result;
-      result.matched_text = normalizedFullText.substr( pos, searchFor.length() );
+      result.matched_text = m_fullText.substr( pos, searchFor.length() ); // Jetzt korrekt!
 
       int searchStart = static_cast<int>( pos );
       int searchEnd   = static_cast<int>( pos + searchFor.length() );
 
-      // Finde alle Fragmente in diesem Bereich
+      qDebug() << "Treffer bei:" << searchStart << "-" << searchEnd << "| Text:" << QString::fromStdString( result.matched_text );
+
+      // Finde Fragmente in diesem Bereich (jetzt mit korrekten Positionen)
       result.bounding_box = calculateBoundingBox( searchStart, searchEnd, result.fragments );
-      // result.bounding_box = calculatePreciseBoundingBox( searchStart, searchEnd, result.fragments );
 
       results.push_back( result );
       pos += searchFor.length();
     }
 
-    qDebug() << "Suche nach '" << QString::fromStdString( search_term ) << "': " << results.size() << " Treffer";
-
+    qDebug() << "Treffer gesamt:" << results.size() << "\n";
     return results;
   }
 
 private:
-  std::string normalizeWhitespace( const std::string& text )
-  {
-    std::string result;
-    bool        lastWasSpace = false;
-
-    for ( char c : text )
-    {
-      if ( std::isspace( static_cast<unsigned char>( c ) ) )
-      {
-        if ( !lastWasSpace && !result.empty() )
-        {
-          result += ' ';
-          lastWasSpace = true;
-        }
-      }
-      else
-      {
-        result += c;
-        lastWasSpace = false;
-      }
-    }
-
-    return result;
-  }
-
   void collectTextFragments( litehtml::element::ptr el )
   {
     if (!el) return;
@@ -319,22 +286,26 @@ private:
     {
       litehtml::position pos = el->get_placement();
 
-      // Nur wenn Element eine gültige Position hat
       if ( pos.width > 0 && pos.height > 0 )
       {
         TextFragment fragment;
-        fragment.text                = normalizeWhitespace( text );
+        fragment.text                = text; // Original-Text
         fragment.element             = el;
         fragment.pos                 = pos;
         fragment.start_char_offset   = 0;
-        fragment.end_char_offset     = fragment.text.length();
-        fragment.global_start_offset = m_fullText.length();
+        fragment.end_char_offset     = text.length();
+        fragment.global_start_offset = m_fullText.length(); // Start VOR dem Text
         fragment.is_leaf             = true;
 
-        m_fullText += fragment.text + " ";
-        fragment.global_end_offset = m_fullText.length();
+        // Text zum Volltext hinzufügen
+        m_fullText += text;
+        fragment.global_end_offset = m_fullText.length(); // Ende NACH dem Text
 
         m_fragments.push_back( fragment );
+
+        // WICHTIG: Leerzeichen NACH dem Speichern des Fragments hinzufügen
+        // So zeigt global_end_offset auf das Ende des Textes, nicht auf das Leerzeichen
+        // m_fullText += " ";
 
         // qDebug() << "Leaf-Fragment:" << QString::fromStdString( fragment.text ).left( 30 ) << "| Pos:" << pos.x << pos.y << "| Size:" << pos.width
         //          << "x" << pos.height;
@@ -353,11 +324,11 @@ private:
     litehtml::position boundingBox   = { 0, 0, 0, 0 };
     bool               firstFragment = true;
 
-    // qDebug() << "\n=== Berechne Bounding Box ===";
-    // qDebug() << "Suchbereich: global offset" << searchStart << "bis" << searchEnd;
-    // qDebug() << "Gesuchter Text:"
-    // << QString::fromStdString(
-    //      m_fullText.substr( searchStart, std::min( (size_t)( searchEnd - searchStart ), m_fullText.length() - searchStart ) ) );
+    qDebug() << "\n=== Berechne BBox ===";
+    qDebug() << "Suchbereich im m_fullText:" << searchStart << "-" << searchEnd;
+    qDebug() << "Gesuchter Text:"
+             << QString::fromStdString( m_fullText.substr( std::min( (size_t)searchStart, m_fullText.length() ),
+                                                           std::min( (size_t)( searchEnd - searchStart ), m_fullText.length() - searchStart ) ) );
 
     for ( const auto& fragment : m_fragments )
     {
@@ -366,62 +337,69 @@ private:
         continue;
       }
 
+      // qDebug() << "Prüfe Fragment:" << QString::fromStdString( fragment.text ).left( 20 ) << "| Global:" << fragment.global_start_offset << "-"
+      //          << fragment.global_end_offset;
+
       // Überlappung zwischen Suchbereich und Fragment
+      // WICHTIG: Fragment geht von global_start_offset bis global_end_offset
+      // Das Leerzeichen danach ist NICHT Teil des Fragments!
       int overlapStart = std::max( searchStart, fragment.global_start_offset );
       int overlapEnd   = std::min( searchEnd, fragment.global_end_offset );
 
       if ( overlapStart < overlapEnd )
       {
-        // Kopie des Fragments erstellen
+        qDebug() << "  → Überlappung:" << overlapStart << "-" << overlapEnd;
+
         TextFragment matchedFragment = fragment;
 
         // Lokale Offsets im Fragment-Text berechnen
         int localStart = overlapStart - fragment.global_start_offset;
         int localEnd   = overlapEnd - fragment.global_start_offset;
 
-        // WICHTIG: Bounds checking
-        int maxLen = static_cast<int>( fragment.text.length() );
-        localStart = std::clamp( localStart, 0, maxLen );
-        localEnd   = std::clamp( localEnd, 0, maxLen );
+        // Bounds checking
+        int textLen = static_cast<int>( fragment.text.length() );
+        localStart  = std::clamp( localStart, 0, textLen );
+        localEnd    = std::clamp( localEnd, 0, textLen );
 
         if ( localEnd <= localStart )
         {
-          qDebug() << "Warnung: Ungültige Offsets für Fragment";
+          qDebug() << "  → FEHLER: Ungültige lokale Offsets!";
           continue;
         }
 
         matchedFragment.start_char_offset = localStart;
         matchedFragment.end_char_offset   = localEnd;
 
-        // WICHTIG: Position des matched Fragments anpassen
+        qDebug() << "  → Lokale Offsets:" << localStart << "-" << localEnd
+                 << "| Text:" << QString::fromStdString( fragment.text.substr( localStart, localEnd - localStart ) );
+
+        // Position für diesen Teil des Fragments berechnen
         litehtml::position adjustedPos = fragment.pos;
 
-        if ( maxLen > 0 && fragment.pos.width > 0 )
+        if ( textLen > 0 && fragment.pos.width > 0 )
         {
-          float charWidth = static_cast<float>( fragment.pos.width ) / static_cast<float>( maxLen );
+          float charWidth = static_cast<float>( fragment.pos.width ) / static_cast<float>( textLen );
 
-          // X-Position anpassen basierend auf localStart
+          // X-Position anpassen
           adjustedPos.x = fragment.pos.x + static_cast<int>( charWidth * localStart );
 
-          // Breite anpassen basierend auf Anzahl der Zeichen
+          // Breite anpassen
           adjustedPos.width = static_cast<int>( charWidth * ( localEnd - localStart ) );
+
+          qDebug() << "  → Angepasste Position:" << adjustedPos.x << adjustedPos.y << "| Größe:" << adjustedPos.width << "x" << adjustedPos.height
+                   << "| CharWidth:" << charWidth;
         }
 
-        // Speichere die angepasste Position IM Fragment
+        // Speichere angepasste Position im Fragment
         matchedFragment.pos = adjustedPos;
-
         matchedFragments.push_back( matchedFragment );
 
-        // qDebug() << "Fragment gefunden:" << QString::fromStdString( fragment.text.substr( localStart, localEnd - localStart ) )
-        //          << "| Local:" << localStart << "-" << localEnd << "| Pos:" << adjustedPos.x << adjustedPos.y << "| Size:" << adjustedPos.width <<
-        //          "x"
-        //          << adjustedPos.height;
-
-        // Bounding Box erweitern
+        // Bounding Box erweitern/initialisieren
         if ( firstFragment )
         {
           boundingBox   = adjustedPos;
           firstFragment = false;
+          qDebug() << "  → Initiale BBox:" << boundingBox.x << boundingBox.y << boundingBox.width << "x" << boundingBox.height;
         }
         else
         {
@@ -434,13 +412,15 @@ private:
           boundingBox.y      = minY;
           boundingBox.width  = maxX - minX;
           boundingBox.height = maxY - minY;
+
+          qDebug() << "  → Erweiterte BBox:" << boundingBox.x << boundingBox.y << boundingBox.width << "x" << boundingBox.height;
         }
       }
     }
 
-    // qDebug() << "Finale Bounding Box:" << boundingBox.x << boundingBox.y << boundingBox.width << "x" << boundingBox.height;
-    // qDebug() << "=========================\n";
-
+    qDebug() << "Finale BBox:" << boundingBox.x << boundingBox.y << boundingBox.width << "x" << boundingBox.height;
+    qDebug() << "Anzahl Fragmente:" << matchedFragments.size();
+    qDebug() << "===================\n";
     return boundingBox;
   }
 };
