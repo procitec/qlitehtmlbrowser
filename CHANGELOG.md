@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.3.0
+
+- [#5](https://github.com/procitec/qlitehtmlbrowser/issues/5): Implement selection
+
+
 ## v2.2.1
 
 - [#17](https://github.com/procitec/qlitehtmlbrowser/issues/17): Scale changed signal

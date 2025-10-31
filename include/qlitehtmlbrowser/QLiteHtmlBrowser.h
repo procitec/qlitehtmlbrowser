@@ -25,6 +25,11 @@ class QLITEHTMLBROWSER_EXPORT QLiteHtmlBrowser : public QWidget
 {
   Q_OBJECT
 
+#ifdef UNIT_TEST
+  friend class FindTest;
+  friend class SelectionTest;
+#endif
+
   /// property to access the url that is currently shown in the browser
   Q_PROPERTY( QUrl source READ source WRITE setSource )
 
@@ -155,6 +160,8 @@ public:
   QColor highlightColor() const;
   void   setHighlightColor( QColor color );
 
+  QString selectedText() const;
+
 public Q_SLOTS:
   /// set URL to given url. The URL may be an url to local file, QtHelp, http etc.
   /// The URL could contain an anchor element. Currently parameters to URL like
@@ -188,7 +195,9 @@ Q_SIGNALS:
   /// send when scale changes
   void scaleChanged();
 
+  /// send when selection changes
+  void selectionChanged();
+
 protected:
-private:
   QLiteHtmlBrowserImpl* mImpl = nullptr;
 };

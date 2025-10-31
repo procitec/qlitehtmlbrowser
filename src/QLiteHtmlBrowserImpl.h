@@ -70,6 +70,8 @@ public:
   QColor highlightColor() const;
   void   setHighlightColor( QColor color );
 
+  QString selectedText() const;
+
 protected:
   void changeEvent( QEvent* ) override;
   void mousePressEvent( QMouseEvent* ) override;
@@ -79,6 +81,11 @@ Q_SIGNALS:
   void urlChanged( const QUrl& );
   void anchorClicked( const QUrl& );
   void scaleChanged();
+  void selectionChanged();
+
+#ifdef UNIT_TEST
+  container_qt* container() const { return mContainer; }
+#endif
 
 private:
   class HistoryEntry

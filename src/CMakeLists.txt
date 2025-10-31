@@ -22,6 +22,8 @@ target_sources(QLiteHtmlBrowser
         QLiteHtmlBrowser.cpp
         QLiteHtmlBrowserImpl.cpp
         QLiteHtmlBrowserImpl.h
+        TextManager.h
+        TextManager.cpp
         container_qt.cpp
         container_qt.h
         browserdefinitions.h

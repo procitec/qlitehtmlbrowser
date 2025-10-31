@@ -53,4 +53,6 @@ private:
   QAction*      mPreviousFindMatch = nullptr;
   QLabel*       mScale             = nullptr;
   QString       mScaleText         = tr( "Zoom: %1%" );
+  QLabel*       mSelection         = nullptr;
+  QString       mSelectionText     = tr( "Selected %1 chars" );
 };
