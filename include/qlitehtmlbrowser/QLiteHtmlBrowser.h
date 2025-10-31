@@ -25,6 +25,11 @@ class QLITEHTMLBROWSER_EXPORT QLiteHtmlBrowser : public QWidget
 {
   Q_OBJECT
 
+#ifdef UNIT_TEST
+  friend class FindTest;
+  friend class SelectionTest;
+#endif
+
   /// property to access the url that is currently shown in the browser
   Q_PROPERTY( QUrl source READ source WRITE setSource )
 
@@ -194,6 +199,5 @@ Q_SIGNALS:
   void selectionChanged();
 
 protected:
-private:
   QLiteHtmlBrowserImpl* mImpl = nullptr;
 };

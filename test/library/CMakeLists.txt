@@ -8,6 +8,8 @@ else()
   set(QT_VERSION_MAJOR 5)
 endif()
 
+add_compile_definitions(-DUNIT_TEST)
+
 set( test_names
     test_html_content
     test_css_content
@@ -39,9 +41,9 @@ foreach( name ${test_names})
       ${${name}_mocs}
     )
 
-    target_include_directories( ${name} PRIVATE ${QLiteHtmlBrowser_SOURCE_DIR}/include )
+    target_include_directories( ${name} PRIVATE ${QLiteHtmlBrowser_SOURCE_DIR}/include ${QLiteHtmlBrowser_SOURCE_DIR}/src)
 
-    target_link_libraries(${name} PRIVATE QLiteHtmlBrowser Qt::Widgets Qt::Gui Qt::Test )
+    target_link_libraries(${name} PRIVATE QLiteHtmlBrowser litehtml Qt::Widgets Qt::Gui Qt::Test )
 
     target_compile_definitions(${name} PRIVATE TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 

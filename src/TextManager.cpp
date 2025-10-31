@@ -19,16 +19,16 @@ void TextManager::buildFromDocument( litehtml::document::ptr doc )
     // qDebug() << "Fragmente gesammelt:" << m_fragments.size();
     // qDebug() << "Gesamttext-Länge:" << m_fullText.length();
 
-    qDebug() << "\n=== Gesammelte Text-Fragmente ===";
-    qDebug() << "Anzahl Fragmente:" << m_fragments.size();
-    for ( size_t i = 0; i < m_fragments.size(); ++i )
-    {
-      const auto& frag = m_fragments[i];
-      qDebug() << "Fragment" << i << ":"
-               << "Text:" << QString::fromStdString( frag.text ).left( 30 ) << "| Leaf:" << frag.is_leaf << "| Pos:" << frag.pos.x << frag.pos.y
-               << "| Size:" << frag.pos.width << "x" << frag.pos.height << "| Valid:" << frag.hasValidPosition();
-    }
-    qDebug() << "================================\n";
+    // qDebug() << "\n=== Gesammelte Text-Fragmente ===";
+    // qDebug() << "Anzahl Fragmente:" << m_fragments.size();
+    // for ( size_t i = 0; i < m_fragments.size(); ++i )
+    // {
+    //   const auto& frag = m_fragments[i];
+    //   qDebug() << "Fragment" << i << ":"
+    //            << "Text:" << QString::fromStdString( frag.text ).left( 30 ) << "| Leaf:" << frag.is_leaf << "| Pos:" << frag.pos.x << frag.pos.y
+    //            << "| Size:" << frag.pos.width << "x" << frag.pos.height << "| Valid:" << frag.hasValidPosition();
+    // }
+    // qDebug() << "================================\n";
   }
 }
 

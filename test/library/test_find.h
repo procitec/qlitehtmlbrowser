@@ -21,8 +21,11 @@ private Q_SLOTS:
     mWnd.reset();
     mWnd = nullptr;
   }
+  void test_find_single_word_data();
   void test_find_single_word();
+  void test_find_phrase_data();
   void test_find_phrase();
+  void test_find_phrase_multi_element_data();
   void test_find_phrase_multi_element();
 
 private:

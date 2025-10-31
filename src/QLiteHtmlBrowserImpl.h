@@ -83,6 +83,10 @@ Q_SIGNALS:
   void scaleChanged();
   void selectionChanged();
 
+#ifdef UNIT_TEST
+  container_qt* const container() const { return mContainer; }
+#endif
+
 private:
   class HistoryEntry
   {

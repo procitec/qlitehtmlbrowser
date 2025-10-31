@@ -15,7 +15,14 @@
 
 class container_qt : public QAbstractScrollArea, protected litehtml::document_container
 {
+
   Q_OBJECT
+
+#ifdef UNIT_TEST
+  friend class FindTest;
+  friend class SelectionTest;
+#endif
+
 public:
   container_qt( QWidget* parent = nullptr );
 
@@ -93,7 +100,7 @@ protected:
   void copySelectionToClipboard();
   void clearSelection();
 
-private:
+protected:
   // selection
   void drawSelection( QPainter& painter );
 
@@ -126,7 +133,7 @@ private:
   QByteArray             loadResource( Browser::ResourceType type, const QUrl& url );
   MousePos               convertMousePos( const QMouseEvent* event );
 
-private:
+protected:
   int                               find_text( litehtml::document::ptr doc, const std::string& search_term, bool case_sensitive = true );
   bool                              find_next_match();
   bool                              find_previous_match();
@@ -134,17 +141,7 @@ private:
   void highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const TextManager::TextFindMatch& match );
   void                              draw_highlights( litehtml::uint_ptr hdc );
   void                              clear_highlights() { mFindMatches.clear(); }
-  // std::string                       normalizeWhitespace( const std::string& text );
-  //  void                              find_text_in_document( litehtml::document::ptr                  doc,
-  //                                                           const std::string&                       search_term,
-  //                                                           std::vector<TextManager::TextFindMatch>& matches,
-  //                                                           bool                                     case_sensitive = true );
-  // void               collect_text_fragments( litehtml::element::ptr el, std::vector<TextManager::TextFragment>& fragments, std::string& fullText
-  // ); litehtml::position calculate_precise_bounding_box( const std::vector<TextManager::TextFragment>& allFragments,
-  //                                                    int                                           searchStart,
-  //                                                    int                                           searchEnd,
-  //                                                    std::vector<TextManager::TextFragment>&       matchedFragments );
-  void scroll_to_find_match( const TextManager::TextFindMatch* );
+  void                              scroll_to_find_match( const TextManager::TextFindMatch* );
 
   std::shared_ptr<litehtml::document>     mDocument;
   QByteArray                              mDocumentSource;
