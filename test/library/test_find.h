@@ -10,7 +10,7 @@ class FindTest : public TestBase
   Q_OBJECT
 public:
   FindTest()
-    : TestBase( qApp->arguments() ){};
+    : TestBase( qApp->arguments() ) {};
   virtual ~FindTest() = default;
 
 private Q_SLOTS:
