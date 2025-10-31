@@ -10,7 +10,7 @@ class SelectionTest : public TestBase
   Q_OBJECT
 public:
   SelectionTest()
-    : TestBase( qApp->arguments() ){};
+    : TestBase( qApp->arguments() ) {};
   virtual ~SelectionTest() = default;
 
 private Q_SLOTS:
