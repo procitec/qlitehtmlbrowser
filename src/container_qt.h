@@ -99,6 +99,7 @@ protected:
   // const DOMTextManager::SelectionRange& getCurrentSelection() const;
   void copySelectionToClipboard();
   void clearSelection();
+  void selectAll();
 
 protected:
   // selection
@@ -139,9 +140,9 @@ protected:
   bool                              find_previous_match();
   const TextManager::TextFindMatch* find_current_match() const;
   void highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const TextManager::TextFindMatch& match );
-  void                              draw_highlights( litehtml::uint_ptr hdc );
-  void                              clear_highlights() { mFindMatches.clear(); }
-  void                              scroll_to_find_match( const TextManager::TextFindMatch* );
+  void draw_highlights( litehtml::uint_ptr hdc );
+  void clear_highlights() { mFindMatches.clear(); }
+  void scroll_to_find_match( const TextManager::TextFindMatch* );
 
   std::shared_ptr<litehtml::document>     mDocument;
   QByteArray                              mDocumentSource;
@@ -164,9 +165,9 @@ protected:
   litehtml::position                      mClip                  = {};
   std::vector<TextManager::TextFindMatch> mFindMatches           = {};
   int                                     mFindCurrentMatchIndex = -1;
-  QColor                                     mHighlightColor        = QColor( 255, 255, 0, 30 );
-  QColor                                     mSelectionColor        = QColor( 0, 120, 215, 100 );
-  QString                                    mFindText;
+  QColor                                  mHighlightColor        = QColor( 255, 255, 0, 30 );
+  QColor                                  mSelectionColor        = QColor( 0, 120, 215, 100 );
+  QString                                 mFindText;
 
   // for selection
 

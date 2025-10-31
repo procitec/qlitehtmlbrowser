@@ -238,6 +238,12 @@ void TextManager::collectTextFragments( litehtml::element::ptr el )
       fragment.global_end_offset = m_fullText.length(); // Ende NACH dem Text
       fragment.element_tag       = getElementTag( el );
       fragment.is_block_element  = isBlockLevelElement( fragment.element_tag );
+      fragment.table_cell_parent = findParentWithTag( el, "td" );
+      if ( !fragment.table_cell_parent )
+      {
+        fragment.table_cell_parent = findParentWithTag( el, "th" );
+      }
+      fragment.table_row_parent = findParentWithTag( el, "tr" );
 
       m_fragments.push_back( fragment );
 
@@ -255,6 +261,31 @@ void TextManager::collectTextFragments( litehtml::element::ptr el )
   {
     collectTextFragments( *it );
   }
+}
+
+litehtml::element::ptr TextManager::findParentWithTag( litehtml::element::ptr element, const std::string& tag ) const
+{
+  if ( !element )
+    return nullptr;
+
+  auto current = element->parent();
+  while ( current )
+  {
+    const char* tagName = current->get_tagName();
+    if ( tagName )
+    {
+      std::string currentTag( tagName );
+      std::transform( currentTag.begin(), currentTag.end(), currentTag.begin(), ::tolower );
+
+      if ( currentTag == tag )
+      {
+        return current;
+      }
+    }
+    current = current->parent();
+  }
+
+  return nullptr;
 }
 
 litehtml::position TextManager::calculateBoundingBox( int searchStart, int searchEnd, std::vector<TextFragment>& matchedFragments )
@@ -389,12 +420,12 @@ std::string TextManager::getElementTag( litehtml::element::ptr element ) const
 bool TextManager::isBlockLevelElement( const std::string& tag ) const
 {
   // Liste der gängigen Block-Level-Elemente
-  static const std::vector<std::string> blockElements = {
-    "address", "article",  "aside", "blockquote", "canvas", "dd",      "div",   "dl",    "dt",     "fieldset", "figcaption", "figure",
-    "footer",  "form",     "h1",    "h2",         "h3",     "h4",      "h5",    "h6",    "header", "hr",       "li",         "main",
-    "nav",     "noscript", "ol",    "p",          "pre",    "section", "table", "tfoot", "ul",     "video",
-    "br" // BR ist speziell: inline aber erzeugt Zeilenumbruch
-  };
+  static const std::vector<std::string> blockElements = { "address", "article",  "aside",      "blockquote", "canvas", "dd",      "div", "dl",
+                                                          "dt",      "fieldset", "figcaption", "figure",     "footer", "form",    "h1",  "h2",
+                                                          "h3",      "h4",       "h5",         "h6",         "header", "hr",      "li",  "main",
+                                                          "nav",     "noscript", "ol",         "p",          "pre",    "section", "ul",  "video",
+                                                          "br", // BR ist speziell: inline aber erzeugt Zeilenumbruch
+                                                          "table",   "thead",    "tbody",      "tfoot" };
 
   return std::find( blockElements.begin(), blockElements.end(), tag ) != blockElements.end();
 }
@@ -440,10 +471,14 @@ std::string TextManager::selectedText( const SelectionRange& selection, TextForm
         {
           const auto& prevFragment = selection.fragments[i - 1];
 
-          // WICHTIG: Prüfe ob gleicher Parent
+          if ( prevFragment.table_row_parent != fragment.table_row_parent )
+          {
+            // part = "\n" + part;
+            result += "\n";
+          }
+
           if ( prevFragment.parent_element != fragment.parent_element )
           {
-            // Unterschiedliches Parent-Element
             if ( prevFragment.element_tag == "p" && fragment.element_tag == "p" )
             {
               // Zwischen zwei <p>-Elementen: Doppelter Newline
@@ -458,14 +493,27 @@ std::string TextManager::selectedText( const SelectionRange& selection, TextForm
             {
               if ( prevFragment.element_tag != fragment.element_tag )
               {
-                // Inline-Elemente mit unterschiedlichem Parent: Space
-                result += ' ';
+                if ( !result.empty() && !std::isspace( result.back() ) && !std::isspace( part.front() ) )
+                {
+                  result += ' ';
+                }
+              }
+              else
+              {
+                if ( !result.empty() && !std::isspace( result.back() ) && !std::isspace( part.front() ) )
+                {
+                  result += ' ';
+                }
               }
             }
           }
           else
           {
-            // Gleiches Parent-Element: Nur Space            result += ' ';
+
+            // if ( !result.empty() && !std::isspace( result.back() ) )
+            // {
+            //  result += ' ';
+            // }
           }
         }
 
@@ -502,4 +550,49 @@ std::string TextManager::selectedText( const SelectionRange& selection, TextForm
   }
 
   return result.substr( start, end - start + 1 );
+}
+
+TextManager::SelectionRange TextManager::selectAll()
+{
+  SelectionRange selection;
+
+  // Wenn keine Fragmente vorhanden, leere Selektion zurückgeben
+  if ( m_fragments.empty() )
+  {
+    return selection;
+  }
+
+  // Start-Position: Erstes Fragment, erstes Zeichen
+  const auto& firstFragment   = m_fragments.front();
+  selection.start.element     = firstFragment.element;
+  selection.start.char_offset = 0;
+  selection.start.element_pos = firstFragment.pos;
+
+  // End-Position: Letztes Fragment, letztes Zeichen
+  const auto& lastFragment  = m_fragments.back();
+  selection.end.element     = lastFragment.element;
+  selection.end.char_offset = lastFragment.text.length();
+  selection.end.element_pos = lastFragment.pos;
+
+  // Alle Fragmente zur Selektion hinzufügen
+  for ( const auto& fragment : m_fragments )
+  {
+    if ( !fragment.hasValidPosition() )
+    {
+      continue;
+    }
+
+    TextFragment selectedFragment = fragment;
+
+    // Vollständiges Fragment auswählen
+    selectedFragment.start_char_offset = 0;
+    selectedFragment.end_char_offset   = fragment.text.length();
+
+    // Position bleibt unverändert (gesamtes Fragment)
+    selectedFragment.pos = fragment.pos;
+
+    selection.fragments.push_back( selectedFragment );
+  }
+
+  return selection;
 }

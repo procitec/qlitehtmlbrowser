@@ -18,8 +18,10 @@ private:
     bool                   is_leaf;
     litehtml::element::ptr parent_element;
 
-    std::string element_tag;      // z.B. "p", "div", "span", "br"
-    bool        is_block_element; // true für Block-Level-Elemente
+    std::string            element_tag;       // z.B. "p", "div", "span", "br"
+    bool                   is_block_element;  // true für Block-Level-Elemente
+    litehtml::element::ptr table_cell_parent; // <td> oder <th>
+    litehtml::element::ptr table_row_parent;  // <tr>
 
     bool hasValidPosition() const { return pos.width > 0 && pos.height > 0; }
   };
@@ -84,11 +86,13 @@ public:
   SelectionRange             getSelectionBetween( const TextPosition& start, const TextPosition& end );
   std::vector<TextFindMatch> findText( const std::string& search_term, bool case_sensitive = true );
   std::string                selectedText( const SelectionRange& selection, TextFormatMode mode = TextFormatMode::Structured ) const;
+  SelectionRange             selectAll();
 
 private:
-  void               collectTextFragments( litehtml::element::ptr el );
-  litehtml::position calculateBoundingBox( int searchStart, int searchEnd, std::vector<TextFragment>& matchedFragments );
-  bool               isBlockLevelElement( const std::string& tag ) const;
-  std::string        getElementTag( litehtml::element::ptr element ) const;
-  bool               shouldInsertNewline( const TextFragment& prev, const TextFragment& current ) const;
+  void                   collectTextFragments( litehtml::element::ptr el );
+  litehtml::position     calculateBoundingBox( int searchStart, int searchEnd, std::vector<TextFragment>& matchedFragments );
+  bool                   isBlockLevelElement( const std::string& tag ) const;
+  std::string            getElementTag( litehtml::element::ptr element ) const;
+  bool                   shouldInsertNewline( const TextFragment& prev, const TextFragment& current ) const;
+  litehtml::element::ptr findParentWithTag( litehtml::element::ptr element, const std::string& tag ) const;
 };

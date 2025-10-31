@@ -1138,7 +1138,6 @@ int container_qt::findText( const QString& text )
   return mFindMatches.size();
 }
 
-
 // Textsuche durchführen
 int container_qt::find_text( litehtml::document::ptr doc, const std::string& search_term, bool case_sensitive )
 {
@@ -1296,6 +1295,7 @@ void container_qt::clearSelection()
 {
   m_currentSelection.clear();
   viewport()->update();
+  emit selectionChanged();
 }
 
 void container_qt::keyPressEvent( QKeyEvent* event )
@@ -1309,6 +1309,11 @@ void container_qt::keyPressEvent( QKeyEvent* event )
   else if ( event->key() == Qt::Key_Escape )
   {
     clearSelection();
+  }
+  // Strg+A alles selektieren
+  else if ( event->matches( QKeySequence::SelectAll ) )
+  {
+    selectAll();
   }
 
   QWidget::keyPressEvent( event );
@@ -1347,4 +1352,11 @@ void container_qt::drawSelection( QPainter& painter )
   }
 
   painter.restore();
+}
+
+void container_qt::selectAll()
+{
+  m_currentSelection = m_textManager.selectAll();
+  viewport()->update();
+  emit selectionChanged();
 }

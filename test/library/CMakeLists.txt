@@ -15,6 +15,7 @@ set( test_names
     test_css_content
     test_history
     test_find
+    test_selection
 )
 
 set( runpath "$<TARGET_FILE_DIR:QLiteHtmlBrowser>;$<TARGET_FILE_DIR:Qt${QT_VERSION_MAJOR}::Widgets>")
@@ -31,6 +32,10 @@ foreach( name ${test_names})
     qt_wrap_cpp ( ${name}_mocs
         ${name}.h
         test_base.h
+        ${QLiteHtmlBrowser_SOURCE_DIR}/src/container_qt.h
+        ${QLiteHtmlBrowser_SOURCE_DIR}/src/QLiteHtmlBrowserImpl.h
+        ${QLiteHtmlBrowser_SOURCE_DIR}/src/TextManager.h
+        ${QLiteHtmlBrowser_SOURCE_DIR}/include/qlitehtmlbrowser/QLiteHtmlBrowser.h
     )
 
     target_sources(${name}
@@ -39,11 +44,19 @@ foreach( name ${test_names})
       ${name}.h
       test_base.h
       ${${name}_mocs}
+      ${QLiteHtmlBrowser_SOURCE_DIR}/include/qlitehtmlbrowser/QLiteHtmlBrowser.h
+      ${QLiteHtmlBrowser_SOURCE_DIR}/src/QLiteHtmlBrowser.cpp
+      ${QLiteHtmlBrowser_SOURCE_DIR}/src/QLiteHtmlBrowserImpl.cpp
+      ${QLiteHtmlBrowser_SOURCE_DIR}/src/QLiteHtmlBrowserImpl.h
+      ${QLiteHtmlBrowser_SOURCE_DIR}/src/container_qt.h
+      ${QLiteHtmlBrowser_SOURCE_DIR}/src/container_qt.cpp
+      ${QLiteHtmlBrowser_SOURCE_DIR}/src/TextManager.cpp
+      ${QLiteHtmlBrowser_SOURCE_DIR}/src/TextManager.h
     )
 
     target_include_directories( ${name} PRIVATE ${QLiteHtmlBrowser_SOURCE_DIR}/include ${QLiteHtmlBrowser_SOURCE_DIR}/src)
 
-    target_link_libraries(${name} PRIVATE QLiteHtmlBrowser litehtml Qt::Widgets Qt::Gui Qt::Test )
+    target_link_libraries(${name} PUBLIC litehtml Qt::Widgets Qt::Gui Qt::Test )
 
     target_compile_definitions(${name} PRIVATE TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 

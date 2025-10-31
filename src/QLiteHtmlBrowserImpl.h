@@ -84,7 +84,7 @@ Q_SIGNALS:
   void selectionChanged();
 
 #ifdef UNIT_TEST
-  container_qt* const container() const { return mContainer; }
+  container_qt* container() const { return mContainer; }
 #endif
 
 private:
