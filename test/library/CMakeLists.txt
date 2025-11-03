@@ -9,6 +9,7 @@ else()
 endif()
 
 add_compile_definitions(-DUNIT_TEST)
+add_definitions(-DQLITEHTMLBROWSER_LIBRARY)
 
 set( test_names
     test_html_content
