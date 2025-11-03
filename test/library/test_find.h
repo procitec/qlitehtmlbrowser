@@ -30,6 +30,7 @@ private Q_SLOTS:
 
 private:
   QLiteHtmlBrowser*            createMainWindow( const QSize& );
+  bool                         skipUITest() const;
   std::unique_ptr<QMainWindow> mWnd         = nullptr;
   QSize                        mBrowserSize = { 800, 600 };
 };

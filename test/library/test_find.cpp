@@ -13,6 +13,18 @@ int main( int argc, char** argv )
   return QTest::qExec( &mContentTest, mContentTest.args() );
 }
 
+bool FindTest::skipUITest() const
+{
+  auto skip = false;
+  auto qpa  = qgetenv( "QT_QPA_PLATFORM" );
+  if ( !qpa.isEmpty() )
+  {
+    auto value = QString::fromLocal8Bit( qpa );
+    skip       = value != "xcb";
+  }
+  return skip;
+}
+
 QLiteHtmlBrowser* FindTest::createMainWindow( const QSize& size )
 {
   mWnd         = std::make_unique<QMainWindow>();
@@ -84,14 +96,24 @@ void FindTest::test_find_phrase()
 
   if ( 0 < found )
   {
+    if ( skipUITest() )
+    {
+      QSKIP( "skip tests due QT_QPA_PLATFORM_PLUGIN" );
+    }
+
     auto container    = browser->mImpl->container();
     auto find_machtes = container->mFindMatches;
     for ( size_t i = 0; i < find_machtes.size(); ++i )
     {
       const auto& match = find_machtes[i];
-      QCOMPARE( QRect( match.bounding_box.x, match.bounding_box.y, match.bounding_box.width, match.bounding_box.height ), bounding_boxes[i] );
-      // qDebug() << "Find match" << i << ":"
-      //          << "Text:" << QString::fromStdString( match.matched_text ) << "Pos X" << match.bounding_box.x;
+      auto        bb    = QRect( match.bounding_box.x, match.bounding_box.y, match.bounding_box.width, match.bounding_box.height );
+      if ( bb != bounding_boxes[i] )
+      {
+        auto img = container->grab(); // QMainWindow, QWidget usw.
+        img.save( QString( "screenshot_ui_find_phrase_%1.png" ).arg( i ) );
+      }
+
+      QCOMPARE( bb, bounding_boxes[i] );
     }
   }
 }
@@ -119,16 +141,29 @@ void FindTest::test_find_phrase_multi_element()
 
   auto found = browser->findText( find_text );
   qApp->processEvents();
+  // QTest::qWaitForWindowExposed( browser->mImpl->container() );
   QCOMPARE( found, matches );
   if ( 0 < found )
   {
+    if ( skipUITest() )
+    {
+      QSKIP( "skip tests due QT_QPA_PLATFORM_PLUGIN" );
+    }
 
     auto container    = browser->mImpl->container();
+    qApp->processEvents();
     auto find_machtes = container->mFindMatches;
     for ( size_t i = 0; i < find_machtes.size(); ++i )
     {
       const auto& match = find_machtes[i];
-      QCOMPARE( QRect( match.bounding_box.x, match.bounding_box.y, match.bounding_box.width, match.bounding_box.height ), bounding_boxes[i] );
+      auto        bb    = QRect( match.bounding_box.x, match.bounding_box.y, match.bounding_box.width, match.bounding_box.height );
+      if ( bb != bounding_boxes[i] )
+      {
+        auto img = container->grab(); // QMainWindow, QWidget usw.
+        img.save( QDir::currentPath() + QString( "/screenshot_ui_multi_element_%1.png" ).arg( i ) );
+      }
+
+      QCOMPARE( bb, bounding_boxes[i] );
     }
   }
 }
