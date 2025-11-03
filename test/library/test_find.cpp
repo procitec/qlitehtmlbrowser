@@ -150,7 +150,7 @@ void FindTest::test_find_phrase_multi_element()
       QSKIP( "skip tests due QT_QPA_PLATFORM_PLUGIN" );
     }
 
-    auto container    = browser->mImpl->container();
+    auto container = browser->mImpl->container();
     qApp->processEvents();
     auto find_machtes = container->mFindMatches;
     for ( size_t i = 0; i < find_machtes.size(); ++i )
