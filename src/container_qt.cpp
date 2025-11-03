@@ -878,10 +878,12 @@ void container_qt::setScale( double scale )
     ( 0 < horizontalScrollBar()->maximum() ) ? static_cast<float>( horizontalScrollBar()->value() ) / horizontalScrollBar()->maximum() : 0.0;
   auto relV = ( 0 < verticalScrollBar()->maximum() ) ? static_cast<float>( verticalScrollBar()->value() ) / verticalScrollBar()->maximum() : 0.0;
   mScale    = std::clamp( scale, mMinScale, mMaxScale );
+  m_currentSelection.clear();
   render();
-  findText( mFindText );
   horizontalScrollBar()->setValue( std::floor( relH * horizontalScrollBar()->maximum() ) );
   verticalScrollBar()->setValue( std::floor( relV * verticalScrollBar()->maximum() ) );
+  m_textManager.buildFromDocument( mDocument );
+  findText( mFindText );
   emit scaleChanged();
 }
 
@@ -915,9 +917,13 @@ void container_qt::resizeEvent( QResizeEvent* event )
     ( 0 < horizontalScrollBar()->maximum() ) ? static_cast<float>( horizontalScrollBar()->value() ) / horizontalScrollBar()->maximum() : 0.0;
   auto relV = ( 0 < verticalScrollBar()->maximum() ) ? static_cast<float>( verticalScrollBar()->value() ) / verticalScrollBar()->maximum() : 0.0;
   QAbstractScrollArea::resizeEvent( event );
+  m_currentSelection.clear();
   render();
   horizontalScrollBar()->setValue( std::floor( relH * horizontalScrollBar()->maximum() ) );
   verticalScrollBar()->setValue( std::floor( relV * verticalScrollBar()->maximum() ) );
+
+  m_textManager.buildFromDocument( mDocument );
+  findText( mFindText );
 }
 
 void container_qt::wheelEvent( QWheelEvent* e )
@@ -1216,8 +1222,9 @@ void container_qt::draw_highlights( litehtml::uint_ptr hdc )
 void container_qt::highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const TextManager::TextFindMatch& match )
 {
 
-  qDebug() << "Highlighting text '" << QString::fromStdString( match.matched_text ) << "' at position (" << pos.x << ", " << pos.y << ") with size "
-           << pos.width << "x" << pos.height;
+  // qDebug() << "Highlighting text '" << QString::fromStdString( match.matched_text ) << "' at position (" << pos.x << ", " << pos.y << ") with size
+  // "
+  //          << pos.width << "x" << pos.height;
 
   QPainter* p( reinterpret_cast<QPainter*>( hdc ) );
   p->save();
@@ -1338,7 +1345,8 @@ void container_qt::drawSelection( QPainter& painter )
     }
 
     int startX = pos.x + static_cast<int>( charWidth * fragment.start_char_offset );
-    int width  = static_cast<int>( charWidth * ( fragment.end_char_offset - fragment.start_char_offset ) );
+    // int width  = static_cast<int>( charWidth * ( fragment.end_char_offset - fragment.start_char_offset ) );
+    int width = pos.width;
 
     auto scroll_pos = -scrollBarPos();
 
