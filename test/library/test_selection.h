@@ -5,13 +5,13 @@
 
 class QLiteHtmlBrowser;
 
-class FindTest : public TestBase
+class SelectionTest : public TestBase
 {
   Q_OBJECT
 public:
-  FindTest()
+  SelectionTest()
     : TestBase( qApp->arguments() ) {};
-  virtual ~FindTest() = default;
+  virtual ~SelectionTest() = default;
 
 private Q_SLOTS:
   void init() { TestBase::init(); }
@@ -21,16 +21,12 @@ private Q_SLOTS:
     mWnd.reset();
     mWnd = nullptr;
   }
-  void test_find_single_word_data();
-  void test_find_single_word();
-  void test_find_phrase_data();
-  void test_find_phrase();
-  void test_find_phrase_multi_element_data();
-  void test_find_phrase_multi_element();
+
+  void testSelectionText_data();
+  void testSelectionText();
 
 private:
   QLiteHtmlBrowser*            createMainWindow( const QSize& );
-  bool                         skipUITest() const;
   std::unique_ptr<QMainWindow> mWnd         = nullptr;
   QSize                        mBrowserSize = { 800, 600 };
 };
