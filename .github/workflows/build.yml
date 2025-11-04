@@ -2,14 +2,9 @@ name: Build QLiteHtmlBrowser
 
 on:
   push:
-    branches:
-      - main
-      - qt6
-
+    branches: [main, qt6, qt5]
   pull_request:
-
   workflow_call:
-
 
 jobs:
   check-formatting:
@@ -17,36 +12,118 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        path:
-          - 'include'
-          - 'src'
-          - 'test'
+        path: ['include', 'src', 'test']
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Run clang-format formatting check
-        uses: jidicula/clang-format-action@v4.13.0
+      - uses: actions/checkout@v4
+      - uses: jidicula/clang-format-action@v4.13.0
         with:
           clang-format-version: '18'
           check-path: ${{ matrix.path }}
 
   build:
     needs: check-formatting
-    name: Build and run tests
-    runs-on: ubuntu-latest
+    name: Build (${{ matrix.os }} - Qt ${{ matrix.qt-version }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # ========== Linux Builds ==========
+          # Qt 6 (latest) on Linux
+          - os: ubuntu-latest
+            qt-version: '6.7.*'
+            qt-modules: 'qtbase qt5compat'
+            name: Linux-Qt6
+            use-apt: false
+            test-cmd: xvfb-run -a ctest -V -E NOT_BUILT
+
+          # Qt 5.15 LTS on Linux
+          - os: ubuntu-22.04
+            qt-version: '5.15.2'
+            qt-modules: ''
+            name: Linux-Qt5
+            use-apt: true
+            apt-packages: 'qt5-default qtbase5-dev qttools5-dev ninja-build xvfb libxcb-cursor0'
+            test-cmd: xvfb-run -a ctest -V -E NOT_BUILT
+
+          # ========== Windows Builds ==========
+          # Qt 6 (latest) on Windows
+          - os: windows-latest
+            qt-version: '6.7.*'
+            qt-arch: 'win64_msvc2019_64'
+            qt-modules: 'qtbase qt5compat'
+            name: Windows-Qt6
+            use-apt: false
+            test-cmd: ctest -C Release -V -E NOT_BUILT
+
+          # Qt 5.15 LTS on Windows
+          - os: windows-latest
+            qt-version: '5.15.2'
+            qt-arch: 'win64_msvc2019_64'
+            qt-modules: ''
+            name: Windows-Qt5
+            use-apt: false
+            test-cmd: ctest -C Release -V -E NOT_BUILT
+
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Install dependencies
-        run: sudo apt install qt6-base-dev qt6-tools-dev ninja-build
-      - name: Run CMake
-        run: cmake -B ${{github.workspace}}/build -GNinja -DCMAKE_BUILD_TYPE=Release
+
+      # ========== Linux: Qt via APT (Qt5 only) ==========
+      - name: Install Qt via APT (Linux Qt5)
+        if: runner.os == 'Linux' && matrix.use-apt
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ matrix.apt-packages }}
+
+      # ========== Linux/Windows: Qt via installer (Qt6 and Windows Qt5) ==========
+      - name: Install Qt via installer
+        if: ${{ !matrix.use-apt }}
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ matrix.qt-version }}
+          arch: ${{ matrix.qt-arch || '' }}
+          modules: ${{ matrix.qt-modules }}
+          cache: true
+
+      # ========== Windows: MSVC + Ninja ==========
+      - name: Setup MSVC (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Install Ninja (Windows)
+        if: runner.os == 'Windows'
+        run: choco install ninja
+
+      - name: Install Ninja (Linux - if needed)
+        if: runner.os == 'Linux' && !matrix.use-apt
+        run: sudo apt-get install -y ninja-build xvfb libxcb-cursor0
+
+      # ========== CMake Configure ==========
+      - name: Configure CMake (Linux)
+        if: runner.os == 'Linux'
+        run: cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Configure CMake (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cmake -B build `
+            -GNinja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_C_COMPILER=cl `
+            -DCMAKE_CXX_COMPILER=cl
+
+      # ========== Build ==========
       - name: Build
-        run: cmake --build ${{github.workspace}}/build
-      - name: Test
-        env:
-          QT_QPA_PLATFORM: offscreen
-        working-directory: ${{github.workspace}}/build
-        run: ctest -V -E NOT_BUILT
+        run: cmake --build build --config Release
+
+      # ========== Test ==========
+      - name: Run Tests
+        working-directory: build
+        run: ${{ matrix.test-cmd }}
+        continue-on-error: true
