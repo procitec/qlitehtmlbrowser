@@ -72,7 +72,7 @@ void FindTest::test_find_phrase_data()
   QTest::addColumn<int>( "matches" );
   QTest::addColumn<QList<QRect>>( "bounding_boxes" );
 #ifdef Q_OS_LINUX
-  QList<QRect> boxes = { { 252, 995, 151, 17 } };
+  QList<QRect> boxes = { { 276, 909, 161, 15 } };
 #else
   QList<QRect> boxes = { { 276, 866, 161, 14 } };
 #endif
@@ -130,7 +130,7 @@ void FindTest::test_find_phrase_multi_element_data()
   QTest::addColumn<QList<QRect>>( "bounding_boxes" );
   // these boxes are currently valid, but are wrong. See issues in qlitehtml project
 #ifdef Q_OS_LINUX
-  QList<QRect> boxes = { { 8, 2145, 64, 46 } };
+  QList<QRect> boxes = { { 8, 1974, 143, 42 } };
 #else
   QList<QRect> boxes = { { 8, 1880, 143, 40 } };
 #endif
