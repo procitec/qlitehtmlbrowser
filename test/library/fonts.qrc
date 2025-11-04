@@ -1,0 +1,8 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/fonts">
+        <file alias="DejaVuSans.ttf">fonts/DejaVuSans.ttf</file>
+        <file alias="DejaVuSans-Bold.ttf">fonts/DejaVuSans-Bold.ttf</file>
+        <file alias="DejaVuSansMono.ttf">fonts/DejaVuSansMono.ttf</file>
+    </qresource>
+</RCC>

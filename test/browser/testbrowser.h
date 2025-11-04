@@ -40,6 +40,7 @@ protected:
   void findText( const QString& text );
   void nextFindMatch();
   void previousFindMatch();
+  bool loadTestFonts();
 
 private:
   QHelpBrowser* mBrowser;
