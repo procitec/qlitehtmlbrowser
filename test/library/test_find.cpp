@@ -70,14 +70,14 @@ void FindTest::test_find_phrase_data()
 {
   QTest::addColumn<QString>( "find_text" );
   QTest::addColumn<int>( "matches" );
-  QTest::addColumn<QList<QRect>>( "bounding_boxes" );
+  QTest::addColumn<QList<QList<QRect>>>( "bounding_boxes" );
 #if defined( Q_OS_LINUX ) && QT_VERSION < QT_VERSION_CHECK( 6, 0, 0 )
-  QList<QRect> boxes = { { 276, 909, 161, 15 } };
+  QList<QList<QRect>> boxes = { { { 276, 909, 66, 15 }, { 342, 909, 4, 15 }, { 346, 909, 91, 15 } } };
 #else
-  QList<QRect> boxes = { { 276, 866, 161, 14 } };
+  QList<QList<QRect>> boxes = { { { 276, 866, 66, 14 }, { 342, 866, 4, 14 }, { 346, 866, 91, 14 } } };
 #endif
   QTest::addRow( "%d", 0 ) << QString( "allgemeine Beobachtungen" ) << 1 << boxes;
-  boxes = { { 0, 0, 0, 0 } };
+  boxes = { { {} } };
   QTest::addRow( "%d", 0 ) << QString( "schliesst ab" ) << 0 << boxes;
 }
 
@@ -85,7 +85,7 @@ void FindTest::test_find_phrase()
 {
   QFETCH( QString, find_text );
   QFETCH( int, matches );
-  QFETCH( QList<QRect>, bounding_boxes );
+  QFETCH( QList<QList<QRect>>, bounding_boxes );
 
   auto browser = createMainWindow( mBrowserSize );
   // QVERIFY( mWnd->centralWidget() );
@@ -111,14 +111,12 @@ void FindTest::test_find_phrase()
     for ( size_t i = 0; i < find_machtes.size(); ++i )
     {
       const auto& match = find_machtes[i];
-      auto        bb    = QRect( match.bounding_box.x, match.bounding_box.y, match.bounding_box.width, match.bounding_box.height );
-      if ( bb != bounding_boxes[i] )
+      for ( size_t j = 0; j < match.fragments.size(); ++j )
       {
-        auto img = container->grab(); // QMainWindow, QWidget usw.
-        img.save( QString( "screenshot_ui_find_phrase_%1.png" ).arg( i ) );
+        auto bb =
+          QRect( ( match.fragments[j] ).pos.x, ( match.fragments[j] ).pos.y, ( match.fragments[j] ).pos.width, ( match.fragments[j] ).pos.height );
+        QCOMPARE( bb, bounding_boxes[i][j] );
       }
-
-      QCOMPARE( bb, bounding_boxes[i] );
     }
   }
 }
@@ -127,12 +125,20 @@ void FindTest::test_find_phrase_multi_element_data()
 {
   QTest::addColumn<QString>( "find_text" );
   QTest::addColumn<int>( "matches" );
-  QTest::addColumn<QList<QRect>>( "bounding_boxes" );
+  QTest::addColumn<QList<QList<QRect>>>( "bounding_boxes" );
   // these boxes are currently valid, but are wrong. See issues in qlitehtml project
 #if defined( Q_OS_LINUX ) && QT_VERSION < QT_VERSION_CHECK( 6, 0, 0 )
-  QList<QRect> boxes = { { 8, 1974, 143, 42 } };
+  QList<QList<QRect>> boxes = {
+    { { 81, 1974, 47, 15 }, { 128, 1974, 4, 15 }, { 132, 1974, 19, 15 }, { 8, 2001, 40, 15 }, { 48, 2001, 4, 15 }, { 52, 2001, 12, 15 } } };
 #else
-  QList<QRect> boxes = { { 8, 1880, 143, 40 } };
+  QList<QList<QRect>> boxes = { {
+    { 81, 1880, 47, 14 },
+    { 128, 1880, 4, 14 },
+    { 132, 1880, 19, 14 },
+    { 8, 1906, 40, 14 },
+    { 48, 1906, 4, 14 },
+    { 52, 1906, 12, 14 },
+  } };
 #endif
   QTest::addRow( "%d", 0 ) << QString( "schließt ab.Absatz 48" ) << 1 << boxes;
 }
@@ -141,7 +147,7 @@ void FindTest::test_find_phrase_multi_element()
 {
   QFETCH( QString, find_text );
   QFETCH( int, matches );
-  QFETCH( QList<QRect>, bounding_boxes );
+  QFETCH( QList<QList<QRect>>, bounding_boxes );
 
   auto browser = createMainWindow( mBrowserSize );
   // QVERIFY( mWnd->centralWidget() );
@@ -166,14 +172,12 @@ void FindTest::test_find_phrase_multi_element()
     for ( size_t i = 0; i < find_machtes.size(); ++i )
     {
       const auto& match = find_machtes[i];
-      auto        bb    = QRect( match.bounding_box.x, match.bounding_box.y, match.bounding_box.width, match.bounding_box.height );
-      if ( bb != bounding_boxes[i] )
+      for ( size_t j = 0; j < match.fragments.size(); ++j )
       {
-        auto img = container->grab(); // QMainWindow, QWidget usw.
-        img.save( QDir::currentPath() + QString( "/screenshot_ui_multi_element_%1.png" ).arg( i ) );
+        auto bb =
+          QRect( ( match.fragments[j] ).pos.x, ( match.fragments[j] ).pos.y, ( match.fragments[j] ).pos.width, ( match.fragments[j] ).pos.height );
+        QCOMPARE( bb, bounding_boxes[i][j] );
       }
-
-      QCOMPARE( bb, bounding_boxes[i] );
     }
   }
 }

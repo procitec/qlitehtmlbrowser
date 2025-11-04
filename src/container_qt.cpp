@@ -1208,18 +1208,16 @@ void container_qt::draw_highlights( litehtml::uint_ptr hdc )
   for ( auto it = mFindMatches.begin(); it != mFindMatches.end(); ++it )
   {
     const auto match = ( *it );
-    // for ( auto it = match.fragments.begin(); it != match.fragments.end(); ++it )
-    // {
-    //   litehtml::position pos = ( *it ).pos;
-    //   highlight_text_at_position( hdc, pos, match );
-    // }
-    litehtml::position pos = ( *it ).bounding_box;
-    highlight_text_at_position( hdc, pos, match );
+    for ( auto it = match.fragments.begin(); it != match.fragments.end(); ++it )
+    {
+      litehtml::position pos = ( *it ).pos;
+      highlight_text_at_position( hdc, pos, match );
+    }
   }
 }
 
 // draw highlighted text at position
-void container_qt::highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const TextManager::TextFindMatch& match )
+void container_qt::highlight_text_at_position( litehtml::uint_ptr hdc, const litehtml::position& pos, const TextManager::TextFindMatch& /*match*/ )
 {
 
   // qDebug() << "Highlighting text '" << QString::fromStdString( match.matched_text ) << "' at position (" << pos.x << ", " << pos.y << ") with size
