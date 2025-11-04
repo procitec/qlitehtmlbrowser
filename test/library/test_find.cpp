@@ -74,7 +74,7 @@ void FindTest::test_find_phrase_data()
 #if defined( Q_OS_LINUX ) && QT_VERSION < QT_VERSION_CHECK( 6, 0, 0 )
   QList<QList<QRect>> boxes = { { { 276, 909, 66, 15 }, { 342, 909, 4, 15 }, { 346, 909, 91, 15 } } };
 #else
-  QList<QList<QRect>> boxes = { { {}, {}, {} } };
+  QList<QList<QRect>> boxes = { { { 276, 866, 66, 14 }, { 342, 866, 4, 14 }, { 346, 866, 91, 14 } } };
 #endif
   QTest::addRow( "%d", 0 ) << QString( "allgemeine Beobachtungen" ) << 1 << boxes;
   boxes = { { {} } };
@@ -131,8 +131,14 @@ void FindTest::test_find_phrase_multi_element_data()
   QList<QList<QRect>> boxes = {
     { { 81, 1974, 47, 15 }, { 128, 1974, 4, 15 }, { 132, 1974, 19, 15 }, { 8, 2001, 40, 15 }, { 48, 2001, 4, 15 }, { 52, 2001, 12, 15 } } };
 #else
-  QList<QList<QRect>> boxes = [] { {}, {}, {}, {}, {}, {}, }
-};
+  QList<QList<QRect>> boxes = { {
+    { 81, 1880, 47, 14 },
+    { 128, 1880, 4, 14 },
+    { 132, 1880, 19, 14 },
+    { 8, 1906, 40, 14 },
+    { 48, 1906, 4, 14 },
+    { 52, 1906, 12, 14 },
+  } };
 #endif
   QTest::addRow( "%d", 0 ) << QString( "schließt ab.Absatz 48" ) << 1 << boxes;
 }
