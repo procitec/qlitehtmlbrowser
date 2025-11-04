@@ -33,7 +33,7 @@ jobs:
           # Qt 6 (latest) on Linux
           - os: ubuntu-latest
             qt-version: '6.7.*'
-            qt-modules: 'qtbase qt5compat'
+            qt-modules: 'qt5compat'
             name: Linux-Qt6
             use-apt: false
             test-cmd: xvfb-run -a ctest -V -E NOT_BUILT
@@ -44,7 +44,7 @@ jobs:
             qt-modules: ''
             name: Linux-Qt5
             use-apt: true
-            apt-packages: 'qt5-default qtbase5-dev qttools5-dev ninja-build xvfb libxcb-cursor0'
+            apt-packages: 'qtbase5-dev qttools5-dev ninja-build xvfb libxcb-cursor0'
             test-cmd: xvfb-run -a ctest -V -E NOT_BUILT
 
           # ========== Windows Builds ==========
@@ -52,7 +52,7 @@ jobs:
           - os: windows-latest
             qt-version: '6.7.*'
             qt-arch: 'win64_msvc2019_64'
-            qt-modules: 'qtbase qt5compat'
+            qt-modules: 'qt5compat'
             name: Windows-Qt6
             use-apt: false
             test-cmd: ctest -C Release -V -E NOT_BUILT
