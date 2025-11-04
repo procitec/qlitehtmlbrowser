@@ -9,7 +9,7 @@ else()
 endif()
 
 add_compile_definitions(-DUNIT_TEST)
-add_definitions(-DQLITEHTMLBROWSER_LIBRARY)
+add_compile_definitions(-DQLITEHTMLBROWSER_LIBRARY)
 
 set( test_names
     test_html_content
@@ -25,6 +25,8 @@ if(WIN32)
 endif()
 
 list(APPEND environment "$<IF:$<PLATFORM_ID:Windows>,PATH,LD_LIBRARY_PATH>=$<SHELL_PATH:${runpath}>")
+
+qt_add_resources(_RESOURCES fonts.qrc)
 
 foreach( name ${test_names})
 
@@ -53,6 +55,7 @@ foreach( name ${test_names})
       ${QLiteHtmlBrowser_SOURCE_DIR}/src/container_qt.cpp
       ${QLiteHtmlBrowser_SOURCE_DIR}/src/TextManager.cpp
       ${QLiteHtmlBrowser_SOURCE_DIR}/src/TextManager.h
+      ${_RESOURCES}
     )
 
     target_include_directories( ${name} PRIVATE ${QLiteHtmlBrowser_SOURCE_DIR}/include ${QLiteHtmlBrowser_SOURCE_DIR}/src)
@@ -61,7 +64,7 @@ foreach( name ${test_names})
 
     target_compile_definitions(${name} PRIVATE TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
-    add_test( NAME ${name} COMMAND ${name} --searchpath=${CMAKE_CURRENT_SOURCE_DIR})
+    add_test( NAME ${name} COMMAND ${name} --searchpath=${CMAKE_CURRENT_SOURCE_DIR} --interactive)
 
     set_tests_properties(${name} PROPERTIES
         ENVIRONMENT "${environment}"

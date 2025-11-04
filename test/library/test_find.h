@@ -14,6 +14,14 @@ public:
   virtual ~FindTest() = default;
 
 private Q_SLOTS:
+  void initTestCase()
+  {
+    auto fonts_loaded = loadTestFonts();
+    if ( !fonts_loaded )
+    {
+      QSKIP( "test fonts could not be loaded" );
+    }
+  }
   void init() { TestBase::init(); }
   void cleanup()
   {

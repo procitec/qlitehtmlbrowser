@@ -11,10 +11,12 @@
 #include <QtCore/QDebug>
 #include <QtWidgets/QStyle>
 #include <QtWidgets/QStatusBar>
+
 #include <cmath>
 
 TestBrowser::TestBrowser()
 {
+
   mBrowser = new QHelpBrowser( this );
   setCentralWidget( mBrowser );
   setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
