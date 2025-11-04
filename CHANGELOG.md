@@ -2,6 +2,7 @@
 
 ## v2.3.1
 
+- [#26](https://github.com/procitec/qlitehtmlbrowser/issues/26): Fix Multi-Elemen selection highlight boxes
 - [#25](https://github.com/procitec/qlitehtmlbrowser/issues/25): Build Matrix with Windows, Ubuntu, Qt6, Qt5
 
 ## v2.3.0
