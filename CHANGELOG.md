@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.3.1
+
+- [#25](https://github.com/procitec/qlitehtmlbrowser/issues/25): Build Matrix with Windows, Ubuntu, Qt6, Qt5
+
 ## v2.3.0
 
 - [#5](https://github.com/procitec/qlitehtmlbrowser/issues/5): Implement selection
