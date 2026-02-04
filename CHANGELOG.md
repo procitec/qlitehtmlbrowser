@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.3.2
+
+- [#29](https://github.com/procitec/qlitehtmlbrowser/issues/29): Show links to image files in own Dialog
+
 ## v2.3.1
 
 - [#26](https://github.com/procitec/qlitehtmlbrowser/issues/26): Fix Multi-Elemen selection highlight boxes
