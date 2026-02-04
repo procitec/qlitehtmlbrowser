@@ -33,7 +33,7 @@ jobs:
           # Qt 6 (latest) on Linux
           - os: ubuntu-latest
             qt-version: '6.7.*'
-            qt-modules: 'qt5compat qtsvg'
+            qt-modules: 'qt5compat'
             name: Linux-Qt6
             use-apt: false
             test-cmd: xvfb-run -a ctest -V -E NOT_BUILT
@@ -52,7 +52,7 @@ jobs:
           - os: windows-latest
             qt-version: '6.7.*'
             qt-arch: 'win64_msvc2019_64'
-            qt-modules: 'qt5compat qtsvg'
+            qt-modules: 'qt5compat'
             name: Windows-Qt6
             use-apt: false
             test-cmd: ctest -C Release -V -E NOT_BUILT
@@ -61,7 +61,7 @@ jobs:
           - os: windows-latest
             qt-version: '5.15.2'
             qt-arch: 'win64_msvc2019_64'
-            qt-modules: 'qtsvg'
+            qt-modules: ''
             name: Windows-Qt5
             use-apt: false
             test-cmd: ctest -C Release -V -E NOT_BUILT
