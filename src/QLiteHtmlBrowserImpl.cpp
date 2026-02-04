@@ -570,9 +570,9 @@ void QLiteHtmlBrowserImpl::onImageClicked( const QUrl& url, const QByteArray& co
   dlg->resize( qMax( 200, w ), qMax( 200, h ) );
 
   // Dialog über dem Parent zentrieren (absolute Screen-Koordinaten)
-  const QRect  parentGeom   = this->frameGeometry();
-  const QPoint parentCenter = this->mapToGlobal( parentGeom.center() );
-  dlg->move( parentCenter.x() - dlg->width() / 2, parentCenter.y() - dlg->height() / 2 );
+  QRect dialogRect = dlg->frameGeometry();
+  dialogRect.moveCenter( this->mapToGlobal( this->rect().center() ) );
+  dlg->move( dialogRect.topLeft() );
 
   dlg->setModal( true ); // optional, je nach gewünschtem Verhalten
   dlg->show();           // oder dlg->exec();
