@@ -14,6 +14,11 @@
 #include <functional>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QScrollArea>
+#include <QtSvg/QSvgRenderer>
+#include <QtGui/QPainter>
+#include <QtCore/QBuffer>
+#include <qscreen.h>
+#include <qscrollbar.h>
 
 QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
   : QWidget( parent )
@@ -215,7 +220,7 @@ void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type, bool clearFWHist )
       }
       else if ( isImageUrl( url.toString() ) )
       {
-        onImageClicked( url, content );
+        onImageClicked( url );
         return;
       }
       else
@@ -318,18 +323,49 @@ double QLiteHtmlBrowserImpl::scale() const
   return scale;
 }
 
-QByteArray QLiteHtmlBrowserImpl::loadResource( int /*type*/, const QUrl& url )
+QImage QLiteHtmlBrowserImpl::loadSvgFromFile( const QString& filename )
+{
+  QSvgRenderer renderer;
+  QImage       img;
+  renderer.load( filename );
+  if ( renderer.isValid() )
+  {
+    QSize  size( renderer.defaultSize() );
+    QImage svgImg( size, QImage::Format_ARGB32_Premultiplied );
+    svgImg.fill( Qt::transparent );
+    QPainter p( &svgImg );
+    renderer.render( &p );
+    img = svgImg;
+  }
+  return img;
+}
+
+QByteArray QLiteHtmlBrowserImpl::loadResource( int type, const QUrl& url )
 {
   QByteArray data;
+
+  auto resource_type = static_cast<Browser::ResourceType>( type );
 
   QString fileName = findFile( url );
   if ( !fileName.isEmpty() )
   {
-    QFile f( fileName );
-    if ( f.open( QFile::ReadOnly ) )
+    if ( resource_type == Browser::ResourceType::Image && fileName.toLower().endsWith( ".svg" ) )
     {
-      data = f.readAll();
-      f.close();
+      auto    img    = loadSvgFromFile( fileName );
+      auto    pixmap = QPixmap::fromImage( img );
+      QBuffer buffer( &data );
+      buffer.open( QIODevice::WriteOnly );
+      pixmap.save( &buffer, "PNG" );
+      buffer.close();
+    }
+    else
+    {
+      QFile f( fileName );
+      if ( f.open( QFile::ReadOnly ) )
+      {
+        data = f.readAll();
+        f.close();
+      }
     }
   }
 
@@ -534,40 +570,70 @@ QString QLiteHtmlBrowserImpl::selectedText() const
   return text;
 }
 
-void QLiteHtmlBrowserImpl::onImageClicked( const QUrl& url, const QByteArray& content )
+void QLiteHtmlBrowserImpl::onImageClicked( const QUrl& url )
 {
-  Q_UNUSED( url );
+  auto pure_url = QUrl( url );
+  pure_url.setFragment( {} );
+  QFileInfo f( url.toLocalFile() );
 
-  // Bild aus Bytes laden
-  QImage img;
-  if ( !img.loadFromData( content ) )
+  if ( !f.exists() )
   {
     return;
   }
 
+  // Bild aus Bytes laden
+  QImage img;
+
+  // sinnvolle Startgröße (z.B. max 80% der Parentgröße)
+  const QSize parentSize = this->size();
+  const int   def_w      = parentSize.width() * 8 / 10;
+  const int   def_h      = parentSize.height() * 8 / 10;
+
+  if ( !img.load( f.absoluteFilePath() ) )
+  {
+    if ( url.toString().toLower().endsWith( ".svg" ) )
+    {
+      img = loadSvgFromFile( f.absoluteFilePath() );
+    }
+  }
+
+  if ( img.isNull() )
+  {
+    return;
+  }
+
+  const int w = qMax( img.width(), def_w );
+  const int h = qMax( img.height(), def_h );
+
   // Dialog mit Bild anlegen, Parent ist dieses Widget (MyViewer)
   QDialog* dlg = new QDialog( this );
   dlg->setAttribute( Qt::WA_DeleteOnClose );
-  dlg->setWindowTitle( tr( "Bildanzeige" ) );
+  dlg->setWindowTitle( f.fileName() );
 
   // Inhalt: ScrollArea + QLabel mit Pixmap
   auto* layout = new QVBoxLayout( dlg );
   auto* scroll = new QScrollArea( dlg );
-  auto* label  = new QLabel( dlg );
+  // scroll->setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOn );
+  // scroll->setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOn );
+  auto* label = new QLabel( dlg );
 
   label->setPixmap( QPixmap::fromImage( img ) );
   label->setAlignment( Qt::AlignCenter );
+  label->resize( w, h );
   scroll->setWidget( label );
   scroll->setWidgetResizable( true );
 
   layout->addWidget( scroll );
   dlg->setLayout( layout );
 
-  // sinnvolle Startgröße (z.B. max 80% der Parentgröße)
-  const QSize parentSize = this->size();
-  const int   w          = qMin( img.width(), parentSize.width() * 8 / 10 );
-  const int   h          = qMin( img.height(), parentSize.height() * 8 / 10 );
-  dlg->resize( qMax( 200, w ), qMax( 200, h ) );
+  // Optional: Maximalgröße begrenzen (80% des Screens)
+  QSize screenSize = screen()->availableGeometry().size();
+  dlg->setMaximumSize( screenSize * 0.5 );
+
+  auto margins = dlg->contentsMargins() + scroll->contentsMargins() + scroll->viewport()->contentsMargins() + label->contentsMargins();
+
+  dlg->resize( qMax( 200, w + scroll->verticalScrollBar()->width() + margins.left() + margins.right() ),
+               qMax( 200, h + scroll->horizontalScrollBar()->height() + margins.top() + margins.bottom() ) );
 
   // Dialog über dem Parent zentrieren (absolute Screen-Koordinaten)
   QRect dialogRect = dlg->frameGeometry();

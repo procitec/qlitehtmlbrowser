@@ -113,7 +113,8 @@ private:
   void    applyCSS();
   bool    isImageUrl( const QString& u ) const;
   bool    isHtmlUrl( const QString& u ) const;
-  void    onImageClicked( const QUrl& url, const QByteArray& content );
+  void    onImageClicked( const QUrl& url );
+  QImage  loadSvgFromFile( const QString& filename );
 
   Q_DISABLE_COPY_MOVE( QLiteHtmlBrowserImpl );
 
