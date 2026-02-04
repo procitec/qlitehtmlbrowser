@@ -17,8 +17,8 @@
 #include <QtSvg/QSvgRenderer>
 #include <QtGui/QPainter>
 #include <QtCore/QBuffer>
-#include <qscreen.h>
-#include <qscrollbar.h>
+#include <QtGui/QScreen>
+#include <QtWidgets/QScrollBar>
 
 QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
   : QWidget( parent )
