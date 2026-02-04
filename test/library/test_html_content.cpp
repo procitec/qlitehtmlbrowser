@@ -75,7 +75,7 @@ void HTMLContentTest::test_lists_data()
     <li>Coffee</li>
     <li>Tea</li>
     <li>Milk</li>
-  </ol> 
+  </ol>
   </body></html>)-";
   QTest::newRow( "description list" ) << R"-(
   <html><body>
@@ -84,7 +84,7 @@ void HTMLContentTest::test_lists_data()
     <dd>- black hot drink</dd>
     <dt>Milk</dt>
     <dd>- white cold drink</dd>
-  </dl> 
+  </dl>
   </body></html>)-";
 
   // litehtml seems to support this via css only
@@ -94,7 +94,7 @@ void HTMLContentTest::test_lists_data()
     <li>Coffee</li>
     <li>Tea</li>
     <li>Milk</li>
-  </ol> 
+  </ol>
   </body></html>)-";
 
   // litehtml seems to support this via css only
@@ -104,7 +104,7 @@ void HTMLContentTest::test_lists_data()
     <li>Coffee</li>
     <li>Tea</li>
     <li>Milk</li>
-  </ol> 
+  </ol>
   </body></html>)-";
   QTest::newRow( "unordered list disc image " ) << R"-(
   <html><body>
@@ -151,11 +151,29 @@ void HTMLContentTest::test_img_data()
 {
   QTest::addColumn<QString>( "html" );
 
-  QTest::newRow( "Simple local image <execute in SOURCE_DIR required>" ) << R"-(
+  QTest::newRow( "Simple local image (png) <execute in SOURCE_DIR required>" ) << R"-(
   <!DOCTYPE html>
   <html>
   <body>
   <img src="images/16x16/arrow_up_green.png"/>
+  </body>
+  </html>
+  )-";
+
+  QTest::newRow( "Simple local image (svg) <execute in SOURCE_DIR required>" ) << R"-(
+  <!DOCTYPE html>
+  <html>
+  <body>
+  <img src="images/plantuml.svg"/>
+  </body>
+  </html>
+  )-";
+
+  QTest::newRow( "Simple local image (jpg) <execute in SOURCE_DIR required>" ) << R"-(
+  <!DOCTYPE html>
+  <html>
+  <body>
+  <img src="images/plantuml.jpg"/>
   </body>
   </html>
   )-";
@@ -191,9 +209,19 @@ void HTMLContentTest::test_img_scale_data()
   </html>
   )-";
 
+  auto contentSVG = R"-(
+  <!DOCTYPE html>
+  <html>
+  <body>
+  <img src="images/plantuml.svg"/>
+  </body>
+  </html>
+  )-";
+
   QTest::newRow( "procitec_logo scale 100% <execute in SOURCE_DIR required>" ) << content << 1.0;
   QTest::newRow( "procitec_logo scale 150% <execute in SOURCE_DIR required>" ) << content << 1.50;
   QTest::newRow( "procitec_logo scale 50% <execute in SOURCE_DIR required>" ) << content << 0.50;
+  QTest::newRow( "plantuml svg scale 50% <execute in SOURCE_DIR required>" ) << contentSVG << 0.50;
 }
 
 void HTMLContentTest::test_img_scale()
@@ -213,9 +241,9 @@ void HTMLContentTest::test_tables_data()
 <!DOCTYPE html>
 <html>
 <body>
-  
+
 <h2>HTML Table</h2>
-  
+
 <table>
   <tr>
     <th>Company</th>
@@ -253,7 +281,7 @@ void HTMLContentTest::test_tables_data()
     <td>Italy</td>
   </tr>
 </table>
-  
+
 </body>
 </html>)-";
 }
