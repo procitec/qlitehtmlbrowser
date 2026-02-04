@@ -111,6 +111,9 @@ private:
   void    parseUrl( const QUrl& url );
   QString readResourceCss( const QString& ) const;
   void    applyCSS();
+  bool    isImageUrl( const QString& u ) const;
+  bool    isHtmlUrl( const QString& u ) const;
+  void    onImageClicked( const QUrl& url, const QByteArray& content );
 
   Q_DISABLE_COPY_MOVE( QLiteHtmlBrowserImpl );
 

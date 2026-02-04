@@ -12,6 +12,8 @@
 #include <QShortcut>
 #include <QtGui/QDesktopServices>
 #include <functional>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QScrollArea>
 
 QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
   : QWidget( parent )
@@ -166,20 +168,26 @@ void QLiteHtmlBrowserImpl::mousePressEvent( QMouseEvent* e )
 //  }
 //}
 
+bool QLiteHtmlBrowserImpl::isImageUrl( const QString& u ) const
+{
+  const auto lower = u.toLower();
+  return lower.endsWith( ".png" ) || lower.endsWith( ".jpg" ) || lower.endsWith( ".jpeg" ) || lower.endsWith( ".gif" ) || lower.endsWith( ".svg" );
+}
+
+bool QLiteHtmlBrowserImpl::isHtmlUrl( const QString& u ) const
+{
+  const auto lower = u.toLower();
+  return lower.endsWith( ".html" ) || lower.endsWith( ".htm" );
+}
+
+#include <QtWidgets/QMessageBox>
 void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type, bool clearFWHist )
 {
-  mUrl                       = UrlType( url, type );
-  auto [home_url, home_type] = mHome;
-  if ( home_url.isEmpty() )
-  {
-    mHome = UrlType( url, type );
-  }
-
   if ( mContainer )
   {
     auto pure_url = QUrl( url );
     pure_url.setFragment( {} );
-    QString html;
+    QByteArray content;
 
     if ( pure_url.isLocalFile() )
     {
@@ -188,20 +196,40 @@ void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type, bool clearFWHist )
       QFile f( pure_url.toLocalFile() );
       if ( f.open( QIODevice::ReadOnly ) )
       {
-        html = f.readAll();
+        content = f.readAll();
         f.close();
       }
     }
     else
     {
       // eg. if ( url.scheme() == "qthelp" )
-      html = mResourceHandler( type, url );
+      content = mResourceHandler( type, url );
     }
 
-    if ( !html.isEmpty() )
+    if ( !content.isEmpty() )
     {
-      parseUrl( url );
-      mContainer->setHtml( html, url );
+      if ( isHtmlUrl( url.toString() ) )
+      {
+        parseUrl( url );
+        mContainer->setHtml( QString::fromUtf8( content ), url );
+      }
+      else if ( isImageUrl( url.toString() ) )
+      {
+        onImageClicked( url, content );
+        return;
+      }
+      else
+      {
+        // could not be shown / displayed -> return
+        return;
+      }
+
+      mUrl                       = UrlType( url, type );
+      auto [home_url, home_type] = mHome;
+      if ( home_url.isEmpty() )
+      {
+        mHome = UrlType( url, type );
+      }
 
       auto hist_url = QUrl();
 
@@ -330,12 +358,13 @@ QUrl QLiteHtmlBrowserImpl::resolveUrl( const QString& url )
   {
     resolved = QUrl( mBaseUrl ).resolved( _url );
   }
+
   if ( !resolved.isRelative() )
   {
     return resolved;
   }
 
-  else if ( QFileInfo( resolved.toLocalFile() ).isReadable() )
+  if ( QFileInfo( resolved.toLocalFile() ).isReadable() )
   {
     return QUrl::fromLocalFile( resolved.toLocalFile() );
   }
@@ -503,4 +532,48 @@ QString QLiteHtmlBrowserImpl::selectedText() const
     text = mContainer->selectedText();
   }
   return text;
+}
+
+void QLiteHtmlBrowserImpl::onImageClicked( const QUrl& url, const QByteArray& content )
+{
+  Q_UNUSED( url );
+
+  // Bild aus Bytes laden
+  QImage img;
+  if ( !img.loadFromData( content ) )
+  {
+    return;
+  }
+
+  // Dialog mit Bild anlegen, Parent ist dieses Widget (MyViewer)
+  QDialog* dlg = new QDialog( this );
+  dlg->setAttribute( Qt::WA_DeleteOnClose );
+  dlg->setWindowTitle( tr( "Bildanzeige" ) );
+
+  // Inhalt: ScrollArea + QLabel mit Pixmap
+  auto* layout = new QVBoxLayout( dlg );
+  auto* scroll = new QScrollArea( dlg );
+  auto* label  = new QLabel( dlg );
+
+  label->setPixmap( QPixmap::fromImage( img ) );
+  label->setAlignment( Qt::AlignCenter );
+  scroll->setWidget( label );
+  scroll->setWidgetResizable( true );
+
+  layout->addWidget( scroll );
+  dlg->setLayout( layout );
+
+  // sinnvolle Startgröße (z.B. max 80% der Parentgröße)
+  const QSize parentSize = this->size();
+  const int   w          = qMin( img.width(), parentSize.width() * 8 / 10 );
+  const int   h          = qMin( img.height(), parentSize.height() * 8 / 10 );
+  dlg->resize( qMax( 200, w ), qMax( 200, h ) );
+
+  // Dialog über dem Parent zentrieren (absolute Screen-Koordinaten)
+  const QRect  parentGeom   = this->frameGeometry();
+  const QPoint parentCenter = this->mapToGlobal( parentGeom.center() );
+  dlg->move( parentCenter.x() - dlg->width() / 2, parentCenter.y() - dlg->height() / 2 );
+
+  dlg->setModal( true ); // optional, je nach gewünschtem Verhalten
+  dlg->show();           // oder dlg->exec();
 }
