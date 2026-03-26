@@ -20,6 +20,133 @@
 #include <QtCore/QBuffer>
 #include <QtGui/QScreen>
 #include <QtWidgets/QScrollBar>
+#include <QFileInfo>
+#include <QImageReader>
+#include <QMimeDatabase>
+#include <QMimeType>
+
+namespace
+{
+
+QString normalizedUrlPath( const QUrl& url )
+{
+  if ( url.isLocalFile() )
+  {
+    return url.toLocalFile();
+  }
+
+  return url.path();
+}
+
+QString urlSuffix( const QUrl& url )
+{
+  // return QFileInfo( normalizedUrlPath( url ) ).suffix().toLower();
+  return QFileInfo( url.path() ).suffix().toLower();
+}
+
+static bool hasHtmlExtension( const QUrl& url )
+{
+  const auto ext = urlSuffix( url );
+  return ext == "html" || ext == "htm" || ext == "xhtml";
+}
+
+static bool hasImageExtension( const QUrl& url )
+{
+  static const QSet<QString> exts = { "png", "jpg", "jpeg", "gif", "svg", "bmp", "webp" };
+  return exts.contains( urlSuffix( url ) );
+}
+
+bool isImageData( const QByteArray& data )
+{
+  if ( data.isEmpty() )
+  {
+    return false;
+  }
+
+  QBuffer buffer;
+  buffer.setData( data );
+  if ( !buffer.open( QIODevice::ReadOnly ) )
+  {
+    return false;
+  }
+
+  QImageReader reader( &buffer );
+  reader.setDecideFormatFromContent( true );
+  return reader.canRead();
+}
+
+bool looksLikeSvgData( const QByteArray& data )
+{
+  const auto head = QString::fromUtf8( data.left( 512 ) ).trimmed().toLower();
+  return head.contains( "<svg" );
+}
+
+bool looksLikeHtmlData( const QByteArray& data )
+{
+  if ( data.isEmpty() )
+  {
+    return false;
+  }
+
+  const auto head = QString::fromUtf8( data.left( 1024 ) ).trimmed().toLower();
+
+  return head.startsWith( "<!doctype html" ) || head.startsWith( "<html" ) || head.contains( "<html" ) || head.contains( "<head" ) ||
+         head.contains( "<body" );
+}
+
+Browser::ResourceType detectResourceType( const QUrl& url, const QByteArray& content, int requestedType )
+{
+  const auto requested = static_cast<Browser::ResourceType>( requestedType );
+  if ( requested != Browser::ResourceType::Unknown )
+  {
+    return requested;
+  }
+
+  if ( isImageData( content ) || looksLikeSvgData( content ) )
+  {
+    return Browser::ResourceType::Image;
+  }
+
+  if ( looksLikeHtmlData( content ) )
+  {
+    return Browser::ResourceType::Html;
+  }
+
+  if ( hasImageExtension( url ) )
+  {
+    return Browser::ResourceType::Image;
+  }
+
+  if ( hasHtmlExtension( url ) )
+  {
+    return Browser::ResourceType::Html;
+  }
+
+  if ( url.isLocalFile() )
+  {
+    QMimeDatabase db;
+    const auto    mime = db.mimeTypeForFile( url.toLocalFile(), QMimeDatabase::MatchContent );
+
+    if ( mime.inherits( "text/html" ) || mime.inherits( "application/xhtml+xml" ) )
+    {
+      return Browser::ResourceType::Html;
+    }
+
+    if ( mime.name().startsWith( "image/" ) )
+    {
+      return Browser::ResourceType::Image;
+    }
+  }
+
+  return Browser::ResourceType::Unknown;
+}
+
+bool isSvgUrl( const QUrl& url )
+{
+  return urlSuffix( url ) == "svg";
+}
+
+} // namespace
 
 QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
   : QWidget( parent )
@@ -187,105 +314,168 @@ void QLiteHtmlBrowserImpl::mousePressEvent( QMouseEvent* e )
 //  }
 //}
 
-bool QLiteHtmlBrowserImpl::isImageUrl( const QString& u ) const
+bool QLiteHtmlBrowserImpl::isImageUrl( const QUrl& u ) const
 {
-  const auto lower = u.toLower();
-  return lower.endsWith( ".png" ) || lower.endsWith( ".jpg" ) || lower.endsWith( ".jpeg" ) || lower.endsWith( ".gif" ) || lower.endsWith( ".svg" );
+  return hasImageExtension( u );
 }
 
-bool QLiteHtmlBrowserImpl::isHtmlUrl( const QString& u ) const
+bool QLiteHtmlBrowserImpl::isHtmlUrl( const QUrl& u ) const
 {
-  const auto lower = u.toLower();
-  return lower.endsWith( ".html" ) || lower.endsWith( ".htm" ) || lower.contains( ".html#" ) || lower.contains( ".htm#" );
+  return hasHtmlExtension( u );
 }
 
-#include <QtWidgets/QMessageBox>
 void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type, bool clearFWHist )
 {
-  if ( mContainer )
+  if ( !mContainer )
   {
-    auto pure_url = QUrl( url );
-    pure_url.setFragment( {} );
-    QByteArray content;
-
-    if ( pure_url.isLocalFile() )
-    {
-      // get the content of the url and display the html
-
-      QFile f( pure_url.toLocalFile() );
-      if ( f.open( QIODevice::ReadOnly ) )
-      {
-        content = f.readAll();
-        f.close();
-      }
-    }
-    else
-    {
-      // eg. if ( url.scheme() == "qthelp" )
-      auto effectiveType = type;
-      if ( effectiveType == static_cast<int>( Browser::ResourceType::Unknown ) )
-      {
-        if ( isHtmlUrl( url.toString() ) )
-        {
-          effectiveType = static_cast<int>( Browser::ResourceType::Html );
-        }
-        else if ( isImageUrl( url.toString() ) )
-        {
-          effectiveType = static_cast<int>( Browser::ResourceType::Image );
-        }
-      }
-      content = mResourceHandler( effectiveType, url );
-    }
-
-    if ( !content.isEmpty() )
-    {
-      if ( isHtmlUrl( url.toString() ) )
-      {
-        parseUrl( url );
-        mContainer->setHtml( QString::fromUtf8( content ), url );
-        mCurrentCaption = mContainer->caption();
-        showHtmlView();
-      }
-      else if ( isImageUrl( url.toString() ) )
-      {
-        if ( !onImageClicked( url ) )
-        {
-          return;
-        }
-      }
-      else
-      {
-        // could not be shown / displayed -> return
-        return;
-      }
-
-      mUrl                       = UrlType( url, type );
-      auto [home_url, home_type] = mHome;
-      if ( home_url.isEmpty() )
-      {
-        mHome = UrlType( url, type );
-      }
-
-      auto hist_url = QUrl();
-
-      if ( !mBWHistStack.isEmpty() )
-      {
-        hist_url = mBWHistStack.top().url;
-      }
-
-      if ( hist_url != url )
-      {
-        mBWHistStack.push( { url, type, caption() } );
-      }
-
-      if ( clearFWHist )
-        mFWHistStack.clear();
-
-      update();
-    }
-
-    emit urlChanged( url );
+    return;
   }
+
+  QUrl pureUrl( url );
+  pureUrl.setFragment( {} );
+
+  QByteArray content;
+
+  if ( pureUrl.isLocalFile() )
+  {
+    QFile f( pureUrl.toLocalFile() );
+    if ( f.open( QIODevice::ReadOnly ) )
+    {
+      content = f.readAll();
+      f.close();
+    }
+  }
+  else
+  {
+    // NICHT über findFile/loadResource laufen lassen.
+    // qthelp:, http:, custom schemes etc. müssen hier bleiben.
+    content = mResourceHandler( type, url );
+
+    // optional: falls type Unknown ist und dein Handler den Typ braucht:
+    if ( content.isEmpty() && type == static_cast<int>( Browser::ResourceType::Unknown ) )
+    {
+      if ( hasHtmlExtension( pureUrl ) )
+      {
+        content = mResourceHandler( static_cast<int>( Browser::ResourceType::Html ), url );
+        type    = static_cast<int>( Browser::ResourceType::Html );
+      }
+      else if ( hasImageExtension( pureUrl ) )
+      {
+        content = mResourceHandler( static_cast<int>( Browser::ResourceType::Image ), url );
+        type    = static_cast<int>( Browser::ResourceType::Image );
+      }
+    }
+  }
+
+  if ( content.isEmpty() )
+  {
+    emit urlChanged( url );
+    return;
+  }
+
+  const bool isHtml  = hasHtmlExtension( pureUrl ) || looksLikeHtmlData( content );
+  const bool isImage = hasImageExtension( pureUrl ) || isImageData( content ) || looksLikeSvgData( content );
+
+  if ( isHtml )
+  {
+    parseUrl( url );
+    mContainer->setHtml( QString::fromUtf8( content ), url );
+    mCurrentCaption = mContainer->caption();
+    showHtmlView();
+  }
+  else if ( isImage )
+  {
+    if ( !showImageFromData( url, content ) )
+    {
+      return;
+    }
+  }
+  else
+  {
+    return;
+  }
+
+  const int storedType = isHtml ? static_cast<int>( Browser::ResourceType::Html ) : isImage ? static_cast<int>( Browser::ResourceType::Image ) : type;
+
+  mUrl = UrlType( url, storedType );
+
+  auto [home_url, home_type] = mHome;
+  if ( home_url.isEmpty() )
+  {
+    mHome = UrlType( url, storedType );
+  }
+
+  QUrl hist_url;
+  if ( !mBWHistStack.isEmpty() )
+  {
+    hist_url = mBWHistStack.top().url;
+  }
+
+  if ( hist_url != url )
+  {
+    mBWHistStack.push( { url, storedType, caption() } );
+  }
+
+  if ( clearFWHist )
+  {
+    mFWHistStack.clear();
+  }
+
+  update();
+  emit urlChanged( url );
+}
+
+bool QLiteHtmlBrowserImpl::showImageFromData( const QUrl& url, const QByteArray& imageData )
+{
+  if ( !mImageLabel || !mImageScroll )
+  {
+    return false;
+  }
+
+  QImage img;
+  if ( !imageData.isEmpty() )
+  {
+    img.loadFromData( imageData );
+    if ( img.isNull() && ( isSvgUrl( url ) || looksLikeSvgData( imageData ) ) )
+    {
+      img = loadSvgFromData( imageData );
+    }
+  }
+
+  if ( img.isNull() && url.isLocalFile() )
+  {
+    QFileInfo f( url.toLocalFile() );
+    if ( f.exists() )
+    {
+      if ( !img.load( f.absoluteFilePath() ) && isSvgUrl( url ) )
+      {
+        img = loadSvgFromFile( f.absoluteFilePath() );
+      }
+    }
+  }
+
+  if ( img.isNull() )
+  {
+    return false;
+  }
+
+  const auto pixmap = QPixmap::fromImage( img );
+  mImageLabel->setPixmap( pixmap );
+  mImageLabel->resize( pixmap.size() );
+  mImageLabel->setMinimumSize( pixmap.size() );
+  mImageLabel->setMaximumSize( pixmap.size() );
+  mImageScroll->horizontalScrollBar()->setValue( 0 );
+  mImageScroll->verticalScrollBar()->setValue( 0 );
+
+  QFileInfo info( normalizedUrlPath( url ) );
+  mCurrentCaption = info.fileName().isEmpty() ? url.fileName() : info.fileName();
+  if ( mCurrentCaption.isEmpty() )
+  {
+    mCurrentCaption = url.toDisplayString();
+  }
+
+  showImageView();
+  return true;
 }
 
 QUrl QLiteHtmlBrowserImpl::baseUrl( const QUrl& url ) const
@@ -645,54 +835,17 @@ void QLiteHtmlBrowserImpl::showImageView()
 
 bool QLiteHtmlBrowserImpl::onImageClicked( const QUrl& url )
 {
-  if ( !mImageLabel || !mImageScroll )
-  {
-    return false;
-  }
+  QByteArray imageData = loadResource( static_cast<int>( Browser::ResourceType::Image ), url );
 
-  QImage     img;
-  const auto imageData = loadResource( static_cast<int>( Browser::ResourceType::Image ), url );
-  if ( !imageData.isEmpty() )
+  if ( imageData.isEmpty() && url.isLocalFile() )
   {
-    img.loadFromData( imageData );
-    if ( img.isNull() && url.toString().toLower().endsWith( ".svg" ) )
+    QFile f( url.toLocalFile() );
+    if ( f.open( QIODevice::ReadOnly ) )
     {
-      img = loadSvgFromData( imageData );
+      imageData = f.readAll();
+      f.close();
     }
   }
 
-  if ( img.isNull() && url.isLocalFile() )
-  {
-    QFileInfo f( url.toLocalFile() );
-    if ( f.exists() )
-    {
-      if ( !img.load( f.absoluteFilePath() ) && url.toString().toLower().endsWith( ".svg" ) )
-      {
-        img = loadSvgFromFile( f.absoluteFilePath() );
-      }
-    }
-  }
-
-  if ( img.isNull() )
-  {
-    return false;
-  }
-
-  const auto pixmap = QPixmap::fromImage( img );
-  mImageLabel->setPixmap( pixmap );
-  mImageLabel->resize( pixmap.size() );
-  mImageLabel->setMinimumSize( pixmap.size() );
-  mImageLabel->setMaximumSize( pixmap.size() );
-  mImageScroll->horizontalScrollBar()->setValue( 0 );
-  mImageScroll->verticalScrollBar()->setValue( 0 );
-
-  QFileInfo info( url.isLocalFile() ? url.toLocalFile() : url.path() );
-  mCurrentCaption = info.fileName().isEmpty() ? url.fileName() : info.fileName();
-  if ( mCurrentCaption.isEmpty() )
-  {
-    mCurrentCaption = url.toDisplayString();
-  }
-
-  showImageView();
-  return true;
+  return showImageFromData( url, imageData );
 }

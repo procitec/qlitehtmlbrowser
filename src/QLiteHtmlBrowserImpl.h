@@ -116,11 +116,12 @@ private:
   void    parseUrl( const QUrl& url );
   QString readResourceCss( const QString& ) const;
   void    applyCSS();
-  bool    isImageUrl( const QString& u ) const;
-  bool    isHtmlUrl( const QString& u ) const;
+  bool    isImageUrl( const QUrl& u ) const;
+  bool    isHtmlUrl( const QUrl& u ) const;
   bool    onImageClicked( const QUrl& url );
   QImage  loadSvgFromFile( const QString& filename );
   QImage  loadSvgFromData( const QByteArray& data );
+  bool    showImageFromData( const QUrl& url, const QByteArray& imageData );
 
   Q_DISABLE_COPY_MOVE( QLiteHtmlBrowserImpl );
 
