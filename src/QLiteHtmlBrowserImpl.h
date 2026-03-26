@@ -4,6 +4,9 @@ class container_qt;
 
 #include "browserdefinitions.h"
 #include <QtWidgets/QWidget>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QScrollArea>
+#include <QtWidgets/QStackedLayout>
 #include <QtCore/QUrl>
 #include <QtCore/QStack>
 #include <QtGui/QPagedPaintDevice>
@@ -106,6 +109,8 @@ private:
   };
 
   QString findFile( const QUrl& name ) const;
+  void    showHtmlView();
+  void    showImageView();
   void    onAnchorClicked( const QUrl& );
   QUrl    baseUrl( const QUrl& url ) const;
   void    parseUrl( const QUrl& url );
@@ -113,12 +118,16 @@ private:
   void    applyCSS();
   bool    isImageUrl( const QString& u ) const;
   bool    isHtmlUrl( const QString& u ) const;
-  void    onImageClicked( const QUrl& url );
+  bool    onImageClicked( const QUrl& url );
   QImage  loadSvgFromFile( const QString& filename );
+  QImage  loadSvgFromData( const QByteArray& data );
 
   Q_DISABLE_COPY_MOVE( QLiteHtmlBrowserImpl );
 
   container_qt*                  mContainer   = nullptr;
+  QStackedLayout*                mViewStack   = nullptr;
+  QScrollArea*                   mImageScroll = nullptr;
+  QLabel*                        mImageLabel  = nullptr;
   QUrl                           mBaseUrl     = {};
   QString                        mExternalCSS = {};
   UrlType                        mUrl         = {};
@@ -127,6 +136,7 @@ private:
   QStack<HistoryEntry>           mBWHistStack  = {};
   QStack<HistoryEntry>           mFWHistStack  = {};
   UrlType                        mHome         = {};
+  QString                        mCurrentCaption = {};
   QStringList                    mSearchPaths  = {};
   QStringList                    mValidSchemes = { "file", "qrc", "qthelp" };
 };

@@ -2,6 +2,7 @@
 #include "container_qt.h"
 
 #include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QStackedLayout>
 #include <QtGui/QWheelEvent>
 #include <QtCore/QDir>
 #include <QtCore/QDebug>
@@ -34,10 +35,23 @@ QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
   connect( mContainer, &container_qt::scaleChanged, this, &QLiteHtmlBrowserImpl::scaleChanged );
   connect( mContainer, &container_qt::selectionChanged, this, &QLiteHtmlBrowserImpl::selectionChanged );
 
+  mImageScroll = new QScrollArea( this );
+  mImageScroll->setWidgetResizable( false );
+  mImageScroll->setAlignment( Qt::AlignCenter );
+  mImageLabel = new QLabel( mImageScroll );
+  mImageLabel->setAlignment( Qt::AlignCenter );
+  mImageLabel->setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Fixed );
+  mImageScroll->setWidget( mImageLabel );
+
   auto* layout = new QVBoxLayout;
   layout->setContentsMargins( 0, 0, 0, 0 );
-  layout->addWidget( mContainer );
+  mViewStack = new QStackedLayout;
+  mViewStack->setContentsMargins( 0, 0, 0, 0 );
+  mViewStack->addWidget( mContainer );
+  mViewStack->addWidget( mImageScroll );
+  layout->addLayout( mViewStack );
   setLayout( layout );
+  showHtmlView();
   applyCSS();
 }
 
@@ -208,7 +222,19 @@ void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type, bool clearFWHist )
     else
     {
       // eg. if ( url.scheme() == "qthelp" )
-      content = mResourceHandler( type, url );
+      auto effectiveType = type;
+      if ( effectiveType == static_cast<int>( Browser::ResourceType::Unknown ) )
+      {
+        if ( isHtmlUrl( url.toString() ) )
+        {
+          effectiveType = static_cast<int>( Browser::ResourceType::Html );
+        }
+        else if ( isImageUrl( url.toString() ) )
+        {
+          effectiveType = static_cast<int>( Browser::ResourceType::Image );
+        }
+      }
+      content = mResourceHandler( effectiveType, url );
     }
 
     if ( !content.isEmpty() )
@@ -217,11 +243,15 @@ void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type, bool clearFWHist )
       {
         parseUrl( url );
         mContainer->setHtml( QString::fromUtf8( content ), url );
+        mCurrentCaption = mContainer->caption();
+        showHtmlView();
       }
       else if ( isImageUrl( url.toString() ) )
       {
-        onImageClicked( url );
-        return;
+        if ( !onImageClicked( url ) )
+        {
+          return;
+        }
       }
       else
       {
@@ -245,7 +275,7 @@ void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type, bool clearFWHist )
 
       if ( hist_url != url )
       {
-        mBWHistStack.push( { url, type, mContainer->caption() } );
+        mBWHistStack.push( { url, type, caption() } );
       }
 
       if ( clearFWHist )
@@ -276,6 +306,8 @@ void QLiteHtmlBrowserImpl::setHtml( const QString& html, const QUrl& source_url 
   {
     parseUrl( source_url );
     mContainer->setHtml( html, source_url );
+    mCurrentCaption = mContainer->caption();
+    showHtmlView();
   }
 }
 
@@ -330,7 +362,32 @@ QImage QLiteHtmlBrowserImpl::loadSvgFromFile( const QString& filename )
   renderer.load( filename );
   if ( renderer.isValid() )
   {
-    QSize  size( renderer.defaultSize() );
+    QSize size = renderer.defaultSize();
+    if ( !size.isValid() || size.isEmpty() )
+    {
+      size = QSize( 512, 512 );
+    }
+    QImage svgImg( size, QImage::Format_ARGB32_Premultiplied );
+    svgImg.fill( Qt::transparent );
+    QPainter p( &svgImg );
+    renderer.render( &p );
+    img = svgImg;
+  }
+  return img;
+}
+
+QImage QLiteHtmlBrowserImpl::loadSvgFromData( const QByteArray& data )
+{
+  QSvgRenderer renderer;
+  QImage       img;
+  renderer.load( data );
+  if ( renderer.isValid() )
+  {
+    QSize size = renderer.defaultSize();
+    if ( !size.isValid() || size.isEmpty() )
+    {
+      size = QSize( 512, 512 );
+    }
     QImage svgImg( size, QImage::Format_ARGB32_Premultiplied );
     svgImg.fill( Qt::transparent );
     QPainter p( &svgImg );
@@ -523,7 +580,7 @@ void QLiteHtmlBrowserImpl::reload()
 
 const QString& QLiteHtmlBrowserImpl::caption() const
 {
-  return mContainer->caption();
+  return mCurrentCaption;
 }
 
 void QLiteHtmlBrowserImpl::print( QPagedPaintDevice* printer ) const
@@ -570,76 +627,72 @@ QString QLiteHtmlBrowserImpl::selectedText() const
   return text;
 }
 
-void QLiteHtmlBrowserImpl::onImageClicked( const QUrl& url )
+void QLiteHtmlBrowserImpl::showHtmlView()
 {
-  auto pure_url = QUrl( url );
-  pure_url.setFragment( {} );
-  QFileInfo f( url.toLocalFile() );
-
-  if ( !f.exists() )
+  if ( mViewStack && mContainer )
   {
-    return;
+    mViewStack->setCurrentWidget( mContainer );
+  }
+}
+
+void QLiteHtmlBrowserImpl::showImageView()
+{
+  if ( mViewStack && mImageScroll )
+  {
+    mViewStack->setCurrentWidget( mImageScroll );
+  }
+}
+
+bool QLiteHtmlBrowserImpl::onImageClicked( const QUrl& url )
+{
+  if ( !mImageLabel || !mImageScroll )
+  {
+    return false;
   }
 
-  // Bild aus Bytes laden
   QImage img;
-
-  // sinnvolle Startgröße (z.B. max 80% der Parentgröße)
-  const QSize parentSize = this->size();
-  const int   def_w      = parentSize.width() * 8 / 10;
-  const int   def_h      = parentSize.height() * 8 / 10;
-
-  if ( !img.load( f.absoluteFilePath() ) )
+  const auto imageData = loadResource( static_cast<int>( Browser::ResourceType::Image ), url );
+  if ( !imageData.isEmpty() )
   {
-    if ( url.toString().toLower().endsWith( ".svg" ) )
+    img.loadFromData( imageData );
+    if ( img.isNull() && url.toString().toLower().endsWith( ".svg" ) )
     {
-      img = loadSvgFromFile( f.absoluteFilePath() );
+      img = loadSvgFromData( imageData );
+    }
+  }
+
+  if ( img.isNull() && url.isLocalFile() )
+  {
+    QFileInfo f( url.toLocalFile() );
+    if ( f.exists() )
+    {
+      if ( !img.load( f.absoluteFilePath() ) && url.toString().toLower().endsWith( ".svg" ) )
+      {
+        img = loadSvgFromFile( f.absoluteFilePath() );
+      }
     }
   }
 
   if ( img.isNull() )
   {
-    return;
+    return false;
   }
 
-  const int w = qMax( img.width(), def_w );
-  const int h = qMax( img.height(), def_h );
+  const auto pixmap = QPixmap::fromImage( img );
+  mImageLabel->setPixmap( pixmap );
+  mImageLabel->resize( pixmap.size() );
+  mImageLabel->setMinimumSize( pixmap.size() );
+  mImageLabel->setMaximumSize( pixmap.size() );
+  mImageScroll->horizontalScrollBar()->setValue( 0 );
+  mImageScroll->verticalScrollBar()->setValue( 0 );
 
-  // Dialog mit Bild anlegen, Parent ist dieses Widget (MyViewer)
-  QDialog* dlg = new QDialog( this );
-  dlg->setAttribute( Qt::WA_DeleteOnClose );
-  dlg->setWindowTitle( f.fileName() );
+  QFileInfo info( url.isLocalFile() ? url.toLocalFile() : url.path() );
+  mCurrentCaption = info.fileName().isEmpty() ? url.fileName() : info.fileName();
+  if ( mCurrentCaption.isEmpty() )
+  {
+    mCurrentCaption = url.toDisplayString();
+  }
 
-  // Inhalt: ScrollArea + QLabel mit Pixmap
-  auto* layout = new QVBoxLayout( dlg );
-  auto* scroll = new QScrollArea( dlg );
-  // scroll->setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOn );
-  // scroll->setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOn );
-  auto* label = new QLabel( dlg );
-
-  label->setPixmap( QPixmap::fromImage( img ) );
-  label->setAlignment( Qt::AlignCenter );
-  label->resize( w, h );
-  scroll->setWidget( label );
-  scroll->setWidgetResizable( true );
-
-  layout->addWidget( scroll );
-  dlg->setLayout( layout );
-
-  // Optional: Maximalgröße begrenzen (80% des Screens)
-  QSize screenSize = screen()->availableGeometry().size();
-  dlg->setMaximumSize( screenSize * 0.5 );
-
-  auto margins = dlg->contentsMargins() + scroll->contentsMargins() + scroll->viewport()->contentsMargins() + label->contentsMargins();
-
-  dlg->resize( qMax( 200, w + scroll->verticalScrollBar()->width() + margins.left() + margins.right() ),
-               qMax( 200, h + scroll->horizontalScrollBar()->height() + margins.top() + margins.bottom() ) );
-
-  // Dialog über dem Parent zentrieren (absolute Screen-Koordinaten)
-  QRect dialogRect = dlg->frameGeometry();
-  dialogRect.moveCenter( this->mapToGlobal( this->rect().center() ) );
-  dlg->move( dialogRect.topLeft() );
-
-  dlg->setModal( true ); // optional, je nach gewünschtem Verhalten
-  dlg->show();           // oder dlg->exec();
+  showImageView();
+  return true;
 }

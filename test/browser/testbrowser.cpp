@@ -72,6 +72,20 @@ TestBrowser::TestBrowser()
              }
            } );
 
+  mActHome = new QAction( style()->standardIcon( QStyle::SP_DirHomeIcon ), tr( "home" ), this );
+  connect( mActHome, &QAction::triggered, this, [this]() { home(); } );
+  mToolBar.addAction( mActHome );
+
+  mActBackward = new QAction( style()->standardIcon( QStyle::QStyle::SP_ArrowBack ), tr( "backward" ), this );
+  connect( mActBackward, &QAction::triggered, this, [this]() { backward(); } );
+  mToolBar.addAction( mActBackward );
+
+  mActForward = new QAction( style()->standardIcon( QStyle::QStyle::SP_ArrowForward ), tr( "forward" ), this );
+  connect( mActForward, &QAction::triggered, this, [this]() { forward(); } );
+  mToolBar.addAction( mActForward );
+
+  mToolBar.addSeparator();
+
   mFindText = new QLineEdit( this );
   mToolBar.addWidget( mFindText );
   connect( mFindText, &QLineEdit::returnPressed, this,
@@ -243,4 +257,19 @@ void TestBrowser::previousFindMatch()
 void TestBrowser::nextFindMatch()
 {
   mBrowser->findNextMatch();
+}
+
+void TestBrowser::forward()
+{
+  mBrowser->forward();
+}
+
+void TestBrowser::backward()
+{
+  mBrowser->backward();
+}
+
+void TestBrowser::home()
+{
+  mBrowser->home();
 }
