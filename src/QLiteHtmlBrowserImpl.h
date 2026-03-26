@@ -133,10 +133,10 @@ private:
   UrlType                        mUrl         = {};
   Browser::ResourceHandlerType   mResourceHandler;
   Browser::UrlResolveHandlerType mUrlResolveHandler;
-  QStack<HistoryEntry>           mBWHistStack  = {};
-  QStack<HistoryEntry>           mFWHistStack  = {};
-  UrlType                        mHome         = {};
+  QStack<HistoryEntry>           mBWHistStack    = {};
+  QStack<HistoryEntry>           mFWHistStack    = {};
+  UrlType                        mHome           = {};
   QString                        mCurrentCaption = {};
-  QStringList                    mSearchPaths  = {};
-  QStringList                    mValidSchemes = { "file", "qrc", "qthelp" };
+  QStringList                    mSearchPaths    = {};
+  QStringList                    mValidSchemes   = { "file", "qrc", "qthelp" };
 };

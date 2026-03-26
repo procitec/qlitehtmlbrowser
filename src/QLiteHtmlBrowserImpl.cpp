@@ -650,7 +650,7 @@ bool QLiteHtmlBrowserImpl::onImageClicked( const QUrl& url )
     return false;
   }
 
-  QImage img;
+  QImage     img;
   const auto imageData = loadResource( static_cast<int>( Browser::ResourceType::Image ), url );
   if ( !imageData.isEmpty() )
   {
