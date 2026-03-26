@@ -81,3 +81,6 @@ target_include_directories( test_history_image PRIVATE ${QLiteHtmlBrowser_SOURCE
 target_link_libraries(test_history_image PUBLIC QLiteHtmlBrowser litehtml Qt::Widgets Qt::Gui Qt::Svg Qt::Test )
 
 add_test(NAME test_history_image COMMAND test_history_image)
+set_tests_properties(test_history_image PROPERTIES
+    ENVIRONMENT "${environment}"
+)
