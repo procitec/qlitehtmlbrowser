@@ -196,7 +196,7 @@ bool QLiteHtmlBrowserImpl::isImageUrl( const QString& u ) const
 bool QLiteHtmlBrowserImpl::isHtmlUrl( const QString& u ) const
 {
   const auto lower = u.toLower();
-  return lower.endsWith( ".html" ) || lower.endsWith( ".htm" );
+  return lower.endsWith( ".html" ) || lower.endsWith( ".htm" ) || lower.contains( ".html#" ) || lower.contains( ".htm#" );
 }
 
 #include <QtWidgets/QMessageBox>
