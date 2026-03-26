@@ -69,6 +69,14 @@ foreach( name ${test_names})
     set_tests_properties(${name} PROPERTIES
         ENVIRONMENT "${environment}"
     )
-
-
 endforeach()
+
+qt_wrap_cpp ( test_history_image_mocs
+    test_history_image.h
+  )
+
+add_executable(  test_history_image   test_history_image.cpp  test_history_image.h ${test_history_image_mocs})
+target_include_directories( test_history_image PRIVATE ${QLiteHtmlBrowser_SOURCE_DIR}/include ${QLiteHtmlBrowser_SOURCE_DIR}/src)
+target_link_libraries(test_history_image PUBLIC QLiteHtmlBrowser litehtml Qt::Widgets Qt::Gui Qt::Svg Qt::Test )
+
+add_test(NAME test_history_image COMMAND test_history_image)
