@@ -78,6 +78,8 @@ public:
 protected:
   void changeEvent( QEvent* ) override;
   void mousePressEvent( QMouseEvent* ) override;
+  void resizeEvent( QResizeEvent* ) override;
+  bool eventFilter( QObject* watched, QEvent* event ) override;
 
 Q_SIGNALS:
   /// emited when the url changed due to user interaction, e.g. link activation
@@ -119,19 +121,25 @@ private:
   bool    isImageUrl( const QUrl& u ) const;
   bool    isHtmlUrl( const QUrl& u ) const;
   bool    onImageClicked( const QUrl& url );
+  void    updateImageView();
+  void    toggleImageZoomMode();
+  bool    imageFitsViewport( const QSize& imageSize ) const;
+  QSize   imageViewportSize() const;
   QImage  loadSvgFromFile( const QString& filename );
   QImage  loadSvgFromData( const QByteArray& data );
   bool    showImageFromData( const QUrl& url, const QByteArray& imageData );
 
   Q_DISABLE_COPY_MOVE( QLiteHtmlBrowserImpl );
 
-  container_qt*                  mContainer   = nullptr;
-  QStackedLayout*                mViewStack   = nullptr;
-  QScrollArea*                   mImageScroll = nullptr;
-  QLabel*                        mImageLabel  = nullptr;
-  QUrl                           mBaseUrl     = {};
-  QString                        mExternalCSS = {};
-  UrlType                        mUrl         = {};
+  container_qt*                  mContainer          = nullptr;
+  QStackedLayout*                mViewStack          = nullptr;
+  QScrollArea*                   mImageScroll        = nullptr;
+  QLabel*                        mImageLabel         = nullptr;
+  QPixmap                        mCurrentImagePixmap = {};
+  bool                           mImageFitToView     = true;
+  QUrl                           mBaseUrl            = {};
+  QString                        mExternalCSS        = {};
+  UrlType                        mUrl                = {};
   Browser::ResourceHandlerType   mResourceHandler;
   Browser::UrlResolveHandlerType mUrlResolveHandler;
   QStack<HistoryEntry>           mBWHistStack    = {};

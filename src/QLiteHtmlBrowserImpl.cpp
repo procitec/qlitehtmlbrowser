@@ -24,6 +24,7 @@
 #include <QImageReader>
 #include <QMimeDatabase>
 #include <QMimeType>
+#include <QTimer>
 
 namespace
 {
@@ -168,6 +169,7 @@ QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
   mImageLabel = new QLabel( mImageScroll );
   mImageLabel->setAlignment( Qt::AlignCenter );
   mImageLabel->setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Fixed );
+  mImageLabel->installEventFilter( this );
   mImageScroll->setWidget( mImageLabel );
 
   auto* layout = new QVBoxLayout;
@@ -306,6 +308,34 @@ void QLiteHtmlBrowserImpl::mousePressEvent( QMouseEvent* e )
     e->ignore();
 }
 
+void QLiteHtmlBrowserImpl::resizeEvent( QResizeEvent* ev )
+{
+  QWidget::resizeEvent( ev );
+
+  if ( mViewStack && mImageScroll && mViewStack->currentWidget() == mImageScroll && mImageFitToView )
+  {
+    updateImageView();
+  }
+}
+
+bool QLiteHtmlBrowserImpl::eventFilter( QObject* watched, QEvent* event )
+{
+  if ( watched == mImageLabel && event )
+  {
+    if ( event->type() == QEvent::MouseButtonRelease )
+    {
+      auto* mouseEvent = static_cast<QMouseEvent*>( event );
+      if ( mouseEvent->button() == Qt::LeftButton && !mCurrentImagePixmap.isNull() )
+      {
+        toggleImageZoomMode();
+        return true;
+      }
+    }
+  }
+
+  return QWidget::eventFilter( watched, event );
+}
+
 // void QLiteHtmlBrowser::resizeEvent( QResizeEvent* ev )
 //{
 //  if ( ev )
@@ -369,7 +399,7 @@ void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type, bool clearFWHist )
 
   if ( content.isEmpty() )
   {
-    emit urlChanged( url );
+    // emit urlChanged( url );
     return;
   }
 
@@ -425,6 +455,57 @@ void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type, bool clearFWHist )
   emit urlChanged( url );
 }
 
+QSize QLiteHtmlBrowserImpl::imageViewportSize() const
+{
+  if ( !mImageScroll )
+  {
+    return {};
+  }
+
+  QSize viewportSize = mImageScroll->viewport()->size();
+  viewportSize -= QSize( 4, 4 );
+  return viewportSize.expandedTo( QSize( 1, 1 ) );
+}
+
+bool QLiteHtmlBrowserImpl::imageFitsViewport( const QSize& imageSize ) const
+{
+  const QSize viewportSize = imageViewportSize();
+  return imageSize.width() <= viewportSize.width() && imageSize.height() <= viewportSize.height();
+}
+
+void QLiteHtmlBrowserImpl::updateImageView()
+{
+  if ( !mImageLabel || !mImageScroll || mCurrentImagePixmap.isNull() )
+  {
+    return;
+  }
+
+  QPixmap displayPixmap = mCurrentImagePixmap;
+  if ( mImageFitToView )
+  {
+    const QSize viewportSize = imageViewportSize();
+    displayPixmap            = mCurrentImagePixmap.scaled( viewportSize, Qt::KeepAspectRatio, Qt::SmoothTransformation );
+  }
+
+  mImageLabel->setPixmap( displayPixmap );
+  mImageLabel->resize( displayPixmap.size() );
+  mImageLabel->setMinimumSize( displayPixmap.size() );
+  mImageLabel->setMaximumSize( displayPixmap.size() );
+  mImageScroll->horizontalScrollBar()->setValue( 0 );
+  mImageScroll->verticalScrollBar()->setValue( 0 );
+}
+
+void QLiteHtmlBrowserImpl::toggleImageZoomMode()
+{
+  if ( mCurrentImagePixmap.isNull() || imageFitsViewport( mCurrentImagePixmap.size() ) )
+  {
+    return;
+  }
+
+  mImageFitToView = !mImageFitToView;
+  updateImageView();
+}
+
 bool QLiteHtmlBrowserImpl::showImageFromData( const QUrl& url, const QByteArray& imageData )
 {
   if ( !mImageLabel || !mImageScroll )
@@ -459,13 +540,7 @@ bool QLiteHtmlBrowserImpl::showImageFromData( const QUrl& url, const QByteArray&
     return false;
   }
 
-  const auto pixmap = QPixmap::fromImage( img );
-  mImageLabel->setPixmap( pixmap );
-  mImageLabel->resize( pixmap.size() );
-  mImageLabel->setMinimumSize( pixmap.size() );
-  mImageLabel->setMaximumSize( pixmap.size() );
-  mImageScroll->horizontalScrollBar()->setValue( 0 );
-  mImageScroll->verticalScrollBar()->setValue( 0 );
+  mCurrentImagePixmap = QPixmap::fromImage( img );
 
   QFileInfo info( normalizedUrlPath( url ) );
   mCurrentCaption = info.fileName().isEmpty() ? url.fileName() : info.fileName();
@@ -475,6 +550,24 @@ bool QLiteHtmlBrowserImpl::showImageFromData( const QUrl& url, const QByteArray&
   }
 
   showImageView();
+
+  mImageFitToView = !imageFitsViewport( mCurrentImagePixmap.size() );
+  updateImageView();
+
+  // A second deferred update avoids using a stale viewport size directly after
+  // switching the stacked widget page.
+  QTimer::singleShot( 0, this,
+                      [this]()
+                      {
+                        if ( mViewStack && mImageScroll && mViewStack->currentWidget() == mImageScroll && !mCurrentImagePixmap.isNull() )
+                        {
+                          if ( mImageFitToView )
+                          {
+                            updateImageView();
+                          }
+                        }
+                      } );
+
   return true;
 }
 
@@ -830,6 +923,14 @@ void QLiteHtmlBrowserImpl::showImageView()
   if ( mViewStack && mImageScroll )
   {
     mViewStack->setCurrentWidget( mImageScroll );
+
+    // When switching from HTML to image view, the scroll area's viewport size can
+    // still reflect the previously hidden state. Re-apply the scaling once the
+    // layout has settled so fit-to-view uses the final viewport size.
+    if ( !mCurrentImagePixmap.isNull() && mImageFitToView )
+    {
+      QTimer::singleShot( 0, this, [this]() { updateImageView(); } );
+    }
   }
 }
 
