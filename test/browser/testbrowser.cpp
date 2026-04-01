@@ -5,17 +5,120 @@
 #include <QtCore/QSignalBlocker>
 #include <QtWidgets/QApplication>
 #include <QtGui/QKeySequence>
+#include <QtGui/QIcon>
+#include <QtGui/QPalette>
 // #include <QtPrintSupport/QPrinter>
 #include <QtGui/QPainter>
 #include <QtGui/QPdfWriter>
 #include <QtCore/QDebug>
+#include <QtSvg/QSvgRenderer>
 #include <QtWidgets/QStyle>
 #include <QtWidgets/QStatusBar>
 
 #include <cmath>
 
+namespace
+{
+
+constexpr const char* SVG_COLOR_TOKEN = "#000000";
+
+const QByteArray HOME_SVG = QByteArrayLiteral(
+  R"svg(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3.75 10.5L12 4l8.25 6.5"/><path d="M6.75 9.5V20h10.5V9.5"/></svg>)svg" );
+
+const QByteArray BACK_SVG = QByteArrayLiteral(
+  R"svg(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 6L4.5 12l6 6"/><path d="M5 12h14.5"/></svg>)svg" );
+
+const QByteArray FORWARD_SVG = QByteArrayLiteral(
+  R"svg(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 6l6 6-6 6"/><path d="M19 12H4.5"/></svg>)svg" );
+
+const QByteArray UP_SVG = QByteArrayLiteral(
+  R"svg(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10.5l6-6 6 6"/><path d="M12 19.5v-14"/></svg>)svg" );
+
+const QByteArray DOWN_SVG = QByteArrayLiteral(
+  R"svg(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.5l6 6 6-6"/><path d="M12 4.5v14"/></svg>)svg" );
+
+QByteArray recolorSvg( QByteArray svg, const QColor& color )
+{
+  svg.replace( SVG_COLOR_TOKEN, color.name( QColor::HexRgb ).toUtf8() );
+  return svg;
+}
+
+QPixmap renderSvgPixmap( const QByteArray& svgTemplate, const QColor& color, const QSize& logicalSize, qreal devicePixelRatio )
+{
+  const QSize deviceSize( qMax( 1, qRound( logicalSize.width() * devicePixelRatio ) ), qMax( 1, qRound( logicalSize.height() * devicePixelRatio ) ) );
+
+  QPixmap pixmap( deviceSize );
+  pixmap.fill( Qt::transparent );
+  pixmap.setDevicePixelRatio( devicePixelRatio );
+
+  QSvgRenderer renderer;
+  renderer.load( recolorSvg( svgTemplate, color ) );
+  if ( !renderer.isValid() )
+  {
+    return pixmap;
+  }
+
+  QPainter painter( &pixmap );
+  painter.setRenderHint( QPainter::Antialiasing, true );
+  painter.setRenderHint( QPainter::SmoothPixmapTransform, true );
+  renderer.render( &painter, QRectF( QPointF( 0.0, 0.0 ), QSizeF( logicalSize ) ) );
+
+  return pixmap;
+}
+
+QIcon createSvgIcon( const QByteArray& svgTemplate, const QWidget* widget )
+{
+  const QPalette palette = widget->palette();
+
+  QColor normalColor = palette.color( QPalette::ButtonText );
+  if ( !normalColor.isValid() )
+  {
+    normalColor = palette.color( QPalette::WindowText );
+  }
+
+  QColor disabledColor = palette.color( QPalette::Disabled, QPalette::ButtonText );
+  if ( !disabledColor.isValid() )
+  {
+    disabledColor = palette.color( QPalette::Disabled, QPalette::WindowText );
+  }
+  if ( !disabledColor.isValid() )
+  {
+    disabledColor = normalColor;
+  }
+
+  QIcon              icon;
+  const QList<int>   iconExtents       = { 16, 20, 24, 32 };
+  const QList<qreal> devicePixelRatios = { 1.0, 1.25, 1.5, 2.0 };
+
+  for ( const int iconExtent : iconExtents )
+  {
+    const QSize logicalSize( iconExtent, iconExtent );
+    for ( const qreal devicePixelRatio : devicePixelRatios )
+    {
+      icon.addPixmap( renderSvgPixmap( svgTemplate, normalColor, logicalSize, devicePixelRatio ), QIcon::Normal, QIcon::Off );
+      icon.addPixmap( renderSvgPixmap( svgTemplate, normalColor, logicalSize, devicePixelRatio ), QIcon::Active, QIcon::Off );
+      icon.addPixmap( renderSvgPixmap( svgTemplate, disabledColor, logicalSize, devicePixelRatio ), QIcon::Disabled, QIcon::Off );
+    }
+  }
+
+  return icon;
+}
+
+int toolbarIconExtent( const QWidget* widget )
+{
+  return widget->style()->pixelMetric( QStyle::PM_ToolBarIconSize, nullptr, widget );
+}
+
+} // namespace
+
 TestBrowser::TestBrowser()
 {
+
+  const auto homeIcon    = createSvgIcon( HOME_SVG, this );
+  const auto backIcon    = createSvgIcon( BACK_SVG, this );
+  const auto forwardIcon = createSvgIcon( FORWARD_SVG, this );
+  const auto upIcon      = createSvgIcon( UP_SVG, this );
+  const auto downIcon    = createSvgIcon( DOWN_SVG, this );
 
   mBrowser = new QHelpBrowser( this );
   setCentralWidget( mBrowser );
@@ -23,6 +126,9 @@ TestBrowser::TestBrowser()
   setMinimumSize( { 200, 150 } );
   resize( 1024, 768 );
   mBrowser->show();
+
+  const int iconExtent = toolbarIconExtent( this );
+  mToolBar.setIconSize( QSize( iconExtent, iconExtent ) );
 
   auto file_menu = mMenu.addMenu( "File" );
 
@@ -72,15 +178,15 @@ TestBrowser::TestBrowser()
              }
            } );
 
-  mActHome = new QAction( style()->standardIcon( QStyle::SP_DirHomeIcon ), tr( "home" ), this );
+  mActHome = new QAction( homeIcon, tr( "home" ), this );
   connect( mActHome, &QAction::triggered, this, [this]() { home(); } );
   mToolBar.addAction( mActHome );
 
-  mActBackward = new QAction( style()->standardIcon( QStyle::QStyle::SP_ArrowBack ), tr( "backward" ), this );
+  mActBackward = new QAction( backIcon, tr( "backward" ), this );
   connect( mActBackward, &QAction::triggered, this, [this]() { backward(); } );
   mToolBar.addAction( mActBackward );
 
-  mActForward = new QAction( style()->standardIcon( QStyle::QStyle::SP_ArrowForward ), tr( "forward" ), this );
+  mActForward = new QAction( forwardIcon, tr( "forward" ), this );
   connect( mActForward, &QAction::triggered, this, [this]() { forward(); } );
   mToolBar.addAction( mActForward );
 
@@ -97,13 +203,12 @@ TestBrowser::TestBrowser()
              }
            } );
 
-  // Vorheriges mit Standard-Icon (Pfeil nach oben)
-  mPreviousFindMatch = new QAction( style()->standardIcon( QStyle::SP_ArrowUp ), "Vorheriges", this );
+  mPreviousFindMatch = new QAction( upIcon, "Vorheriges", this );
   connect( mPreviousFindMatch, &QAction::triggered, this, [this]() { previousFindMatch(); } );
   mPreviousFindMatch->setEnabled( false );
   mToolBar.addAction( mPreviousFindMatch );
 
-  mNextFindMatch = new QAction( style()->standardIcon( QStyle::SP_ArrowDown ), "Nächstes", this );
+  mNextFindMatch = new QAction( downIcon, "Nächstes", this );
   mNextFindMatch->setEnabled( false );
   connect( mNextFindMatch, &QAction::triggered, this, [this]() { nextFindMatch(); } );
 

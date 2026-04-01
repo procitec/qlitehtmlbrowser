@@ -78,8 +78,6 @@ public:
 protected:
   void changeEvent( QEvent* ) override;
   void mousePressEvent( QMouseEvent* ) override;
-  void resizeEvent( QResizeEvent* ) override;
-  bool eventFilter( QObject* watched, QEvent* event ) override;
 
 Q_SIGNALS:
   /// emited when the url changed due to user interaction, e.g. link activation
@@ -123,23 +121,32 @@ private:
   bool    onImageClicked( const QUrl& url );
   void    updateImageView();
   void    toggleImageZoomMode();
-  bool    imageFitsViewport( const QSize& imageSize ) const;
+  // bool    imageFitsViewport( const QSize& imageSize ) const;
   QSize   imageViewportSize() const;
+  qreal   imageDevicePixelRatio() const;
+  QSize   imageNaturalDisplaySize() const;
+  bool    imageFitsViewport( const QSize& imageSize ) const;
+  QPixmap createRasterDisplayPixmap( const QSize& logicalSize, qreal devicePixelRatio ) const;
+  QPixmap createSvgDisplayPixmap( const QSize& logicalSize, qreal devicePixelRatio ) const;
+  QPixmap createDisplayPixmap( const QSize& logicalSize, qreal devicePixelRatio ) const;
   QImage  loadSvgFromFile( const QString& filename );
   QImage  loadSvgFromData( const QByteArray& data );
   bool    showImageFromData( const QUrl& url, const QByteArray& imageData );
 
   Q_DISABLE_COPY_MOVE( QLiteHtmlBrowserImpl );
 
-  container_qt*                  mContainer          = nullptr;
-  QStackedLayout*                mViewStack          = nullptr;
-  QScrollArea*                   mImageScroll        = nullptr;
-  QLabel*                        mImageLabel         = nullptr;
-  QPixmap                        mCurrentImagePixmap = {};
-  bool                           mImageFitToView     = true;
-  QUrl                           mBaseUrl            = {};
-  QString                        mExternalCSS        = {};
-  UrlType                        mUrl                = {};
+  container_qt*                  mContainer             = nullptr;
+  QStackedLayout*                mViewStack             = nullptr;
+  QScrollArea*                   mImageScroll           = nullptr;
+  QLabel*                        mImageLabel            = nullptr;
+  QImage                         mCurrentImage          = {};
+  QByteArray                     mCurrentSvgData        = {};
+  QSize                          mCurrentSvgDefaultSize = {};
+  bool                           mCurrentImageIsSvg     = false;
+  bool                           mImageFitToView        = true;
+  QUrl                           mBaseUrl               = {};
+  QString                        mExternalCSS           = {};
+  UrlType                        mUrl                   = {};
   Browser::ResourceHandlerType   mResourceHandler;
   Browser::UrlResolveHandlerType mUrlResolveHandler;
   QStack<HistoryEntry>           mBWHistStack    = {};

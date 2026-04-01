@@ -4,6 +4,8 @@
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QStackedLayout>
 #include <QtGui/QWheelEvent>
+#include <QtGui/QMouseEvent>
+#include <QtGui/QWindow>
 #include <QtCore/QDir>
 #include <QtCore/QDebug>
 #include <QtGui/QPalette>
@@ -13,6 +15,9 @@
 #include <QShortcut>
 #include <QtGui/QDesktopServices>
 #include <functional>
+#include <utility>
+#include <algorithm>
+#include <cmath>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QScrollArea>
 #include <QtSvg/QSvgRenderer>
@@ -24,10 +29,99 @@
 #include <QImageReader>
 #include <QMimeDatabase>
 #include <QMimeType>
-#include <QTimer>
+#include <QtGui/QShowEvent>
 
 namespace
 {
+
+class ClickableImageLabel final : public QLabel
+{
+public:
+  using ClickHandler = std::function<void()>;
+
+  explicit ClickableImageLabel( QWidget* parent = nullptr )
+    : QLabel( parent )
+  {
+  }
+
+  void setClickHandler( ClickHandler handler ) { mClickHandler = std::move( handler ); }
+
+protected:
+  void mousePressEvent( QMouseEvent* event ) override
+  {
+    if ( event && event->button() == Qt::LeftButton )
+    {
+      mLeftButtonPressed = true;
+      event->accept();
+      return;
+    }
+
+    QLabel::mousePressEvent( event );
+  }
+
+  void mouseReleaseEvent( QMouseEvent* event ) override
+  {
+#if QT_VERSION_MAJOR >= 6
+    const QPoint releasePos = event ? event->position().toPoint() : QPoint();
+#else
+    const QPoint releasePos = event ? event->pos() : QPoint();
+#endif
+
+    const bool activate = event && event->button() == Qt::LeftButton && mLeftButtonPressed && rect().contains( releasePos );
+    mLeftButtonPressed  = false;
+
+    if ( activate )
+    {
+      event->accept();
+      if ( mClickHandler )
+      {
+        mClickHandler();
+      }
+      return;
+    }
+
+    QLabel::mouseReleaseEvent( event );
+  }
+
+private:
+  ClickHandler mClickHandler      = {};
+  bool         mLeftButtonPressed = false;
+};
+
+class ImageScrollArea final : public QScrollArea
+{
+public:
+  using LayoutChangedHandler = std::function<void()>;
+
+  explicit ImageScrollArea( QWidget* parent = nullptr )
+    : QScrollArea( parent )
+  {
+  }
+
+  void setLayoutChangedHandler( LayoutChangedHandler handler ) { mLayoutChangedHandler = std::move( handler ); }
+
+protected:
+  void resizeEvent( QResizeEvent* event ) override
+  {
+    QScrollArea::resizeEvent( event );
+    if ( mLayoutChangedHandler )
+    {
+      mLayoutChangedHandler();
+    }
+  }
+
+  void showEvent( QShowEvent* event ) override
+  {
+    QScrollArea::showEvent( event );
+    if ( mLayoutChangedHandler )
+    {
+      mLayoutChangedHandler();
+    }
+  }
+
+private:
+  LayoutChangedHandler mLayoutChangedHandler = {};
+};
 
 QString normalizedUrlPath( const QUrl& url )
 {
@@ -147,6 +241,20 @@ bool isSvgUrl( const QUrl& url )
   return urlSuffix( url ) == "svg";
 }
 
+QSize toLogicalPixels( const QSize& pixelSize, qreal dpr )
+{
+  const qreal safeDpr = dpr > 0.0 ? dpr : 1.0;
+  return QSize( std::max( 1, static_cast<int>( std::ceil( pixelSize.width() / safeDpr ) ) ),
+                std::max( 1, static_cast<int>( std::ceil( pixelSize.height() / safeDpr ) ) ) );
+}
+
+QSize toDevicePixels( const QSize& logicalSize, qreal dpr )
+{
+  const qreal safeDpr = dpr > 0.0 ? dpr : 1.0;
+  return QSize( std::max( 1, static_cast<int>( std::round( logicalSize.width() * safeDpr ) ) ),
+                std::max( 1, static_cast<int>( std::round( logicalSize.height() * safeDpr ) ) ) );
+}
+
 } // namespace
 
 QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
@@ -163,14 +271,26 @@ QLiteHtmlBrowserImpl::QLiteHtmlBrowserImpl( QWidget* parent )
   connect( mContainer, &container_qt::scaleChanged, this, &QLiteHtmlBrowserImpl::scaleChanged );
   connect( mContainer, &container_qt::selectionChanged, this, &QLiteHtmlBrowserImpl::selectionChanged );
 
-  mImageScroll = new QScrollArea( this );
-  mImageScroll->setWidgetResizable( false );
-  mImageScroll->setAlignment( Qt::AlignCenter );
-  mImageLabel = new QLabel( mImageScroll );
-  mImageLabel->setAlignment( Qt::AlignCenter );
-  mImageLabel->setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Fixed );
-  mImageLabel->installEventFilter( this );
-  mImageScroll->setWidget( mImageLabel );
+  auto* imageScroll = new ImageScrollArea( this );
+  imageScroll->setWidgetResizable( false );
+  imageScroll->setAlignment( Qt::AlignCenter );
+  imageScroll->setLayoutChangedHandler(
+    [this]()
+    {
+      if ( mViewStack && mImageScroll && mViewStack->currentWidget() == mImageScroll && mImageFitToView )
+      {
+        updateImageView();
+      }
+    } );
+
+  auto* imageLabel = new ClickableImageLabel( imageScroll );
+  imageLabel->setAlignment( Qt::AlignCenter );
+  imageLabel->setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Fixed );
+  imageLabel->setClickHandler( [this]() { toggleImageZoomMode(); } );
+
+  imageScroll->setWidget( imageLabel );
+  mImageScroll = imageScroll;
+  mImageLabel  = imageLabel;
 
   auto* layout = new QVBoxLayout;
   layout->setContentsMargins( 0, 0, 0, 0 );
@@ -308,42 +428,6 @@ void QLiteHtmlBrowserImpl::mousePressEvent( QMouseEvent* e )
     e->ignore();
 }
 
-void QLiteHtmlBrowserImpl::resizeEvent( QResizeEvent* ev )
-{
-  QWidget::resizeEvent( ev );
-
-  if ( mViewStack && mImageScroll && mViewStack->currentWidget() == mImageScroll && mImageFitToView )
-  {
-    updateImageView();
-  }
-}
-
-bool QLiteHtmlBrowserImpl::eventFilter( QObject* watched, QEvent* event )
-{
-  if ( watched == mImageLabel && event )
-  {
-    if ( event->type() == QEvent::MouseButtonRelease )
-    {
-      auto* mouseEvent = static_cast<QMouseEvent*>( event );
-      if ( mouseEvent->button() == Qt::LeftButton && !mCurrentImagePixmap.isNull() )
-      {
-        toggleImageZoomMode();
-        return true;
-      }
-    }
-  }
-
-  return QWidget::eventFilter( watched, event );
-}
-
-// void QLiteHtmlBrowser::resizeEvent( QResizeEvent* ev )
-//{
-//  if ( ev )
-//  {
-//    QWidget::resizeEvent( ev );
-//  }
-//}
-
 bool QLiteHtmlBrowserImpl::isImageUrl( const QUrl& u ) const
 {
   return hasImageExtension( u );
@@ -399,7 +483,6 @@ void QLiteHtmlBrowserImpl::setUrl( const QUrl& url, int type, bool clearFWHist )
 
   if ( content.isEmpty() )
   {
-    // emit urlChanged( url );
     return;
   }
 
@@ -467,37 +550,175 @@ QSize QLiteHtmlBrowserImpl::imageViewportSize() const
   return viewportSize.expandedTo( QSize( 1, 1 ) );
 }
 
+qreal QLiteHtmlBrowserImpl::imageDevicePixelRatio() const
+{
+  if ( mImageScroll && mImageScroll->viewport() )
+  {
+#if QT_VERSION >= QT_VERSION_CHECK( 5, 6, 0 )
+    const qreal viewportDpr = mImageScroll->viewport()->devicePixelRatioF();
+#else
+    const qreal viewportDpr = mImageScroll->viewport()->devicePixelRatio();
+#endif
+    if ( viewportDpr > 0.0 )
+    {
+      return viewportDpr;
+    }
+  }
+
+  if ( const auto* topLevel = window() )
+  {
+    if ( auto* handle = topLevel->windowHandle() )
+    {
+      if ( auto* currentScreen = handle->screen() )
+      {
+        const qreal screenDpr = currentScreen->devicePixelRatio();
+        if ( screenDpr > 0.0 )
+        {
+          return screenDpr;
+        }
+      }
+    }
+  }
+
+  if ( auto* currentScreen = QApplication::primaryScreen() )
+  {
+    const qreal screenDpr = currentScreen->devicePixelRatio();
+    if ( screenDpr > 0.0 )
+    {
+      return screenDpr;
+    }
+  }
+
+  return 1.0;
+}
+
+QSize QLiteHtmlBrowserImpl::imageNaturalDisplaySize() const
+{
+  if ( mCurrentImageIsSvg )
+  {
+    if ( mCurrentSvgDefaultSize.isValid() && !mCurrentSvgDefaultSize.isEmpty() )
+    {
+      return mCurrentSvgDefaultSize;
+    }
+    return QSize( 512, 512 );
+  }
+
+  if ( !mCurrentImage.isNull() )
+  {
+    return toLogicalPixels( mCurrentImage.size(), imageDevicePixelRatio() );
+  }
+
+  return {};
+}
+
 bool QLiteHtmlBrowserImpl::imageFitsViewport( const QSize& imageSize ) const
 {
   const QSize viewportSize = imageViewportSize();
   return imageSize.width() <= viewportSize.width() && imageSize.height() <= viewportSize.height();
 }
 
+QPixmap QLiteHtmlBrowserImpl::createRasterDisplayPixmap( const QSize& logicalSize, qreal devicePixelRatio ) const
+{
+  if ( mCurrentImage.isNull() || !logicalSize.isValid() || logicalSize.isEmpty() )
+  {
+    return {};
+  }
+
+  const QSize targetPixelSize = toDevicePixels( logicalSize, devicePixelRatio );
+  QImage      displayImage    = mCurrentImage;
+
+  if ( displayImage.size() != targetPixelSize )
+  {
+    displayImage = mCurrentImage.scaled( targetPixelSize, Qt::KeepAspectRatio, Qt::SmoothTransformation );
+  }
+
+  QPixmap displayPixmap = QPixmap::fromImage( displayImage );
+  displayPixmap.setDevicePixelRatio( devicePixelRatio > 0.0 ? devicePixelRatio : 1.0 );
+  return displayPixmap;
+}
+
+QPixmap QLiteHtmlBrowserImpl::createSvgDisplayPixmap( const QSize& logicalSize, qreal devicePixelRatio ) const
+{
+  if ( !mCurrentImageIsSvg || mCurrentSvgData.isEmpty() || !logicalSize.isValid() || logicalSize.isEmpty() )
+  {
+    return {};
+  }
+
+  QSvgRenderer renderer( mCurrentSvgData );
+  if ( !renderer.isValid() )
+  {
+    return {};
+  }
+
+  const QSize targetPixelSize = toDevicePixels( logicalSize, devicePixelRatio );
+  QImage      displayImage( targetPixelSize, QImage::Format_ARGB32_Premultiplied );
+  displayImage.fill( Qt::transparent );
+
+  QPainter painter( &displayImage );
+  renderer.render( &painter, QRect( QPoint( 0, 0 ), targetPixelSize ) );
+  painter.end();
+
+  QPixmap displayPixmap = QPixmap::fromImage( displayImage );
+  displayPixmap.setDevicePixelRatio( devicePixelRatio > 0.0 ? devicePixelRatio : 1.0 );
+  return displayPixmap;
+}
+
+QPixmap QLiteHtmlBrowserImpl::createDisplayPixmap( const QSize& logicalSize, qreal devicePixelRatio ) const
+{
+  if ( mCurrentImageIsSvg )
+  {
+    return createSvgDisplayPixmap( logicalSize, devicePixelRatio );
+  }
+
+  return createRasterDisplayPixmap( logicalSize, devicePixelRatio );
+}
+
 void QLiteHtmlBrowserImpl::updateImageView()
 {
-  if ( !mImageLabel || !mImageScroll || mCurrentImagePixmap.isNull() )
+  if ( !mImageLabel || !mImageScroll )
   {
     return;
   }
 
-  QPixmap displayPixmap = mCurrentImagePixmap;
+  if ( !mCurrentImageIsSvg && mCurrentImage.isNull() )
+  {
+    return;
+  }
+
+  QSize displayLogicalSize = imageNaturalDisplaySize();
+  if ( !displayLogicalSize.isValid() || displayLogicalSize.isEmpty() )
+  {
+    return;
+  }
+
   if ( mImageFitToView )
   {
     const QSize viewportSize = imageViewportSize();
-    displayPixmap            = mCurrentImagePixmap.scaled( viewportSize, Qt::KeepAspectRatio, Qt::SmoothTransformation );
+    if ( viewportSize.isValid() && !imageFitsViewport( displayLogicalSize ) )
+    {
+      displayLogicalSize = displayLogicalSize.scaled( viewportSize, Qt::KeepAspectRatio );
+    }
+  }
+
+  const qreal   devicePixelRatio = imageDevicePixelRatio();
+  const QPixmap displayPixmap    = createDisplayPixmap( displayLogicalSize, devicePixelRatio );
+  if ( displayPixmap.isNull() )
+  {
+    return;
   }
 
   mImageLabel->setPixmap( displayPixmap );
-  mImageLabel->resize( displayPixmap.size() );
-  mImageLabel->setMinimumSize( displayPixmap.size() );
-  mImageLabel->setMaximumSize( displayPixmap.size() );
+  mImageLabel->resize( displayLogicalSize );
+  mImageLabel->setMinimumSize( displayLogicalSize );
+  mImageLabel->setMaximumSize( displayLogicalSize );
   mImageScroll->horizontalScrollBar()->setValue( 0 );
   mImageScroll->verticalScrollBar()->setValue( 0 );
 }
 
 void QLiteHtmlBrowserImpl::toggleImageZoomMode()
 {
-  if ( mCurrentImagePixmap.isNull() || imageFitsViewport( mCurrentImagePixmap.size() ) )
+  const QSize naturalDisplaySize = imageNaturalDisplaySize();
+  if ( naturalDisplaySize.isEmpty() || imageFitsViewport( naturalDisplaySize ) )
   {
     return;
   }
@@ -513,34 +734,90 @@ bool QLiteHtmlBrowserImpl::showImageFromData( const QUrl& url, const QByteArray&
     return false;
   }
 
-  QImage img;
+  mCurrentImage = QImage();
+  mCurrentSvgData.clear();
+  mCurrentSvgDefaultSize = {};
+  mCurrentImageIsSvg     = false;
+
+  auto tryLoadSvg = [this]( const QByteArray& data ) -> bool
+  {
+    if ( data.isEmpty() )
+    {
+      return false;
+    }
+
+    QSvgRenderer renderer( data );
+    if ( !renderer.isValid() )
+    {
+      return false;
+    }
+
+    mCurrentSvgData        = data;
+    mCurrentSvgDefaultSize = renderer.defaultSize();
+    if ( !mCurrentSvgDefaultSize.isValid() || mCurrentSvgDefaultSize.isEmpty() )
+    {
+      mCurrentSvgDefaultSize = QSize( 512, 512 );
+    }
+    mCurrentImageIsSvg = true;
+    return true;
+  };
+
+  bool loaded = false;
+
   if ( !imageData.isEmpty() )
   {
-    img.loadFromData( imageData );
-    if ( img.isNull() && ( isSvgUrl( url ) || looksLikeSvgData( imageData ) ) )
+    if ( ( isSvgUrl( url ) || looksLikeSvgData( imageData ) ) && tryLoadSvg( imageData ) )
     {
-      img = loadSvgFromData( imageData );
+      loaded = true;
     }
-  }
-
-  if ( img.isNull() && url.isLocalFile() )
-  {
-    QFileInfo f( url.toLocalFile() );
-    if ( f.exists() )
+    else
     {
-      if ( !img.load( f.absoluteFilePath() ) && isSvgUrl( url ) )
+      QImage img;
+      img.loadFromData( imageData );
+      if ( !img.isNull() )
       {
-        img = loadSvgFromFile( f.absoluteFilePath() );
+        mCurrentImage      = img;
+        mCurrentImageIsSvg = false;
+        loaded             = true;
       }
     }
   }
 
-  if ( img.isNull() )
+  if ( !loaded && url.isLocalFile() )
+  {
+    QFileInfo f( url.toLocalFile() );
+    if ( f.exists() )
+    {
+      if ( isSvgUrl( url ) )
+      {
+        QFile svgFile( f.absoluteFilePath() );
+        if ( svgFile.open( QIODevice::ReadOnly ) )
+        {
+          const QByteArray svgData = svgFile.readAll();
+          svgFile.close();
+          loaded = tryLoadSvg( svgData );
+        }
+      }
+
+      if ( !loaded )
+      {
+        QImage img;
+        if ( img.load( f.absoluteFilePath() ) )
+        {
+          mCurrentImage      = img;
+          mCurrentImageIsSvg = false;
+          loaded             = true;
+        }
+      }
+    }
+  }
+
+  if ( !loaded )
   {
     return false;
   }
 
-  mCurrentImagePixmap = QPixmap::fromImage( img );
+  mImageFitToView = true;
 
   QFileInfo info( normalizedUrlPath( url ) );
   mCurrentCaption = info.fileName().isEmpty() ? url.fileName() : info.fileName();
@@ -550,24 +827,7 @@ bool QLiteHtmlBrowserImpl::showImageFromData( const QUrl& url, const QByteArray&
   }
 
   showImageView();
-
-  mImageFitToView = !imageFitsViewport( mCurrentImagePixmap.size() );
   updateImageView();
-
-  // A second deferred update avoids using a stale viewport size directly after
-  // switching the stacked widget page.
-  QTimer::singleShot( 0, this,
-                      [this]()
-                      {
-                        if ( mViewStack && mImageScroll && mViewStack->currentWidget() == mImageScroll && !mCurrentImagePixmap.isNull() )
-                        {
-                          if ( mImageFitToView )
-                          {
-                            updateImageView();
-                          }
-                        }
-                      } );
-
   return true;
 }
 
@@ -852,6 +1112,7 @@ void QLiteHtmlBrowserImpl::backward()
     setUrl( entry.url, entry.urlType, false /* don’t clear forward history */ );
   }
 }
+
 void QLiteHtmlBrowserImpl::reload()
 {
   if ( !mBWHistStack.isEmpty() )
@@ -900,6 +1161,7 @@ void QLiteHtmlBrowserImpl::previousFindMatch()
     mContainer->findPreviousMatch();
   }
 }
+
 QString QLiteHtmlBrowserImpl::selectedText() const
 {
   QString text;
@@ -922,14 +1184,12 @@ void QLiteHtmlBrowserImpl::showImageView()
 {
   if ( mViewStack && mImageScroll )
   {
+    const bool wasImageView = mViewStack->currentWidget() == mImageScroll;
     mViewStack->setCurrentWidget( mImageScroll );
 
-    // When switching from HTML to image view, the scroll area's viewport size can
-    // still reflect the previously hidden state. Re-apply the scaling once the
-    // layout has settled so fit-to-view uses the final viewport size.
-    if ( !mCurrentImagePixmap.isNull() && mImageFitToView )
+    if ( wasImageView )
     {
-      QTimer::singleShot( 0, this, [this]() { updateImageView(); } );
+      updateImageView();
     }
   }
 }
