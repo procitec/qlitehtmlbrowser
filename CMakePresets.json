@@ -1,0 +1,27 @@
+{
+  "version": 8,
+  "configurePresets": [
+    {
+      "name": "Release",
+      "displayName": "Release configure preset",
+      "description": "Sets Ninja generator, build and install directory",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/release/install"
+      }
+    },
+    {
+      "name": "Debug",
+      "displayName": "Debug configure preset",
+      "description": "Sets Ninja generator, build and install directory",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/debug/install"
+      }
+    }
+  ]
+}

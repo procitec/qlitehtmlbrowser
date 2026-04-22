@@ -31,6 +31,72 @@
 #include <QMimeType>
 #include <QtGui/QShowEvent>
 
+#include <QByteArray>
+#include <QCursor>
+#include <QPainter>
+#include <QPixmap>
+#include <QSvgRenderer>
+#include <QString>
+
+namespace CursorUtils
+{
+inline QString zoomInSvg()
+{
+  return QStringLiteral( R"svg(
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
+  <title>Zoom In</title>
+  <desc>Freely usable magnifying glass with plus symbol, styled for a standard Qt desktop application.</desc>
+  <g stroke="#4A4A4A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="27" cy="27" r="16"/>
+    <line x1="38.5" y1="38.5" x2="52" y2="52"/>
+    <line x1="27" y1="20" x2="27" y2="34"/>
+    <line x1="20" y1="27" x2="34" y2="27"/>
+  </g>
+</svg>
+)svg" );
+}
+
+inline QString zoomOutSvg()
+{
+  return QStringLiteral( R"svg(
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
+  <title>Zoom Out</title>
+  <desc>Freely usable magnifying glass with minus symbol, styled for a standard Qt desktop application.</desc>
+  <g stroke="#4A4A4A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="27" cy="27" r="16"/>
+    <line x1="38.5" y1="38.5" x2="52" y2="52"/>
+    <line x1="20" y1="27" x2="34" y2="27"/>
+  </g>
+</svg>
+)svg" );
+}
+
+inline QCursor createSvgCursor( const QString& svg, int size = 32, int hotX = 6, int hotY = 6 )
+{
+  QPixmap pixmap( size, size );
+  pixmap.fill( Qt::transparent );
+
+  QSvgRenderer renderer( svg.toUtf8() );
+  QPainter     painter( &pixmap );
+  painter.setRenderHint( QPainter::Antialiasing, true );
+  painter.setRenderHint( QPainter::SmoothPixmapTransform, true );
+  renderer.render( &painter );
+  painter.end();
+
+  return QCursor( pixmap, hotX, hotY );
+}
+
+inline QCursor createZoomInCursor( int size = 32, int hotX = 6, int hotY = 6 )
+{
+  return createSvgCursor( zoomInSvg(), size, hotX, hotY );
+}
+
+inline QCursor createZoomOutCursor( int size = 32, int hotX = 6, int hotY = 6 )
+{
+  return createSvgCursor( zoomOutSvg(), size, hotX, hotY );
+}
+} // namespace CursorUtils
+
 namespace
 {
 
@@ -686,6 +752,7 @@ void QLiteHtmlBrowserImpl::updateImageView()
   }
 
   QSize displayLogicalSize = imageNaturalDisplaySize();
+  auto displayNaturalSize = displayLogicalSize;
   if ( !displayLogicalSize.isValid() || displayLogicalSize.isEmpty() )
   {
     return;
@@ -696,7 +763,7 @@ void QLiteHtmlBrowserImpl::updateImageView()
     const QSize viewportSize = imageViewportSize();
     if ( viewportSize.isValid() && !imageFitsViewport( displayLogicalSize ) )
     {
-      displayLogicalSize = displayLogicalSize.scaled( viewportSize, Qt::KeepAspectRatio );
+      displayLogicalSize    = displayLogicalSize.scaled( viewportSize, Qt::KeepAspectRatio );
     }
   }
 
@@ -713,6 +780,18 @@ void QLiteHtmlBrowserImpl::updateImageView()
   mImageLabel->setMaximumSize( displayLogicalSize );
   mImageScroll->horizontalScrollBar()->setValue( 0 );
   mImageScroll->verticalScrollBar()->setValue( 0 );
+  if ( imageFitsViewport( displayNaturalSize ) )
+  {
+    mImageScroll->unsetCursor();
+  }
+  else if ( mImageFitToView )
+  {
+    mImageScroll->setCursor( CursorUtils::createZoomInCursor() );
+  }
+  else
+  {
+    mImageScroll->setCursor( CursorUtils::createZoomOutCursor() );
+  }
 }
 
 void QLiteHtmlBrowserImpl::toggleImageZoomMode()
@@ -1177,6 +1256,10 @@ void QLiteHtmlBrowserImpl::showHtmlView()
   if ( mViewStack && mContainer )
   {
     mViewStack->setCurrentWidget( mContainer );
+  }
+  if ( mImageScroll )
+  {
+    mImageScroll->unsetCursor();
   }
 }
 
