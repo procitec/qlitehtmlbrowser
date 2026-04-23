@@ -1,11 +1,11 @@
 project( TestBrowser )
 
-find_package(Qt6 COMPONENTS Core Gui Widgets Help)
+find_package(Qt6 COMPONENTS Core Gui Widgets Svg Help)
 if(Qt6_FOUND)
   set(QT_VERSION_MAJOR 6)
 else()
   set(QT_VERSION_MAJOR 5)
-  find_package(Qt5 5.15 COMPONENTS Core Gui Widgets Help REQUIRED)
+  find_package(Qt5 5.15 COMPONENTS Core Gui Widgets Svg Help REQUIRED)
 endif()
 
 add_executable( testbrowser )
@@ -26,4 +26,4 @@ target_sources( testbrowser
     )
 
 target_include_directories(testbrowser PRIVATE "${QLiteHtmlBrowser_SOURCE_DIR}/include")
-target_link_libraries( testbrowser PRIVATE QLiteHtmlBrowser Qt::Widgets Qt::Gui Qt::Core Qt::Help )
+target_link_libraries( testbrowser PRIVATE QLiteHtmlBrowser Qt::Widgets Qt::Gui Qt::Core Qt::Svg Qt::Help )

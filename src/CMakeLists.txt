@@ -41,7 +41,7 @@ PRIVATE
     "${PROJECT_SOURCE_DIR}/include"
 )
 
-target_link_libraries(QLiteHtmlBrowser PRIVATE litehtml Qt::Widgets Qt::Gui Qt::Core)
+target_link_libraries(QLiteHtmlBrowser PRIVATE litehtml Qt::Widgets Qt::Gui Qt::Svg Qt::Core)
 set_target_properties(QLiteHtmlBrowser PROPERTIES VERSION ${QLiteHtmlBrowser_VERSION})
 set_target_properties(QLiteHtmlBrowser PROPERTIES PUBLIC_HEADER "${PUBLIC_HEADERS}")
 set_property(TARGET QLiteHtmlBrowser PROPERTY CXX_STANDARD 17)

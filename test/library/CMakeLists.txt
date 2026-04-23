@@ -1,10 +1,10 @@
 project( QLiteHtmlBrowserTest )
 
-find_package(Qt6 COMPONENTS Core Gui Widgets Test)
+find_package(Qt6 COMPONENTS Core Gui Widgets Svg Test)
 if(Qt6_FOUND)
   set(QT_VERSION_MAJOR 6)
 else()
-  find_package(Qt5 5.15 COMPONENTS Core Gui Widgets Test REQUIRED)
+  find_package(Qt5 5.15 COMPONENTS Core Gui Widgets Svg Test REQUIRED)
   set(QT_VERSION_MAJOR 5)
 endif()
 
@@ -60,7 +60,7 @@ foreach( name ${test_names})
 
     target_include_directories( ${name} PRIVATE ${QLiteHtmlBrowser_SOURCE_DIR}/include ${QLiteHtmlBrowser_SOURCE_DIR}/src)
 
-    target_link_libraries(${name} PUBLIC litehtml Qt::Widgets Qt::Gui Qt::Test )
+    target_link_libraries(${name} PUBLIC litehtml Qt::Widgets Qt::Gui Qt::Svg Qt::Test )
 
     target_compile_definitions(${name} PRIVATE TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
@@ -69,6 +69,18 @@ foreach( name ${test_names})
     set_tests_properties(${name} PROPERTIES
         ENVIRONMENT "${environment}"
     )
-
-
 endforeach()
+
+qt_wrap_cpp ( test_history_image_mocs
+    test_history_image.h
+    ${QLiteHtmlBrowser_SOURCE_DIR}/include/qlitehtmlbrowser/QLiteHtmlBrowser.h
+)
+
+add_executable(  test_history_image test_history_image.cpp  test_history_image.h ${test_history_image_mocs})
+target_include_directories( test_history_image PRIVATE ${QLiteHtmlBrowser_SOURCE_DIR}/include ${QLiteHtmlBrowser_SOURCE_DIR}/src)
+target_link_libraries(test_history_image PUBLIC QLiteHtmlBrowser litehtml Qt::Widgets Qt::Gui Qt::Svg Qt::Test )
+
+add_test(NAME test_history_image COMMAND test_history_image)
+set_tests_properties(test_history_image PROPERTIES
+    ENVIRONMENT "${environment}"
+)
