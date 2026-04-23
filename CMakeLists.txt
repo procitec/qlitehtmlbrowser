@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
 
-project( QLiteHtmlBrowser VERSION 2.3.1 )
+project( QLiteHtmlBrowser VERSION 2.3.2 )
 
 include(GNUInstallDirs)
 
@@ -27,12 +27,12 @@ if(PROJECT_IS_TOP_LEVEL)
     set( AUTOUIC OFF)
     set( AUTORCC OFF)
 
-    find_package(Qt6 COMPONENTS Core Gui Widgets)
+    find_package(Qt6 COMPONENTS Core Gui Widgets Svg)
     if(Qt6_FOUND)
       set(QT_VERSION_MAJOR 6)
     else()
       set(QT_VERSION_MAJOR 5)
-      find_package(Qt5 5.15 COMPONENTS Core Gui Widgets REQUIRED)
+      find_package(Qt5 5.15 COMPONENTS Core Gui Widgets Svg REQUIRED)
     endif()
 
     if( WITH_DOCS )

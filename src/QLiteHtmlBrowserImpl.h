@@ -4,6 +4,9 @@ class container_qt;
 
 #include "browserdefinitions.h"
 #include <QtWidgets/QWidget>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QScrollArea>
+#include <QtWidgets/QStackedLayout>
 #include <QtCore/QUrl>
 #include <QtCore/QStack>
 #include <QtGui/QPagedPaintDevice>
@@ -106,23 +109,50 @@ private:
   };
 
   QString findFile( const QUrl& name ) const;
+  void    showHtmlView();
+  void    showImageView();
   void    onAnchorClicked( const QUrl& );
   QUrl    baseUrl( const QUrl& url ) const;
   void    parseUrl( const QUrl& url );
   QString readResourceCss( const QString& ) const;
   void    applyCSS();
+  bool    isImageUrl( const QUrl& u ) const;
+  bool    isHtmlUrl( const QUrl& u ) const;
+  bool    onImageClicked( const QUrl& url );
+  void    updateImageView();
+  void    toggleImageZoomMode();
+  // bool    imageFitsViewport( const QSize& imageSize ) const;
+  QSize   imageViewportSize() const;
+  qreal   imageDevicePixelRatio() const;
+  QSize   imageNaturalDisplaySize() const;
+  bool    imageFitsViewport( const QSize& imageSize ) const;
+  QPixmap createRasterDisplayPixmap( const QSize& logicalSize, qreal devicePixelRatio ) const;
+  QPixmap createSvgDisplayPixmap( const QSize& logicalSize, qreal devicePixelRatio ) const;
+  QPixmap createDisplayPixmap( const QSize& logicalSize, qreal devicePixelRatio ) const;
+  QImage  loadSvgFromFile( const QString& filename );
+  QImage  loadSvgFromData( const QByteArray& data );
+  bool    showImageFromData( const QUrl& url, const QByteArray& imageData );
 
   Q_DISABLE_COPY_MOVE( QLiteHtmlBrowserImpl );
 
-  container_qt*                  mContainer   = nullptr;
-  QUrl                           mBaseUrl     = {};
-  QString                        mExternalCSS = {};
-  UrlType                        mUrl         = {};
+  container_qt*                  mContainer             = nullptr;
+  QStackedLayout*                mViewStack             = nullptr;
+  QScrollArea*                   mImageScroll           = nullptr;
+  QLabel*                        mImageLabel            = nullptr;
+  QImage                         mCurrentImage          = {};
+  QByteArray                     mCurrentSvgData        = {};
+  QSize                          mCurrentSvgDefaultSize = {};
+  bool                           mCurrentImageIsSvg     = false;
+  bool                           mImageFitToView        = true;
+  QUrl                           mBaseUrl               = {};
+  QString                        mExternalCSS           = {};
+  UrlType                        mUrl                   = {};
   Browser::ResourceHandlerType   mResourceHandler;
   Browser::UrlResolveHandlerType mUrlResolveHandler;
-  QStack<HistoryEntry>           mBWHistStack  = {};
-  QStack<HistoryEntry>           mFWHistStack  = {};
-  UrlType                        mHome         = {};
-  QStringList                    mSearchPaths  = {};
-  QStringList                    mValidSchemes = { "file", "qrc", "qthelp" };
+  QStack<HistoryEntry>           mBWHistStack    = {};
+  QStack<HistoryEntry>           mFWHistStack    = {};
+  UrlType                        mHome           = {};
+  QString                        mCurrentCaption = {};
+  QStringList                    mSearchPaths    = {};
+  QStringList                    mValidSchemes   = { "file", "qrc", "qthelp" };
 };

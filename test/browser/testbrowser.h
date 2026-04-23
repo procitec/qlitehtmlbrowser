@@ -41,6 +41,9 @@ protected:
   void nextFindMatch();
   void previousFindMatch();
   bool loadTestFonts();
+  void home();
+  void forward();
+  void backward();
 
 private:
   QHelpBrowser* mBrowser;
@@ -56,4 +59,7 @@ private:
   QString       mScaleText         = tr( "Zoom: %1%" );
   QLabel*       mSelection         = nullptr;
   QString       mSelectionText     = tr( "Selected %1 chars" );
+  QAction*      mActHome           = nullptr;
+  QAction*      mActForward        = nullptr;
+  QAction*      mActBackward       = nullptr;
 };

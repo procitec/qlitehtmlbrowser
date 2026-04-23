@@ -44,7 +44,7 @@ jobs:
             qt-modules: ''
             name: Linux-Qt5
             use-apt: true
-            apt-packages: 'qtbase5-dev qttools5-dev ninja-build xvfb libxcb-cursor0'
+            apt-packages: 'qtbase5-dev qttools5-dev libqt5svg5-dev ninja-build xvfb libxcb-cursor0'
             test-cmd: xvfb-run -a ctest -V -E NOT_BUILT
 
           # ========== Windows Builds ==========
